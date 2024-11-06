@@ -6,7 +6,7 @@ background: black;
 }
 div#game {
 background: blue;
-padding:10px;
+
 border:10px solid white;
 borderradius: 5px;
 }
