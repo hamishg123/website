@@ -3,6 +3,7 @@ html {
 font-family: Arial, Helvetica, sans-serif;
 color: white;
 background: black;
+height:200%;
 }
 div#game {
 background: black;
