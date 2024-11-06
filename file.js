@@ -2,4 +2,5 @@ const divElement = document.querySelector('game'); // Replace 'div' with the ID 
 
 divElement.addEventListener('click', function() {
   window.location.href = 'https://hamish.site/main.html'; // Replace 'https://www.example.com' with the URL of your desired page
-});e
+});
+alert("welcome");
