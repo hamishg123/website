@@ -7,7 +7,7 @@ background: black;
 div#game {
 background: blue;
 width: 1%;
-padding: 10px;
+padding: 100px;
 border:10px solid white;
 border-radius: 5px;
 }
