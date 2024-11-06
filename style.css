@@ -4,7 +4,7 @@ font-family: Arial, Helvetica, sans-serif;
 color: white;
 background: black;
 }
-div.game {
+div#game {
 background: blue;
 padding:10px;
 border:10px solid white;
