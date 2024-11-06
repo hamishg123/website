@@ -31,6 +31,6 @@ a {
     color: white;
 }
 
-div.big {
+div#big {
 height: 200%;
 }
