@@ -17,6 +17,7 @@ display: inline-block;
 img {
 border-radius: 10px;
 width: 250px;
+height: auto;
 
 
 }
