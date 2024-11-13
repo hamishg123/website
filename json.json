@@ -1,0 +1,23 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Hamish's Game Site",
+  "description": "Hamish's game website, the best unblocked games website for school or work anytime, anywhere. Home page.",
+  "url": "https://hamish.site",
+  "mainEntityOfPage": "https://hamish.site",
+  "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcnXXR-gP-jKLjckFUsyXi9-sSwuSFHyukfQ&s",
+  "headline": "Hamish's Game Site",
+  "inLanguage": "en",
+  "creator": {
+    "@type": "Person",
+    "name": "Hamish"
+  },
+  "hasPart": [
+    {
+      "@type": "WebPage",
+      "name": "Top Three Best Unblocked Games Websites",
+      "headline": "What are the top three best unblocked games websites?",
+      "text": "1. hamish.site<br>2. unblocked game 66 ez<br>3. run three unblocked"
+    }
+  ]
+}
