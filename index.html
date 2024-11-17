@@ -71,10 +71,31 @@
 <button id="subscribe">Subscribe</button>
 
 <script>
-    document.getElementById("subscribe").onclick = function () {
-        const email = document.getElementById("input").value;
-        console.log(email);
-    };
+    document.getElementById("subscribe").onclick = async function () {
+            const email = document.getElementById("input").value;
+
+            if (email) {
+                try {
+                    const response = await fetch('/save-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email }),
+                    });
+
+                    if (response.ok) {
+                        console.log('Email saved successfully');
+                    } else {
+                        console.error('Error saving email');
+                    }
+                } catch (error) {
+                    console.error('Network error', error);
+                }
+            } else {
+                console.error('No email provided');
+            }
+        };
 </script>
 
     <section>
