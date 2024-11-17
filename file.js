@@ -1,6 +1,6 @@
 let email;
 document.getElementById("subscribe").onclick = function(){
-  email = document.getElementById("imput").value;
+  email = document.getElementById("input").value;
   console.log(email);
 };
 
