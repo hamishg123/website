@@ -121,4 +121,27 @@
     <p>&copy; 2024 Hamish Gordon</p>
   </footer>
 </body>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXFmfMEfEvVQqHJkN0-dtcIuBnugKqWeE",
+    authDomain: "email-396dc.firebaseapp.com",
+    projectId: "email-396dc",
+    storageBucket: "email-396dc.firebasestorage.app",
+    messagingSenderId: "229011077231",
+    appId: "1:229011077231:web:542f0055b2ac5ea530359a",
+    measurementId: "G-PXJBFP7X0Y"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </html>
