@@ -67,8 +67,16 @@
 
     </section>
   <lable>enter email to subscribe: </lable>
-    <input id="input" placeholder="email@email.com">
-    <button id="subscribe">subscribe</button>
+    <input type="text" id="input" placeholder="Enter your email" />
+<button id="subscribe">Subscribe</button>
+
+<script>
+    document.getElementById("subscribe").onclick = function () {
+        const email = document.getElementById("input").value;
+        console.log(email);
+    };
+</script>
+
     <section>
       <h2>More Games Coming Soon!</h2>
       <p>We're constantly adding more fun and engaging games to our site. Stay tuned!</p>
