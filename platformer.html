@@ -89,9 +89,12 @@
         const platformColor = "green";
         const platformSpacing = 90;
 
+        const lavaHeight = 20; // Height of the lava at the bottom
+
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
+        let scrollingEnabled = false;
 
         const keys = {};
         const highScoreDiv = document.getElementById("highScore");
@@ -107,6 +110,9 @@
                 y: canvas.height - i * platformSpacing
             });
         }
+
+        // Ensure the starting platform is directly beneath the player
+        platforms[0].x = player.x - platformWidth / 2;
 
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
@@ -132,10 +138,11 @@
                     player.x < platform.x + platformWidth
                 ) {
                     player.vy = player.jumpStrength;
+                    scrollingEnabled = true; // Start scrolling once the player has jumped
                 }
             });
 
-            if (player.y < canvas.height / 2) {
+            if (scrollingEnabled && player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
                 score++;
@@ -149,7 +156,7 @@
                 });
             }
 
-            if (player.y > canvas.height) {
+            if (player.y + player.height > canvas.height - lavaHeight) {
                 endGame();
             }
         }
@@ -164,6 +171,9 @@
             platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight);
             });
+
+            ctx.fillStyle = "red";
+            ctx.fillRect(0, canvas.height - lavaHeight, canvas.width, lavaHeight);
 
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
@@ -187,6 +197,8 @@
             player.y = 500;
             player.vy = 0;
             score = 0;
+            scrollingEnabled = false;
+
             platforms.length = 0;
 
             for (let i = 0; i < 8; i++) {
@@ -195,6 +207,8 @@
                     y: canvas.height - i * platformSpacing
                 });
             }
+
+            platforms[0].x = player.x - platformWidth / 2;
 
             gameOver = false;
             gameOverModal.style.display = "none";
