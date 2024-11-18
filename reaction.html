@@ -30,10 +30,6 @@
             margin-top: 20px;
             transition: background-color 0.3s ease;
         }
-        button:disabled {
-            cursor: not-allowed;
-            background-color: #ccc !important;
-        }
         #leaderboard {
             margin-top: 20px;
             text-align: left;
@@ -72,19 +68,18 @@
                 gameStarted = true; // Mark game as started
                 instructions.textContent = "Wait for the green color...";
                 startButton.style.backgroundColor = "#ccc"; // Grey when waiting
-                startButton.disabled = true;
 
                 // Random delay before turning green
                 const delay = Math.random() * 3000 + 2000; // 2-5 seconds
                 timeout = setTimeout(() => {
                     console.log("Button is now green!");
                     startButton.style.backgroundColor = "green"; // Turn green
-                    startButton.disabled = false; // Enable clicking
                     instructions.textContent = "Click now!";
                     startTime = performance.now(); // Record time
                     greenActive = true; // Mark as green
                 }, delay);
             } else if (greenActive) {
+                // Calculate reaction time
                 const reactionTime = performance.now() - startTime;
                 console.log(`Reaction time: ${reactionTime.toFixed(2)} ms`);
                 reactionTimeDisplay.textContent = `Your reaction time: ${reactionTime.toFixed(2)} ms`;
@@ -92,6 +87,7 @@
                 loadLeaderboard();
                 resetGame();
             } else {
+                // Handle premature click
                 console.log("Too soon! Resetting game...");
                 instructions.textContent = "Too soon! Wait for green.";
                 resetGame();
@@ -113,7 +109,7 @@
             scoreList.innerHTML = "";
             leaderboard.forEach((score, index) => {
                 const li = document.createElement("li");
-                li.textContent = `${index + 1}. ${score.toFixed(2)} ms`;
+                li.textContent = `${index + 1}. ${score.toFixed(2)} ms`; // Fix duplicate issue
                 scoreList.appendChild(li);
             });
         }
@@ -123,7 +119,6 @@
             console.log("Resetting game...");
             clearTimeout(timeout);
             startButton.style.backgroundColor = "white"; // Reset to white
-            startButton.disabled = false; // Re-enable button
             instructions.textContent = "Click the button when it turns green!";
             gameStarted = false; // Reset game state
             greenActive = false; // Reset green state
