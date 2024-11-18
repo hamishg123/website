@@ -139,6 +139,13 @@
                     newPlatformY = canvas.height / 2 + 20;
                 }
 
+                // Ensure no overlapping of platforms (same horizontal row)
+                platforms.forEach(platform => {
+                    if (Math.abs(newPlatformX - platform.x) < platformWidth) {
+                        newPlatformX = Math.random() * (canvas.width - platformWidth);
+                    }
+                });
+
                 platforms.push({
                     x: newPlatformX,
                     y: newPlatformY
@@ -211,6 +218,13 @@
                     newPlatformY = canvas.height / 2 + 20;
                 }
 
+                // Ensure no overlapping of platforms (same horizontal row)
+                platforms.forEach(platform => {
+                    if (Math.abs(newPlatformX - platform.x) < platformWidth) {
+                        newPlatformX = Math.random() * (canvas.width - platformWidth);
+                    }
+                });
+
                 platforms.push({
                     x: newPlatformX,
                     y: newPlatformY
@@ -243,7 +257,7 @@
             // Draw Score
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
-            ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
+            ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
         function endGame() {
@@ -252,9 +266,8 @@
                 highScore = score;
                 localStorage.setItem("highScore", highScore);
             }
-
             highScoreDiv.textContent = `High Score: ${highScore}`;
-            finalScore.textContent = `Your Score: ${score}${score === highScore ? " (New High Score!)" : ""}`;
+            finalScore.textContent = `Your Score: ${score}` + (score > highScore ? " (New High Score!)" : "");
             gameOverModal.style.display = "block";
         }
 
@@ -266,15 +279,17 @@
             gameOverModal.style.display = "none";
             player.y = platforms[0].y - player.height;
             player.vy = 0;
+            scrollingEnabled = false;
         });
 
-        gameLoop();
-
+        // Game Loop
         function gameLoop() {
             update();
             draw();
             requestAnimationFrame(gameLoop);
         }
+
+        gameLoop();
     </script>
 </body>
 </html>
