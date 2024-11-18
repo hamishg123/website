@@ -37,7 +37,6 @@
             dx: 4,
             dy: 3,
             color: "blue",
-            lastCollisionTime: 0, // Cooldown timer for collision
         };
 
         // Obstacles array to hold user-drawn lines
@@ -113,23 +112,17 @@
             }
 
             // Check collisions with obstacles
-            const now = Date.now();
-            if (now - ball.lastCollisionTime > 50) { // 50ms cooldown
-                obstacles.forEach((path) => {
-                    for (let i = 1; i < path.length; i++) {
-                        const p1 = path[i - 1];
-                        const p2 = path[i];
+            obstacles.forEach((path) => {
+                for (let i = 1; i < path.length; i++) {
+                    const p1 = path[i - 1];
+                    const p2 = path[i];
 
-                        if (lineIntersectsCircle(p1, p2, ball)) {
-                            ball.dx *= -1;
-                            ball.dy *= -1;
-                            ball.color = getRandomColor(); // Change color on collision
-                            ball.lastCollisionTime = now;
-                            break;
-                        }
+                    if (lineIntersectsCircle(p1, p2, ball)) {
+                        handleBounce(p1, p2);
+                        return; // Prevent further checks for smoother behavior
                     }
-                });
-            }
+                }
+            });
         }
 
         // Detect if a line segment intersects with the ball
@@ -145,6 +138,25 @@
 
             const discriminant = b * b - 4 * a * c;
             return discriminant >= 0;
+        }
+
+        // Handle the bounce when the ball hits an obstacle
+        function handleBounce(p1, p2) {
+            // Calculate the normal vector of the line
+            const lineDX = p2.x - p1.x;
+            const lineDY = p2.y - p1.y;
+            const length = Math.sqrt(lineDX ** 2 + lineDY ** 2);
+
+            const normalX = -lineDY / length;
+            const normalY = lineDX / length;
+
+            // Reflect the ball's velocity using the normal vector
+            const dotProduct = ball.dx * normalX + ball.dy * normalY;
+            ball.dx -= 2 * dotProduct * normalX;
+            ball.dy -= 2 * dotProduct * normalY;
+
+            // Change the ball's color
+            ball.color = getRandomColor();
         }
 
         // Get a random color
