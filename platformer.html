@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Jumper</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #add8e6;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // Setup canvas
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 400;
+        canvas.height = 600;
+
+        // Game variables
+        const player = {
+            x: 200,
+            y: 500,
+            width: 30,
+            height: 30,
+            color: "red",
+            vy: 0, // vertical velocity
+            jumpStrength: -10,
+            isJumping: false
+        };
+
+        const platforms = [];
+        const platformWidth = 80;
+        const platformHeight = 10;
+        const platformColor = "green";
+        const platformSpacing = 120;
+
+        let score = 0;
+        let gameOver = false;
+
+        // Create initial platforms
+        for (let i = 0; i < 5; i++) {
+            platforms.push({
+                x: Math.random() * (canvas.width - platformWidth),
+                y: canvas.height - i * platformSpacing
+            });
+        }
+
+        // Input handling
+        const keys = {};
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        // Update game state
+        function update() {
+            if (gameOver) return;
+
+            // Move player left/right
+            if (keys["ArrowLeft"] && player.x > 0) {
+                player.x -= 5;
+            }
+            if (keys["ArrowRight"] && player.x + player.width < canvas.width) {
+                player.x += 5;
+            }
+
+            // Apply gravity
+            player.vy += 0.5;
+            player.y += player.vy;
+
+            // Check for platform collisions
+            platforms.forEach(platform => {
+                if (
+                    player.y + player.height <= platform.y &&
+                    player.y + player.height + player.vy >= platform.y &&
+                    player.x + player.width > platform.x &&
+                    player.x < platform.x + platformWidth
+                ) {
+                    player.vy = player.jumpStrength;
+                    player.isJumping = false;
+                }
+            });
+
+            // Scroll platforms downward as the player climbs
+            if (player.y < canvas.height / 2) {
+                platforms.forEach(platform => platform.y += 2);
+                player.y += 2;
+                score++;
+            }
+
+            // Remove platforms that go off-screen and add new ones
+            if (platforms[0].y > canvas.height) {
+                platforms.shift();
+                platforms.push({
+                    x: Math.random() * (canvas.width - platformWidth),
+                    y: platforms[platforms.length - 1].y - platformSpacing
+                });
+            }
+
+            // End game if the player falls off-screen
+            if (player.y > canvas.height) {
+                gameOver = true;
+                alert(`Game Over! Your score: ${score}`);
+                resetGame();
+            }
+        }
+
+        // Draw everything
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Draw platforms
+            ctx.fillStyle = platformColor;
+            platforms.forEach(platform => {
+                ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight);
+            });
+
+            // Draw score
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Score: ${score}`, 10, 30);
+        }
+
+        // Reset game
+        function resetGame() {
+            player.x = 200;
+            player.y = 500;
+            player.vy = 0;
+            score = 0;
+            platforms.length = 0;
+            for (let i = 0; i < 5; i++) {
+                platforms.push({
+                    x: Math.random() * (canvas.width - platformWidth),
+                    y: canvas.height - i * platformSpacing
+                });
+            }
+            gameOver = false;
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        gameLoop();
+    </script>
+</body>
+</html>
