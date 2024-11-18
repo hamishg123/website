@@ -104,8 +104,8 @@
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
         // Platform spacing configuration
-        const platformSpacingMin = 60;  // Minimum platform spacing (vertical distance)
-        const platformSpacingMax = 120; // Maximum platform spacing (vertical distance)
+        const platformSpacingMin = 50;  // Minimum platform spacing (vertical distance)
+        const platformSpacingMax = 80; // Maximum platform spacing (vertical distance)
         const maxHorizontalSpacing = 150; // Maximum horizontal distance between platforms
 
         // Initialize platforms with the first one directly under the player
@@ -133,6 +133,11 @@
 
                 // Ensure vertical spacing is between the min and max spacing
                 let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+
+                // If the new platform is too high, set it lower
+                if (newPlatformY < canvas.height / 2) {
+                    newPlatformY = canvas.height / 2 + 20;
+                }
 
                 platforms.push({
                     x: newPlatformX,
@@ -201,6 +206,11 @@
                 // Ensure vertical spacing is between the min and max spacing
                 let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
 
+                // If the new platform is too high, set it lower
+                if (newPlatformY < canvas.height / 2) {
+                    newPlatformY = canvas.height / 2 + 20;
+                }
+
                 platforms.push({
                     x: newPlatformX,
                     y: newPlatformY
@@ -248,25 +258,23 @@
             gameOverModal.style.display = "block";
         }
 
-        function resetGame() {
-            initializePlatforms();
-            player.vy = 0;
-            player.grounded = true;
-            score = 0;
-            scrollingEnabled = false;
+        restartButton.addEventListener("click", () => {
             gameOver = false;
+            score = 0;
+            platforms.length = 0;
+            initializePlatforms();
             gameOverModal.style.display = "none";
-        }
+            player.y = platforms[0].y - player.height;
+            player.vy = 0;
+        });
 
-        restartButton.addEventListener("click", resetGame);
+        gameLoop();
 
         function gameLoop() {
             update();
             draw();
             requestAnimationFrame(gameLoop);
         }
-
-        gameLoop();
     </script>
 </body>
 </html>
