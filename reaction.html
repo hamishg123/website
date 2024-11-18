@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Time Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        #gameContainer {
+            margin: 50px auto;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff;
+            width: 80%;
+            max-width: 500px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #ddd;
+        }
+        #leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>Reaction Time Test</h1>
+        <p id="instructions">Click the button when it turns green!</p>
+        <button id="startButton">Start</button>
+        <p id="reactionTime" style="font-size: 20px; margin-top: 20px;"></p>
+        <div id="leaderboard">
+            <h2>Leaderboard</h2>
+            <ol id="scoreList"></ol>
+        </div>
+    </div>
+    <script>
+        const startButton = document.getElementById("startButton");
+        const instructions = document.getElementById("instructions");
+        const reactionTimeDisplay = document.getElementById("reactionTime");
+        const scoreList = document.getElementById("scoreList");
+
+        let startTime, timeout;
+        const leaderboardKey = "reactionLeaderboard";
+
+        // Start the game
+        startButton.addEventListener("click", () => {
+            resetGame();
+            instructions.textContent = "Wait for the green color...";
+            startButton.style.backgroundColor = "#ccc";
+            startButton.disabled = true;
+
+            // Random delay before turning green
+            const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+            timeout = setTimeout(() => {
+                startButton.style.backgroundColor = "green";
+                startButton.disabled = false;
+                instructions.textContent = "Click now!";
+                startTime = performance.now();
+            }, delay);
+        });
+
+        // Measure reaction time
+        startButton.addEventListener("click", () => {
+            if (startButton.style.backgroundColor === "green") {
+                const reactionTime = performance.now() - startTime;
+                reactionTimeDisplay.textContent = `Your reaction time: ${reactionTime.toFixed(2)} ms`;
+                saveScore(reactionTime);
+                loadLeaderboard();
+                resetGame();
+            } else {
+                instructions.textContent = "Too soon! Wait for green.";
+                resetGame();
+            }
+        });
+
+        // Save score to leaderboard
+        function saveScore(score) {
+            let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey)) || [];
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => a - b); // Sort scores (lowest first)
+            leaderboard = leaderboard.slice(0, 5); // Keep top 5
+            localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+        }
+
+        // Load leaderboard
+        function loadLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey)) || [];
+            scoreList.innerHTML = "";
+            leaderboard.forEach((score, index) => {
+                const li = document.createElement("li");
+                li.textContent = `${index + 1}. ${score.toFixed(2)} ms`;
+                scoreList.appendChild(li);
+            });
+        }
+
+        // Reset the game state
+        function resetGame() {
+            clearTimeout(timeout);
+            startButton.style.backgroundColor = "#fff";
+            startButton.disabled = false;
+            instructions.textContent = "Click the button when it turns green!";
+        }
+
+        // Initialize leaderboard
+        loadLeaderboard();
+    </script>
+</body>
+</html>
