@@ -131,9 +131,12 @@
                     newPlatformX = Math.random() * (canvas.width - platformWidth);
                 }
 
+                // Ensure vertical spacing is between the min and max spacing
+                let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+
                 platforms.push({
                     x: newPlatformX,
-                    y: prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
+                    y: newPlatformY
                 });
             }
         }
@@ -195,9 +198,12 @@
                     newPlatformX = Math.random() * (canvas.width - platformWidth);
                 }
 
+                // Ensure vertical spacing is between the min and max spacing
+                let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+
                 platforms.push({
                     x: newPlatformX,
-                    y: prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
+                    y: newPlatformY
                 });
             }
 
