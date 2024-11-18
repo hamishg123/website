@@ -24,45 +24,83 @@
             color: white;
             font-family: Arial, sans-serif;
         }
+        #gameOverModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        #gameOverModal h1 {
+            margin: 0;
+            color: #333;
+        }
+        #gameOverModal p {
+            margin: 10px 0;
+            color: #555;
+        }
+        #restartButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #restartButton:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
     <div id="highScore">High Score: 0</div>
     <canvas id="gameCanvas"></canvas>
+    <div id="gameOverModal">
+        <h1>Game Over!</h1>
+        <p id="finalScore"></p>
+        <button id="restartButton">Play Again</button>
+    </div>
 
     <script>
-        // Setup canvas
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         canvas.width = 400;
         canvas.height = 600;
 
-        // Game variables
         const player = {
             x: 200,
             y: 500,
             width: 30,
             height: 30,
             color: "red",
-            vy: 0, // vertical velocity
-            jumpStrength: -10,
-            isJumping: false
+            vy: 0,
+            jumpStrength: -10
         };
 
         const platforms = [];
         const platformWidth = 80;
         const platformHeight = 10;
         const platformColor = "green";
-        const platformSpacing = 80;
+        const platformSpacing = 90;
 
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
 
-        // Display the high score
-        document.getElementById("highScore").textContent = `High Score: ${highScore}`;
+        const keys = {};
+        const highScoreDiv = document.getElementById("highScore");
+        const gameOverModal = document.getElementById("gameOverModal");
+        const finalScore = document.getElementById("finalScore");
+        const restartButton = document.getElementById("restartButton");
 
-        // Create initial platforms
+        highScoreDiv.textContent = `High Score: ${highScore}`;
+
         for (let i = 0; i < 8; i++) {
             platforms.push({
                 x: Math.random() * (canvas.width - platformWidth),
@@ -70,16 +108,12 @@
             });
         }
 
-        // Input handling
-        const keys = {};
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
 
-        // Update game state
         function update() {
             if (gameOver) return;
 
-            // Move player left/right
             if (keys["ArrowLeft"] && player.x > 0) {
                 player.x -= 5;
             }
@@ -87,11 +121,9 @@
                 player.x += 5;
             }
 
-            // Apply gravity
             player.vy += 0.5;
             player.y += player.vy;
 
-            // Check for platform collisions
             platforms.forEach(platform => {
                 if (
                     player.y + player.height <= platform.y &&
@@ -103,14 +135,12 @@
                 }
             });
 
-            // Scroll platforms downward as the player climbs
             if (player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
                 score++;
             }
 
-            // Remove platforms that go off-screen and add new ones
             if (platforms[0].y > canvas.height) {
                 platforms.shift();
                 platforms.push({
@@ -119,69 +149,65 @@
                 });
             }
 
-            // End game if the player falls off-screen
             if (player.y > canvas.height) {
-                gameOver = true;
-                updateHighScore();
-                alert(`Game Over! Your score: ${score}`);
-                resetGame();
+                endGame();
             }
         }
 
-        // Draw everything
         function draw() {
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw player
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
-            // Draw platforms
             ctx.fillStyle = platformColor;
             platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight);
             });
 
-            // Draw score
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
             ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
         }
 
-        // Update high score
-        function updateHighScore() {
+        function endGame() {
+            gameOver = true;
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem("highScore", highScore);
             }
-            document.getElementById("highScore").textContent = `High Score: ${highScore}`;
+
+            highScoreDiv.textContent = `High Score: ${highScore}`;
+            finalScore.textContent = `Your Score: ${score}${score === highScore ? " (New High Score!)" : ""}`;
+            gameOverModal.style.display = "block";
         }
 
-        // Reset game
         function resetGame() {
             player.x = 200;
             player.y = 500;
             player.vy = 0;
             score = 0;
             platforms.length = 0;
+
             for (let i = 0; i < 8; i++) {
                 platforms.push({
                     x: Math.random() * (canvas.width - platformWidth),
                     y: canvas.height - i * platformSpacing
                 });
             }
+
             gameOver = false;
+            gameOverModal.style.display = "none";
         }
 
-        // Game loop
+        restartButton.addEventListener("click", resetGame);
+
         function gameLoop() {
             update();
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the game
         gameLoop();
     </script>
 </body>
