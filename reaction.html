@@ -62,16 +62,16 @@
         startButton.addEventListener("click", () => {
             resetGame();
             instructions.textContent = "Wait for the green color...";
-            startButton.style.backgroundColor = "#ccc";
+            startButton.style.backgroundColor = "#ccc"; // Grey when waiting
             startButton.disabled = true;
 
             // Random delay before turning green
             const delay = Math.random() * 3000 + 2000; // 2-5 seconds
             timeout = setTimeout(() => {
-                startButton.style.backgroundColor = "green";
-                startButton.disabled = false;
+                startButton.style.backgroundColor = "green"; // Turn green
+                startButton.disabled = false; // Enable clicking
                 instructions.textContent = "Click now!";
-                startTime = performance.now();
+                startTime = performance.now(); // Record time
             }, delay);
         });
 
@@ -112,8 +112,8 @@
         // Reset the game state
         function resetGame() {
             clearTimeout(timeout);
-            startButton.style.backgroundColor = "#fff";
-            startButton.disabled = false;
+            startButton.style.backgroundColor = "#fff"; // Reset to white
+            startButton.disabled = false; // Re-enable button
             instructions.textContent = "Click the button when it turns green!";
         }
 
