@@ -75,13 +75,13 @@
 
         const player = {
             x: 200,
-            y: 600,
+            y: 500,
             width: 30,
             height: 30,
             color: "red",
             vy: 0,
             jumpStrength: -10,
-            grounded: true // New flag to delay gravity
+            grounded: true
         };
 
         const platforms = [];
@@ -105,16 +105,29 @@
 
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
-        for (let i = 0; i < 8; i++) {
+        // Initialize platforms with the first one directly under the player
+        function initializePlatforms() {
+            platforms.length = 0;
+
+            // Ensure the first platform is directly beneath the player
             platforms.push({
-                x: Math.random() * (canvas.width - platformWidth),
-                y: canvas.height - i * platformSpacing
+                x: canvas.width / 2 - platformWidth / 2,
+                y: canvas.height - 100
             });
+
+            player.x = platforms[0].x + platformWidth / 2 - player.width / 2;
+            player.y = platforms[0].y - player.height;
+
+            // Generate additional platforms above
+            for (let i = 1; i < 8; i++) {
+                platforms.push({
+                    x: Math.random() * (canvas.width - platformWidth),
+                    y: platforms[i - 1].y - platformSpacing
+                });
+            }
         }
 
-        // Ensure the starting platform is directly beneath the player
-        platforms[0].x = player.x - platformWidth / 2;
-        player.y = platforms[0].y - player.height; // Place player above the first platform
+        initializePlatforms();
 
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
@@ -132,9 +145,8 @@
 
             // Gravity and Jumping
             if (player.grounded) {
-                // If grounded, wait for the player to move or jump
                 if (keys["ArrowLeft"] || keys["ArrowRight"] || keys[" "]) {
-                    player.grounded = false; // Enable gravity
+                    player.grounded = false;
                 }
             } else {
                 player.vy += 0.5;
@@ -150,18 +162,18 @@
                     player.x < platform.x + platformWidth
                 ) {
                     player.vy = player.jumpStrength;
-                    scrollingEnabled = true; // Start scrolling once the player has jumped
+                    scrollingEnabled = true;
                 }
             });
 
-            // Platform Scrolling
+            // Scroll Platforms
             if (scrollingEnabled && player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
                 score++;
             }
 
-            // Generate New Platforms
+            // Remove and Add Platforms
             if (platforms[0].y > canvas.height) {
                 platforms.shift();
                 platforms.push({
@@ -212,24 +224,11 @@
         }
 
         function resetGame() {
-            player.x = 200;
-            player.y = platforms[0].y - player.height; // Place above the first platform
+            initializePlatforms();
             player.vy = 0;
-            player.grounded = true; // Reset grounded flag
+            player.grounded = true;
             score = 0;
             scrollingEnabled = false;
-
-            platforms.length = 0;
-
-            for (let i = 0; i < 8; i++) {
-                platforms.push({
-                    x: Math.random() * (canvas.width - platformWidth),
-                    y: canvas.height - i * platformSpacing
-                });
-            }
-
-            platforms[0].x = player.x - platformWidth / 2;
-
             gameOver = false;
             gameOverModal.style.display = "none";
         }
