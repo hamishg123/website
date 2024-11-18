@@ -48,22 +48,30 @@
         .hidden {
             display: none;
         }
+        #leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
     <h1>Guess the Number!</h1>
     <div class="game-container">
-        <p>I'm thinking of a number between <strong>1</strong> and <strong>100</strong>.</p>
+        <p>I'm thinking of a number between <strong>1</strong> and <strong>1000</strong>.</p>
         <p>Can you guess it?</p>
         <input type="number" id="guess" placeholder="Enter your guess" />
         <button id="submit">Submit</button>
         <p id="message"></p>
         <button id="restart" class="hidden">Play Again</button>
+        <div id="leaderboard">
+            <h2>Leaderboard</h2>
+            <ol id="scoreList"></ol>
+        </div>
     </div>
 
     <script>
-        // Initialize game variables
-        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        // Game variables
+        let randomNumber = Math.floor(Math.random() * 1000) + 1;
         let attempts = 0;
 
         // DOM elements
@@ -71,16 +79,21 @@
         const submitButton = document.getElementById("submit");
         const message = document.getElementById("message");
         const restartButton = document.getElementById("restart");
+        const scoreList = document.getElementById("scoreList");
+
+        const leaderboardKey = "numberGuessLeaderboard";
 
         // Handle guess submission
         submitButton.addEventListener("click", function () {
             const guess = Number(guessInput.value);
             attempts++;
 
-            if (!guess || guess < 1 || guess > 100) {
-                message.textContent = "Please enter a valid number between 1 and 100.";
+            if (!guess || guess < 1 || guess > 1000) {
+                message.textContent = "Please enter a valid number between 1 and 1000.";
             } else if (guess === randomNumber) {
                 message.textContent = `🎉 Correct! You guessed it in ${attempts} attempts.`;
+                saveScore(attempts);
+                loadLeaderboard();
                 endGame();
             } else if (guess < randomNumber) {
                 message.textContent = "Too low! Try again.";
@@ -94,7 +107,7 @@
 
         // Restart the game
         restartButton.addEventListener("click", function () {
-            randomNumber = Math.floor(Math.random() * 100) + 1;
+            randomNumber = Math.floor(Math.random() * 1000) + 1;
             attempts = 0;
             message.textContent = "";
             guessInput.value = "";
@@ -110,6 +123,29 @@
             guessInput.disabled = true;
             restartButton.classList.remove("hidden");
         }
+
+        // Save score to leaderboard
+        function saveScore(score) {
+            let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey)) || [];
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => a - b); // Sort scores (fewest attempts first)
+            leaderboard = leaderboard.slice(0, 5); // Keep top 5
+            localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+        }
+
+        // Load leaderboard
+        function loadLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey)) || [];
+            scoreList.innerHTML = "";
+            leaderboard.forEach((score, index) => {
+                const li = document.createElement("li");
+                li.textContent = `${index + 1}. ${score} attempts`;
+                scoreList.appendChild(li);
+            });
+        }
+
+        // Initialize leaderboard
+        loadLeaderboard();
     </script>
 </body>
 </html>
