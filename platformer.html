@@ -120,6 +120,7 @@
         function update() {
             if (gameOver) return;
 
+            // Player Movement
             if (keys["ArrowLeft"] && player.x > 0) {
                 player.x -= 5;
             }
@@ -127,9 +128,11 @@
                 player.x += 5;
             }
 
+            // Gravity and Jumping
             player.vy += 0.5;
             player.y += player.vy;
 
+            // Platform Collision Detection
             platforms.forEach(platform => {
                 if (
                     player.y + player.height <= platform.y &&
@@ -142,12 +145,14 @@
                 }
             });
 
+            // Platform Scrolling
             if (scrollingEnabled && player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
                 score++;
             }
 
+            // Generate New Platforms
             if (platforms[0].y > canvas.height) {
                 platforms.shift();
                 platforms.push({
@@ -156,6 +161,7 @@
                 });
             }
 
+            // Lava Collision
             if (player.y + player.height > canvas.height - lavaHeight) {
                 endGame();
             }
@@ -164,17 +170,21 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Draw Player
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
+            // Draw Platforms
             ctx.fillStyle = platformColor;
             platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight);
             });
 
+            // Draw Lava
             ctx.fillStyle = "red";
             ctx.fillRect(0, canvas.height - lavaHeight, canvas.width, lavaHeight);
 
+            // Draw Score
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
             ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
