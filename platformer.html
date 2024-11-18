@@ -104,8 +104,9 @@
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
         // Platform spacing configuration
-        const platformSpacingMin = 60;  // Minimum platform spacing
-        const platformSpacingMax = 120; // Maximum platform spacing
+        const platformSpacingMin = 60;  // Minimum platform spacing (vertical distance)
+        const platformSpacingMax = 120; // Maximum platform spacing (vertical distance)
+        const maxHorizontalSpacing = 150; // Maximum horizontal distance between platforms
 
         // Initialize platforms with the first one directly under the player
         function initializePlatforms() {
@@ -120,11 +121,19 @@
             player.x = platforms[0].x + platformWidth / 2 - player.width / 2;
             player.y = platforms[0].y - player.height;
 
-            // Generate additional platforms above, ensuring spacing is within a reasonable range
+            // Generate additional platforms above, ensuring horizontal spacing is within max range
             for (let i = 1; i < 8; i++) {
+                let prevPlatform = platforms[i - 1];
+                let newPlatformX = Math.random() * (canvas.width - platformWidth);
+                
+                // Ensure the new platform is within the max horizontal spacing of the previous platform
+                while (Math.abs(newPlatformX - prevPlatform.x) > maxHorizontalSpacing) {
+                    newPlatformX = Math.random() * (canvas.width - platformWidth);
+                }
+
                 platforms.push({
-                    x: Math.random() * (canvas.width - platformWidth),
-                    y: platforms[i - 1].y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
+                    x: newPlatformX,
+                    y: prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
                 });
             }
         }
@@ -178,9 +187,17 @@
             // Remove and Add Platforms
             if (platforms[0].y > canvas.height) {
                 platforms.shift();
+                let prevPlatform = platforms[platforms.length - 1];
+                let newPlatformX = Math.random() * (canvas.width - platformWidth);
+
+                // Ensure the new platform is within the max horizontal spacing of the previous platform
+                while (Math.abs(newPlatformX - prevPlatform.x) > maxHorizontalSpacing) {
+                    newPlatformX = Math.random() * (canvas.width - platformWidth);
+                }
+
                 platforms.push({
-                    x: Math.random() * (canvas.width - platformWidth),
-                    y: platforms[platforms.length - 1].y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
+                    x: newPlatformX,
+                    y: prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
                 });
             }
 
