@@ -80,7 +80,8 @@
             height: 30,
             color: "red",
             vy: 0,
-            jumpStrength: -10
+            jumpStrength: -10,
+            grounded: true // New flag to delay gravity
         };
 
         const platforms = [];
@@ -89,7 +90,7 @@
         const platformColor = "green";
         const platformSpacing = 90;
 
-        const lavaHeight = 20; // Height of the lava at the bottom
+        const lavaHeight = 20;
 
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
@@ -113,6 +114,7 @@
 
         // Ensure the starting platform is directly beneath the player
         platforms[0].x = player.x - platformWidth / 2;
+        player.y = platforms[0].y - player.height; // Place player above the first platform
 
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
@@ -129,8 +131,15 @@
             }
 
             // Gravity and Jumping
-            player.vy += 0.5;
-            player.y += player.vy;
+            if (player.grounded) {
+                // If grounded, wait for the player to move or jump
+                if (keys["ArrowLeft"] || keys["ArrowRight"] || keys[" "]) {
+                    player.grounded = false; // Enable gravity
+                }
+            } else {
+                player.vy += 0.5;
+                player.y += player.vy;
+            }
 
             // Platform Collision Detection
             platforms.forEach(platform => {
@@ -204,8 +213,9 @@
 
         function resetGame() {
             player.x = 200;
-            player.y = 500;
+            player.y = platforms[0].y - player.height; // Place above the first platform
             player.vy = 0;
+            player.grounded = true; // Reset grounded flag
             score = 0;
             scrollingEnabled = false;
 
