@@ -37,6 +37,7 @@
             dx: 4,
             dy: 3,
             color: "blue",
+            lastCollisionTime: 0, // Cooldown timer for collision
         };
 
         // Obstacles array to hold user-drawn lines
@@ -112,19 +113,23 @@
             }
 
             // Check collisions with obstacles
-            obstacles.forEach((path) => {
-                for (let i = 1; i < path.length; i++) {
-                    const p1 = path[i - 1];
-                    const p2 = path[i];
+            const now = Date.now();
+            if (now - ball.lastCollisionTime > 50) { // 50ms cooldown
+                obstacles.forEach((path) => {
+                    for (let i = 1; i < path.length; i++) {
+                        const p1 = path[i - 1];
+                        const p2 = path[i];
 
-                    if (lineIntersectsCircle(p1, p2, ball)) {
-                        ball.dx *= -1;
-                        ball.dy *= -1;
-                        ball.color = getRandomColor(); // Change color on collision
-                        break;
+                        if (lineIntersectsCircle(p1, p2, ball)) {
+                            ball.dx *= -1;
+                            ball.dy *= -1;
+                            ball.color = getRandomColor(); // Change color on collision
+                            ball.lastCollisionTime = now;
+                            break;
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         // Detect if a line segment intersects with the ball
