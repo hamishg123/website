@@ -129,20 +129,23 @@
         function lineIntersectsCircle(p1, p2, ball) {
             const A = p2.x - p1.x;
             const B = p2.y - p1.y;
-            const C = p1.x - ball.x;
-            const D = p1.y - ball.y;
+            const length = Math.sqrt(A * A + B * B);
 
-            const a = A * A + B * B;
-            const b = 2 * (A * C + B * D);
-            const c = C * C + D * D - ball.radius * ball.radius;
+            const unitX = A / length;
+            const unitY = B / length;
 
-            const discriminant = b * b - 4 * a * c;
-            return discriminant >= 0;
+            const projection = ((ball.x - p1.x) * unitX + (ball.y - p1.y) * unitY);
+            const closestX = p1.x + projection * unitX;
+            const closestY = p1.y + projection * unitY;
+
+            const distanceToLine = Math.sqrt((closestX - ball.x) ** 2 + (closestY - ball.y) ** 2);
+
+            const withinSegment = projection >= 0 && projection <= length;
+            return distanceToLine <= ball.radius && withinSegment;
         }
 
         // Handle the bounce when the ball hits an obstacle
         function handleBounce(p1, p2) {
-            // Calculate the normal vector of the line
             const lineDX = p2.x - p1.x;
             const lineDY = p2.y - p1.y;
             const length = Math.sqrt(lineDX ** 2 + lineDY ** 2);
@@ -150,12 +153,11 @@
             const normalX = -lineDY / length;
             const normalY = lineDX / length;
 
-            // Reflect the ball's velocity using the normal vector
             const dotProduct = ball.dx * normalX + ball.dy * normalY;
+
             ball.dx -= 2 * dotProduct * normalX;
             ball.dy -= 2 * dotProduct * normalY;
 
-            // Change the ball's color
             ball.color = getRandomColor();
         }
 
