@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive DVD Logo</title>
+    <title>Interactive Ball</title>
     <style>
         body {
             margin: 0;
@@ -26,31 +26,25 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Ensure the logo stays within bounds after resizing
-            if (dvd.x + dvd.width > canvas.width) dvd.x = canvas.width - dvd.width;
-            if (dvd.y + dvd.height > canvas.height) dvd.y = canvas.height - dvd.height;
+            // Ensure the ball stays within bounds after resizing
+            if (ball.x + ball.radius > canvas.width) ball.x = canvas.width - ball.radius;
+            if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // DVD logo properties
-        const dvd = {
+        // Ball properties
+        const ball = {
             x: 100,
             y: 100,
-            width: 100,
-            height: 50,
+            radius: 20,
             dx: 3,
             dy: 2,
             color: getRandomColor(),
-            image: null,
         };
 
         // Obstacles array
         const obstacles = [];
-
-        // Load DVD logo image
-        dvd.image = new Image();
-        dvd.image.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/DVD_logo.svg/512px-DVD_logo.svg.png';
 
         // Mouse properties
         let isDrawing = false;
@@ -81,9 +75,13 @@
             }
         });
 
-        // Function to draw the DVD logo
-        function drawDvdLogo() {
-            ctx.drawImage(dvd.image, dvd.x, dvd.y, dvd.width, dvd.height);
+        // Function to draw the ball
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.closePath();
         }
 
         // Function to draw obstacles
@@ -106,15 +104,13 @@
 
         // Function to check collision with the mouse
         function checkMouseCollision() {
-            if (
-                mouse.x > dvd.x &&
-                mouse.x < dvd.x + dvd.width &&
-                mouse.y > dvd.y &&
-                mouse.y < dvd.y + dvd.height
-            ) {
-                dvd.dx *= -1;
-                dvd.dy *= -1;
-                dvd.color = getRandomColor();
+            const distance = Math.sqrt(
+                (mouse.x - ball.x) ** 2 + (mouse.y - ball.y) ** 2
+            );
+            if (distance < ball.radius) {
+                ball.dx *= -1;
+                ball.dy *= -1;
+                ball.color = getRandomColor();
             }
         }
 
@@ -126,35 +122,31 @@
                     const p2 = path[i];
 
                     // Line-segment collision detection
-                    if (lineSegmentIntersectsRectangle(p1.x, p1.y, p2.x, p2.y, dvd.x, dvd.y, dvd.width, dvd.height)) {
-                        dvd.dx *= -1;
-                        dvd.dy *= -1;
-                        dvd.color = getRandomColor();
+                    if (lineSegmentIntersectsCircle(p1.x, p1.y, p2.x, p2.y, ball.x, ball.y, ball.radius)) {
+                        ball.dx *= -1;
+                        ball.dy *= -1;
+                        ball.color = getRandomColor();
                         return;
                     }
                 }
             });
         }
 
-        // Line-segment to rectangle collision detection
-        function lineSegmentIntersectsRectangle(x1, y1, x2, y2, rx, ry, rw, rh) {
-            return (
-                lineIntersectsLine(x1, y1, x2, y2, rx, ry, rx + rw, ry) || // Top edge
-                lineIntersectsLine(x1, y1, x2, y2, rx, ry, rx, ry + rh) || // Left edge
-                lineIntersectsLine(x1, y1, x2, y2, rx + rw, ry, rx + rw, ry + rh) || // Right edge
-                lineIntersectsLine(x1, y1, x2, y2, rx, ry + rh, rx + rw, ry + rh) // Bottom edge
-            );
-        }
-
-        // Line-segment to line-segment collision detection
-        function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
-            const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-            if (denominator === 0) return false;
-
-            const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
-            const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
-
-            return t > 0 && t < 1 && u > 0 && u < 1;
+        // Line-segment to circle collision detection
+        function lineSegmentIntersectsCircle(x1, y1, x2, y2, cx, cy, r) {
+            const acx = cx - x1;
+            const acy = cy - y1;
+            const abx = x2 - x1;
+            const aby = y2 - y1;
+            const ab2 = abx * abx + aby * aby;
+            const acab = acx * abx + acy * aby;
+            let t = acab / ab2;
+            t = Math.max(0, Math.min(1, t));
+            const hcx = x1 + t * abx;
+            const hcy = y1 + t * aby;
+            const hx = cx - hcx;
+            const hy = cy - hcy;
+            return hx * hx + hy * hy <= r * r;
         }
 
         // Function to get a random color
@@ -171,29 +163,27 @@
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update DVD logo position
-            dvd.x += dvd.dx;
-            dvd.y += dvd.dy;
+            // Update ball position
+            ball.x += ball.dx;
+            ball.y += ball.dy;
 
             // Bounce off canvas boundaries
-            if (dvd.x + dvd.width > canvas.width || dvd.x < 0) dvd.dx *= -1;
-            if (dvd.y + dvd.height > canvas.height || dvd.y < 0) dvd.dy *= -1;
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.dx *= -1;
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
 
             // Check for collisions
             checkMouseCollision();
             checkObstacleCollision();
 
             // Draw everything
-            drawDvdLogo();
+            drawBall();
             drawObstacles();
 
             requestAnimationFrame(update);
         }
 
         // Start the animation
-        dvd.image.onload = () => {
-            update();
-        };
+        update();
     </script>
 </body>
 </html>
