@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Ball</title>
+    <title>Interactive Ball Game</title>
     <style>
         body {
             margin: 0;
@@ -18,64 +18,60 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-        // Set canvas to full screen
+        // Resize the canvas to fit the screen
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-
-            // Ensure the ball stays within bounds after resizing
-            if (ball.x + ball.radius > canvas.width) ball.x = canvas.width - ball.radius;
-            if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
         }
-        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
         // Ball properties
         const ball = {
-            x: 100,
-            y: 100,
-            radius: 20,
-            dx: 3,
-            dy: 2,
-            color: getRandomColor(),
+            x: 200,
+            y: 200,
+            radius: 15,
+            dx: 4,
+            dy: 3,
+            color: "blue",
         };
 
-        // Obstacles array
+        // Obstacles array to hold user-drawn lines
         const obstacles = [];
-
-        // Mouse properties
         let isDrawing = false;
-        let mouse = { x: 0, y: 0 };
 
-        // Update mouse position
-        canvas.addEventListener('mousemove', (event) => {
+        // Mouse tracking
+        const mouse = { x: 0, y: 0 };
+
+        canvas.addEventListener("mousemove", (event) => {
             const rect = canvas.getBoundingClientRect();
             mouse.x = event.clientX - rect.left;
             mouse.y = event.clientY - rect.top;
         });
 
         // Start drawing obstacles
-        canvas.addEventListener('mousedown', () => {
+        canvas.addEventListener("mousedown", () => {
             isDrawing = true;
             obstacles.push([]);
         });
 
         // Stop drawing obstacles
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener("mouseup", () => {
             isDrawing = false;
         });
 
-        // Draw obstacles while holding the mouse button
-        canvas.addEventListener('mousemove', () => {
+        // Draw obstacles as the mouse moves
+        canvas.addEventListener("mousemove", () => {
             if (isDrawing) {
-                obstacles[obstacles.length - 1].push({ x: mouse.x, y: mouse.y });
+                const currentPath = obstacles[obstacles.length - 1];
+                currentPath.push({ x: mouse.x, y: mouse.y });
             }
         });
 
-        // Function to draw the ball
+        // Draw the ball
         function drawBall() {
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
@@ -84,106 +80,85 @@
             ctx.closePath();
         }
 
-        // Function to draw obstacles
+        // Draw obstacles
         function drawObstacles() {
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 5;
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
+
             obstacles.forEach((path) => {
                 ctx.beginPath();
                 for (let i = 0; i < path.length; i++) {
-                    const point = path[i];
                     if (i === 0) {
-                        ctx.moveTo(point.x, point.y);
+                        ctx.moveTo(path[i].x, path[i].y);
                     } else {
-                        ctx.lineTo(point.x, point.y);
+                        ctx.lineTo(path[i].x, path[i].y);
                     }
                 }
                 ctx.stroke();
             });
         }
 
-        // Function to check collision with the mouse
-        function checkMouseCollision() {
-            const distance = Math.sqrt(
-                (mouse.x - ball.x) ** 2 + (mouse.y - ball.y) ** 2
-            );
-            if (distance < ball.radius) {
-                ball.dx *= -1;
-                ball.dy *= -1;
-                ball.color = getRandomColor();
-            }
-        }
+        // Update ball position and check for collisions
+        function updateBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
 
-        // Function to check collision with obstacles
-        function checkObstacleCollision() {
+            // Bounce off walls
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+            }
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+            }
+
+            // Check collisions with obstacles
             obstacles.forEach((path) => {
                 for (let i = 1; i < path.length; i++) {
                     const p1 = path[i - 1];
                     const p2 = path[i];
 
-                    // Line-segment collision detection
-                    if (lineSegmentIntersectsCircle(p1.x, p1.y, p2.x, p2.y, ball.x, ball.y, ball.radius)) {
+                    if (lineIntersectsCircle(p1, p2, ball)) {
                         ball.dx *= -1;
                         ball.dy *= -1;
-                        ball.color = getRandomColor();
-                        return;
+                        ball.color = getRandomColor(); // Change color on collision
+                        break;
                     }
                 }
             });
         }
 
-        // Line-segment to circle collision detection
-        function lineSegmentIntersectsCircle(x1, y1, x2, y2, cx, cy, r) {
-            const acx = cx - x1;
-            const acy = cy - y1;
-            const abx = x2 - x1;
-            const aby = y2 - y1;
-            const ab2 = abx * abx + aby * aby;
-            const acab = acx * abx + acy * aby;
-            let t = acab / ab2;
-            t = Math.max(0, Math.min(1, t));
-            const hcx = x1 + t * abx;
-            const hcy = y1 + t * aby;
-            const hx = cx - hcx;
-            const hy = cy - hcy;
-            return hx * hx + hy * hy <= r * r;
+        // Detect if a line segment intersects with the ball
+        function lineIntersectsCircle(p1, p2, ball) {
+            const A = p2.x - p1.x;
+            const B = p2.y - p1.y;
+            const C = p1.x - ball.x;
+            const D = p1.y - ball.y;
+
+            const a = A * A + B * B;
+            const b = 2 * (A * C + B * D);
+            const c = C * C + D * D - ball.radius * ball.radius;
+
+            const discriminant = b * b - 4 * a * c;
+            return discriminant >= 0;
         }
 
-        // Function to get a random color
+        // Get a random color
         function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
+            return "#" + Math.floor(Math.random() * 16777215).toString(16);
         }
 
-        // Update the game state
-        function update() {
+        // Main animation loop
+        function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update ball position
-            ball.x += ball.dx;
-            ball.y += ball.dy;
-
-            // Bounce off canvas boundaries
-            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.dx *= -1;
-            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
-
-            // Check for collisions
-            checkMouseCollision();
-            checkObstacleCollision();
-
-            // Draw everything
             drawBall();
             drawObstacles();
+            updateBall();
 
-            requestAnimationFrame(update);
+            requestAnimationFrame(animate);
         }
 
-        // Start the animation
-        update();
+        animate(); // Start the animation loop
     </script>
 </body>
 </html>
