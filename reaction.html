@@ -60,37 +60,39 @@
         let startTime, timeout;
         const leaderboardKey = "reactionLeaderboard";
 
+        // Track game state
+        let gameStarted = false;
+        let greenActive = false;
+
         // Start the game
         startButton.addEventListener("click", () => {
-            console.log("Game started!");
-            resetGame();
-            instructions.textContent = "Wait for the green color...";
-            startButton.style.backgroundColor = "#ccc"; // Grey while waiting
-            startButton.disabled = true;
+            if (!gameStarted) {
+                console.log("Game started!");
+                resetGame();
+                gameStarted = true; // Mark game as started
+                instructions.textContent = "Wait for the green color...";
+                startButton.style.backgroundColor = "#ccc"; // Grey when waiting
+                startButton.disabled = true;
 
-            // Random delay before turning green
-            const delay = Math.random() * 3000 + 2000; // 2-5 seconds
-            timeout = setTimeout(() => {
-                console.log("Button is now green!");
-                startButton.style.backgroundColor = "green"; // Turn green
-                startButton.disabled = false; // Enable clicking
-                instructions.textContent = "Click now!";
-                startTime = performance.now(); // Record time
-            }, delay);
-        });
-
-        // Measure reaction time
-        startButton.addEventListener("click", () => {
-            if (startButton.style.backgroundColor === "green") {
+                // Random delay before turning green
+                const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+                timeout = setTimeout(() => {
+                    console.log("Button is now green!");
+                    startButton.style.backgroundColor = "green"; // Turn green
+                    startButton.disabled = false; // Enable clicking
+                    instructions.textContent = "Click now!";
+                    startTime = performance.now(); // Record time
+                    greenActive = true; // Mark as green
+                }, delay);
+            } else if (greenActive) {
                 const reactionTime = performance.now() - startTime;
                 console.log(`Reaction time: ${reactionTime.toFixed(2)} ms`);
                 reactionTimeDisplay.textContent = `Your reaction time: ${reactionTime.toFixed(2)} ms`;
                 saveScore(reactionTime);
                 loadLeaderboard();
                 resetGame();
-            } else if (startButton.style.backgroundColor === "white") {
-                instructions.textContent = "Press Start to begin.";
             } else {
+                console.log("Too soon! Resetting game...");
                 instructions.textContent = "Too soon! Wait for green.";
                 resetGame();
             }
@@ -123,6 +125,8 @@
             startButton.style.backgroundColor = "white"; // Reset to white
             startButton.disabled = false; // Re-enable button
             instructions.textContent = "Click the button when it turns green!";
+            gameStarted = false; // Reset game state
+            greenActive = false; // Reset green state
         }
 
         // Initialize leaderboard
