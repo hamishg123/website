@@ -28,9 +28,11 @@
             border: none;
             border-radius: 5px;
             margin-top: 20px;
+            transition: background-color 0.3s ease;
         }
-        button:hover {
-            background-color: #ddd;
+        button:disabled {
+            cursor: not-allowed;
+            background-color: #ccc !important;
         }
         #leaderboard {
             margin-top: 20px;
@@ -60,14 +62,16 @@
 
         // Start the game
         startButton.addEventListener("click", () => {
+            console.log("Game started!");
             resetGame();
             instructions.textContent = "Wait for the green color...";
-            startButton.style.backgroundColor = "#ccc"; // Grey when waiting
+            startButton.style.backgroundColor = "#ccc"; // Grey while waiting
             startButton.disabled = true;
 
             // Random delay before turning green
             const delay = Math.random() * 3000 + 2000; // 2-5 seconds
             timeout = setTimeout(() => {
+                console.log("Button is now green!");
                 startButton.style.backgroundColor = "green"; // Turn green
                 startButton.disabled = false; // Enable clicking
                 instructions.textContent = "Click now!";
@@ -79,10 +83,13 @@
         startButton.addEventListener("click", () => {
             if (startButton.style.backgroundColor === "green") {
                 const reactionTime = performance.now() - startTime;
+                console.log(`Reaction time: ${reactionTime.toFixed(2)} ms`);
                 reactionTimeDisplay.textContent = `Your reaction time: ${reactionTime.toFixed(2)} ms`;
                 saveScore(reactionTime);
                 loadLeaderboard();
                 resetGame();
+            } else if (startButton.style.backgroundColor === "white") {
+                instructions.textContent = "Press Start to begin.";
             } else {
                 instructions.textContent = "Too soon! Wait for green.";
                 resetGame();
@@ -111,8 +118,9 @@
 
         // Reset the game state
         function resetGame() {
+            console.log("Resetting game...");
             clearTimeout(timeout);
-            startButton.style.backgroundColor = "#fff"; // Reset to white
+            startButton.style.backgroundColor = "white"; // Reset to white
             startButton.disabled = false; // Re-enable button
             instructions.textContent = "Click the button when it turns green!";
         }
