@@ -88,8 +88,6 @@
         const platformWidth = 80;
         const platformHeight = 10;
         const platformColor = "green";
-        const platformSpacing = 90;
-
         const lavaHeight = 20;
 
         let score = 0;
@@ -105,6 +103,10 @@
 
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
+        // Platform spacing configuration
+        const platformSpacingMin = 60;  // Minimum platform spacing
+        const platformSpacingMax = 120; // Maximum platform spacing
+
         // Initialize platforms with the first one directly under the player
         function initializePlatforms() {
             platforms.length = 0;
@@ -118,11 +120,11 @@
             player.x = platforms[0].x + platformWidth / 2 - player.width / 2;
             player.y = platforms[0].y - player.height;
 
-            // Generate additional platforms above
+            // Generate additional platforms above, ensuring spacing is within a reasonable range
             for (let i = 1; i < 8; i++) {
                 platforms.push({
                     x: Math.random() * (canvas.width - platformWidth),
-                    y: platforms[i - 1].y - platformSpacing
+                    y: platforms[i - 1].y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
                 });
             }
         }
@@ -178,7 +180,7 @@
                 platforms.shift();
                 platforms.push({
                     x: Math.random() * (canvas.width - platformWidth),
-                    y: platforms[platforms.length - 1].y - platformSpacing
+                    y: platforms[platforms.length - 1].y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin)
                 });
             }
 
