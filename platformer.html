@@ -16,9 +16,18 @@
             margin: 0 auto;
             background-color: #add8e6;
         }
+        #highScore {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
+    <div id="highScore">High Score: 0</div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
@@ -44,13 +53,17 @@
         const platformWidth = 80;
         const platformHeight = 10;
         const platformColor = "green";
-        const platformSpacing = 120;
+        const platformSpacing = 80;
 
         let score = 0;
+        let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
 
+        // Display the high score
+        document.getElementById("highScore").textContent = `High Score: ${highScore}`;
+
         // Create initial platforms
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             platforms.push({
                 x: Math.random() * (canvas.width - platformWidth),
                 y: canvas.height - i * platformSpacing
@@ -87,7 +100,6 @@
                     player.x < platform.x + platformWidth
                 ) {
                     player.vy = player.jumpStrength;
-                    player.isJumping = false;
                 }
             });
 
@@ -110,6 +122,7 @@
             // End game if the player falls off-screen
             if (player.y > canvas.height) {
                 gameOver = true;
+                updateHighScore();
                 alert(`Game Over! Your score: ${score}`);
                 resetGame();
             }
@@ -133,7 +146,16 @@
             // Draw score
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
-            ctx.fillText(`Score: ${score}`, 10, 30);
+            ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
+        }
+
+        // Update high score
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("highScore", highScore);
+            }
+            document.getElementById("highScore").textContent = `High Score: ${highScore}`;
         }
 
         // Reset game
@@ -143,7 +165,7 @@
             player.vy = 0;
             score = 0;
             platforms.length = 0;
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 8; i++) {
                 platforms.push({
                     x: Math.random() * (canvas.width - platformWidth),
                     y: canvas.height - i * platformSpacing
