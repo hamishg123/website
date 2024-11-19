@@ -81,7 +81,7 @@
             color: "red",
             vy: 0,
             jumpStrength: -10,
-            grounded: false
+            grounded: true
         };
 
         const platforms = [];
@@ -109,13 +109,15 @@
         function initializePlatforms() {
             platforms.length = 0;
 
-            platforms.push({
+            // First platform directly beneath the player
+            const startingPlatform = {
                 x: canvas.width / 2 - platformWidth / 2,
                 y: canvas.height - 100
-            });
+            };
+            platforms.push(startingPlatform);
 
-            player.x = platforms[0].x + platformWidth / 2 - player.width / 2;
-            player.y = platforms[0].y - player.height;
+            player.x = startingPlatform.x + platformWidth / 2 - player.width / 2;
+            player.y = startingPlatform.y - player.height;
 
             for (let i = 1; i < 8; i++) {
                 let prevPlatform = platforms[i - 1];
@@ -141,8 +143,10 @@
             if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
             if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += 5;
 
-            player.vy += 0.5;
-            player.y += player.vy;
+            if (!player.grounded) {
+                player.vy += 0.5;
+                player.y += player.vy;
+            }
 
             let grounded = false;
 
@@ -158,6 +162,8 @@
                     score++;
                 }
             });
+
+            player.grounded = grounded;
 
             if (!grounded && player.y + player.height > canvas.height - lavaHeight) {
                 endGame();
