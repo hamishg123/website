@@ -91,8 +91,8 @@
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
         const platformSpacing = {
-            vertical: 100, // Minimum vertical spacing
-            horizontal: 50 // Minimum horizontal spacing
+            vertical: 80, // Minimum vertical spacing
+            horizontal: 60 // Minimum horizontal spacing
         };
 
         // Initialize platforms
@@ -123,7 +123,7 @@
                 newY = previousPlatform.y - platformSpacing.vertical;
 
                 validPlatform = platforms.every(platform =>
-                    Math.abs(newX - platform.x) >= platformSpacing.horizontal // Avoid horizontal overlap
+                    Math.abs(newX - platform.x) >= platformSpacing.horizontal
                 );
             }
 
