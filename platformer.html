@@ -22,6 +22,7 @@
             left: 10px;
             font-size: 20px;
             color: white;
+            font-family: Arial, sans-serif;
         }
         #gameOverModal {
             position: fixed;
@@ -35,6 +36,14 @@
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
             display: none;
         }
+        #gameOverModal h1 {
+            margin: 0;
+            color: #333;
+        }
+        #gameOverModal p {
+            margin: 10px 0;
+            color: #555;
+        }
         #restartButton {
             padding: 10px 20px;
             font-size: 16px;
@@ -43,6 +52,9 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+        }
+        #restartButton:hover {
+            background: #218838;
         }
     </style>
 </head>
@@ -69,7 +81,7 @@
             color: "red",
             vy: 0,
             jumpStrength: -10,
-            grounded: true
+            grounded: false
         };
 
         const platforms = [];
@@ -81,8 +93,8 @@
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
         let gameOver = false;
-        let scrollingEnabled = false;
 
+        const keys = {};
         const highScoreDiv = document.getElementById("highScore");
         const gameOverModal = document.getElementById("gameOverModal");
         const finalScore = document.getElementById("finalScore");
@@ -90,16 +102,13 @@
 
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
-        const platformSpacing = {
-            vertical: 80, // Minimum vertical spacing
-            horizontal: 60 // Minimum horizontal spacing
-        };
+        const platformSpacingMin = 50;
+        const platformSpacingMax = 80;
+        const maxHorizontalSpacing = 150;
 
-        // Initialize platforms
         function initializePlatforms() {
             platforms.length = 0;
 
-            // Add first platform directly under the player
             platforms.push({
                 x: canvas.width / 2 - platformWidth / 2,
                 y: canvas.height - 100
@@ -108,47 +117,35 @@
             player.x = platforms[0].x + platformWidth / 2 - player.width / 2;
             player.y = platforms[0].y - player.height;
 
-            // Generate additional platforms
             for (let i = 1; i < 8; i++) {
-                addPlatform(platforms[platforms.length - 1]);
+                let prevPlatform = platforms[i - 1];
+                let newPlatformX = Math.random() * (canvas.width - platformWidth);
+                let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+
+                while (Math.abs(newPlatformX - prevPlatform.x) > maxHorizontalSpacing) {
+                    newPlatformX = Math.random() * (canvas.width - platformWidth);
+                }
+
+                platforms.push({ x: newPlatformX, y: newPlatformY });
             }
-        }
-
-        function addPlatform(previousPlatform) {
-            let newX, newY;
-            let validPlatform = false;
-
-            while (!validPlatform) {
-                newX = Math.random() * (canvas.width - platformWidth);
-                newY = previousPlatform.y - platformSpacing.vertical;
-
-                validPlatform = platforms.every(platform =>
-                    Math.abs(newX - platform.x) >= platformSpacing.horizontal
-                );
-            }
-
-            platforms.push({ x: newX, y: newY });
         }
 
         initializePlatforms();
 
-        // Key handling
-        const keys = {};
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
 
         function update() {
             if (gameOver) return;
 
-            // Player movement
             if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
             if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += 5;
 
-            // Gravity and jumping
-            if (!player.grounded) player.vy += 0.5;
+            player.vy += 0.5;
             player.y += player.vy;
 
-            // Platform collision
+            let grounded = false;
+
             platforms.forEach(platform => {
                 if (
                     player.y + player.height <= platform.y &&
@@ -156,49 +153,51 @@
                     player.x + player.width > platform.x &&
                     player.x < platform.x + platformWidth
                 ) {
+                    grounded = true;
                     player.vy = player.jumpStrength;
-                    scrollingEnabled = true;
+                    score++;
                 }
             });
 
-            // Scroll platforms if player is high
-            if (scrollingEnabled && player.y < canvas.height / 2) {
+            if (!grounded && player.y + player.height > canvas.height - lavaHeight) {
+                endGame();
+            }
+
+            if (player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
-                score++;
-            }
 
-            // Add new platforms
-            if (platforms[0].y > canvas.height) {
-                platforms.shift();
-                addPlatform(platforms[platforms.length - 1]);
-            }
+                if (platforms[0].y > canvas.height) {
+                    platforms.shift();
 
-            // Check for lava collision
-            if (player.y + player.height > canvas.height - lavaHeight) endGame();
+                    let prevPlatform = platforms[platforms.length - 1];
+                    let newPlatformX = Math.random() * (canvas.width - platformWidth);
+                    let newPlatformY = prevPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+
+                    while (Math.abs(newPlatformX - prevPlatform.x) > maxHorizontalSpacing) {
+                        newPlatformX = Math.random() * (canvas.width - platformWidth);
+                    }
+
+                    platforms.push({ x: newPlatformX, y: newPlatformY });
+                }
+            }
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw player
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
-            // Draw platforms
             ctx.fillStyle = platformColor;
-            platforms.forEach(platform => {
-                ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight);
-            });
+            platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platformWidth, platformHeight));
 
-            // Draw lava
             ctx.fillStyle = "red";
             ctx.fillRect(0, canvas.height - lavaHeight, canvas.width, lavaHeight);
 
-            // Draw score
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
-            ctx.fillText(`Score: ${score}`, 10, 30);
+            ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
         }
 
         function endGame() {
@@ -207,8 +206,9 @@
                 highScore = score;
                 localStorage.setItem("highScore", highScore);
             }
+
             highScoreDiv.textContent = `High Score: ${highScore}`;
-            finalScore.textContent = `Your Score: ${score}` + (score > highScore ? " (New High Score!)" : "");
+            finalScore.textContent = `Your Score: ${score}${score === highScore ? " (New High Score!)" : ""}`;
             gameOverModal.style.display = "block";
         }
 
@@ -218,7 +218,6 @@
             initializePlatforms();
             gameOverModal.style.display = "none";
             player.vy = 0;
-            scrollingEnabled = false;
         });
 
         function gameLoop() {
