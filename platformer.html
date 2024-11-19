@@ -90,10 +90,10 @@
 
         highScoreDiv.textContent = `High Score: ${highScore}`;
 
-        // Platform spacing configuration
-        const platformSpacingMin = 60;  // Minimum vertical spacing
-        const platformSpacingMax = 100; // Maximum vertical spacing
-        const maxHorizontalSpacing = 150; // Maximum horizontal distance between platforms
+        const platformSpacing = {
+            vertical: 100, // Minimum vertical spacing
+            horizontal: 50 // Minimum horizontal spacing
+        };
 
         // Initialize platforms
         function initializePlatforms() {
@@ -120,12 +120,10 @@
 
             while (!validPlatform) {
                 newX = Math.random() * (canvas.width - platformWidth);
-                newY = previousPlatform.y - (Math.random() * (platformSpacingMax - platformSpacingMin) + platformSpacingMin);
+                newY = previousPlatform.y - platformSpacing.vertical;
 
-                // Ensure platforms are not overlapping or on the same vertical level
                 validPlatform = platforms.every(platform =>
-                    Math.abs(newX - platform.x) > platformWidth && // Avoid horizontal overlap
-                    Math.abs(newY - platform.y) > platformSpacingMin // Ensure vertical distance
+                    Math.abs(newX - platform.x) >= platformSpacing.horizontal // Avoid horizontal overlap
                 );
             }
 
@@ -134,6 +132,8 @@
 
         initializePlatforms();
 
+        // Key handling
+        const keys = {};
         window.addEventListener("keydown", (e) => keys[e.key] = true);
         window.addEventListener("keyup", (e) => keys[e.key] = false);
 
