@@ -1,0 +1,102 @@
+<div id="game" class="focusLeft">
+		<div id="javascriptError" style="display: none;"></div>
+
+		<canvas id="backgroundCanvas" width="811" height="601"></canvas>
+		
+		<div id="goldenCookie" class="goldenCookie"></div>
+		<div id="seasonPopup" class="seasonPopup"></div>
+		<div id="alert"></div>
+		<div id="particles"><div id="particle0" class="particle title"></div><div id="particle1" class="particle title"></div><div id="particle2" class="particle title"></div><div id="particle3" class="particle title"></div><div id="particle4" class="particle title"></div><div id="particle5" class="particle title"></div><div id="particle6" class="particle title"></div><div id="particle7" class="particle title"></div><div id="particle8" class="particle title"></div><div id="particle9" class="particle title"></div><div id="particle10" class="particle title"></div><div id="particle11" class="particle title"></div><div id="particle12" class="particle title"></div><div id="particle13" class="particle title"></div><div id="particle14" class="particle title"></div><div id="particle15" class="particle title"></div><div id="particle16" class="particle title"></div><div id="particle17" class="particle title"></div><div id="particle18" class="particle title"></div><div id="particle19" class="particle title"></div></div>
+		<div id="notes"></div>
+		<div id="darken"></div>
+		<div id="promptAnchor"><div id="prompt" class="framed"><div id="promptContent"></div><div class="close" onclick="Game.ClosePrompt();">x</div></div></div>
+		<div id="versionNumber" class="title">v.1.0466</div>
+		<div id="timers"><div id="timer-frenzy" style="display: none;"></div><div id="timer-elderFrenzy" style="display: none;"></div><div id="timer-clot" style="display: none;"></div><div id="timer-clickFrenzy" style="display: none;"></div></div>
+		
+		<div id="sectionLeft" class="inset" style="cursor: auto;">
+			<canvas id="backgroundLeftCanvas" style="z-index:5;" width="243" height="601"></canvas>
+			<div class="blackFiller"></div>
+			<div class="blackGradient"></div>
+			<div id="sectionLeftInfo"></div>
+			<div id="cookies" class="title">0 cookies<div style="font-size:50%;">per second : 0.0</div></div>
+			<div id="bakeryNameAnchor"><div id="bakeryName" class="title">Happy Pirate's bakery</div></div>
+			<div id="cookieAnchor">
+				<div id="bigCookie"></div>
+				<div id="cookieNumbers"></div>
+			</div>
+		</div>
+
+		<div class="separatorLeft"></div>
+		<div class="separatorRight"></div>
+			
+		<div id="sectionMiddle" class="inset">
+			<div id="comments" class="inset title">
+				<div id="prefsButton" class="button">Menu</div>
+				<div id="statsButton" class="button">Stats</div>
+				<div id="logButton" class="button" style="font-size:80%;">Updates</div>
+				<div id="commentsText" class="commentsText">You feel like making cookies. But nobody wants to eat your cookies.</div>
+				<div class="separatorBottom"></div>
+			</div>
+			<div id="buildingsTitle" class="inset title zoneTitle">Buildings</div>
+			<div id="rows"><div class="row" id="row1"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas1" width="0" height="0"></canvas></div><div class="row" id="row2"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas2" width="0" height="0"></canvas></div><div class="row" id="row3"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas3" width="0" height="0"></canvas></div><div class="row" id="row4"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas4" width="0" height="0"></canvas></div><div class="row" id="row5"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas5" width="0" height="0"></canvas></div><div class="row" id="row6"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas6" width="0" height="0"></canvas></div><div class="row" id="row7"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas7" width="0" height="0"></canvas></div><div class="row" id="row8"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas8" width="0" height="0"></canvas></div><div class="row" id="row9"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas9" width="0" height="0"></canvas></div><div class="row" id="row10"><div class="separatorBottom"></div><canvas class="rowCanvas" id="rowCanvas10" width="0" height="0"></canvas></div></div>
+			<div id="menu"></div>
+			<div id="donateBox">
+				<form target="_blank" action="https://www.paypal.com/cgi-bin/webscr" method="post" id="donate" style="margin:0px 16px;">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="BBN2WL3TC6QH4">
+				<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal â€” The safer, easier way to pay online.">
+				<img alt="" border="0" src="https://www.paypalobjects.com/nl_NL/i/scr/pixel.gif" width="1" height="1">
+				</form>
+				Help us keep developing the game!
+			</div>
+		</div>
+
+		<div id="sectionRight" class="inset">
+			<div id="store">
+				<div id="storeTitle" class="inset title zoneTitle">Store</div>
+				<div id="upgrades" class="storeSection"></div>
+				<div id="products" class="storeSection"><div class="product locked disabled" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[0].tooltip();},'store');" id="product0"><div class="icon off" id="productIconOff0" style="background-image: url(&quot;img/cursoriconOff.png&quot;);"></div><div class="icon" id="productIcon0" style="background-image: url(&quot;img/cursoricon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName0">Cursor</div><span class="price" id="productPrice0">15</span><div class="title owned" id="productOwned0"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-0">Buy 10</div><div style="left:100px;" id="buttonSell-0">Sell 1</div><div style="left:200px;" id="buttonSellAll-0">Sell all</div></div></div><div class="product locked disabled" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[1].tooltip();},'store');" id="product1"><div class="icon off" id="productIconOff1" style="background-image: url(&quot;img/grandmaIconOff.png&quot;);"></div><div class="icon" id="productIcon1" style="background-image: url(&quot;img/grandmaIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName1">Grandma</div><span class="price" id="productPrice1">100</span><div class="title owned" id="productOwned1"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-1">Buy 10</div><div style="left:100px;" id="buttonSell-1">Sell 1</div><div style="left:200px;" id="buttonSellAll-1">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[2].tooltip();},'store');" id="product2"><div class="icon off" id="productIconOff2" style="background-image: url(&quot;img/farmIconOff.png&quot;);"></div><div class="icon" id="productIcon2" style="background-image: url(&quot;img/farmIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName2">Farm</div><span class="price" id="productPrice2">500</span><div class="title owned" id="productOwned2"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-2">Buy 10</div><div style="left:100px;" id="buttonSell-2">Sell 1</div><div style="left:200px;" id="buttonSellAll-2">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[3].tooltip();},'store');" id="product3"><div class="icon off" id="productIconOff3" style="background-image: url(&quot;img/factoryIconOff.png&quot;);"></div><div class="icon" id="productIcon3" style="background-image: url(&quot;img/factoryIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName3">Factory</div><span class="price" id="productPrice3">3,000</span><div class="title owned" id="productOwned3"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-3">Buy 10</div><div style="left:100px;" id="buttonSell-3">Sell 1</div><div style="left:200px;" id="buttonSellAll-3">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[4].tooltip();},'store');" id="product4"><div class="icon off" id="productIconOff4" style="background-image: url(&quot;img/mineIconOff.png&quot;);"></div><div class="icon" id="productIcon4" style="background-image: url(&quot;img/mineIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName4">Mine</div><span class="price" id="productPrice4">10,000</span><div class="title owned" id="productOwned4"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-4">Buy 10</div><div style="left:100px;" id="buttonSell-4">Sell 1</div><div style="left:200px;" id="buttonSellAll-4">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[5].tooltip();},'store');" id="product5"><div class="icon off" id="productIconOff5" style="background-image: url(&quot;img/shipmentIconOff.png&quot;);"></div><div class="icon" id="productIcon5" style="background-image: url(&quot;img/shipmentIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName5">Shipment</div><span class="price" id="productPrice5">40,000</span><div class="title owned" id="productOwned5"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-5">Buy 10</div><div style="left:100px;" id="buttonSell-5">Sell 1</div><div style="left:200px;" id="buttonSellAll-5">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[6].tooltip();},'store');" id="product6"><div class="icon off" id="productIconOff6" style="background-image: url(&quot;img/alchemylabIconOff.png&quot;);"></div><div class="icon" id="productIcon6" style="background-image: url(&quot;img/alchemylabIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName6">Alchemy lab</div><span class="price" id="productPrice6">200,000</span><div class="title owned" id="productOwned6"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-6">Buy 10</div><div style="left:100px;" id="buttonSell-6">Sell 1</div><div style="left:200px;" id="buttonSellAll-6">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[7].tooltip();},'store');" id="product7"><div class="icon off" id="productIconOff7" style="background-image: url(&quot;img/portalIconOff.png&quot;);"></div><div class="icon" id="productIcon7" style="background-image: url(&quot;img/portalIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName7">Portal</div><span class="price" id="productPrice7">1.667 million</span><div class="title owned" id="productOwned7"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-7">Buy 10</div><div style="left:100px;" id="buttonSell-7">Sell 1</div><div style="left:200px;" id="buttonSellAll-7">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[8].tooltip();},'store');" id="product8"><div class="icon off" id="productIconOff8" style="background-image: url(&quot;img/timemachineIconOff.png&quot;);"></div><div class="icon" id="productIcon8" style="background-image: url(&quot;img/timemachineIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName8">Time machine</div><span class="price" id="productPrice8">123.457 million</span><div class="title owned" id="productOwned8"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-8">Buy 10</div><div style="left:100px;" id="buttonSell-8">Sell 1</div><div style="left:200px;" id="buttonSellAll-8">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[9].tooltip();},'store');" id="product9"><div class="icon off" id="productIconOff9" style="background-image: url(&quot;img/antimattercondenserIconOff.png&quot;);"></div><div class="icon" id="productIcon9" style="background-image: url(&quot;img/antimattercondenserIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName9"><span style="font-size:65%;">Antimatter condenser</span></div><span class="price" id="productPrice9">4 billion</span><div class="title owned" id="productOwned9"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-9">Buy 10</div><div style="left:100px;" id="buttonSell-9">Sell 1</div><div style="left:200px;" id="buttonSellAll-9">Sell all</div></div></div><div class="product locked disabled toggledOff" onmouseout="Game.tooltip.hide();" onmouseover="Game.tooltip.draw(this,function(){return Game.ObjectsById[10].tooltip();},'store');" id="product10"><div class="icon off" id="productIconOff10" style="background-image: url(&quot;img/prismIconOff.png&quot;);"></div><div class="icon" id="productIcon10" style="background-image: url(&quot;img/prismIcon.png&quot;);"></div><div class="content"><div class="lockedTitle">???</div><div class="title" id="productName10">Prism</div><span class="price" id="productPrice10">75 billion</span><div class="title owned" id="productOwned10"></div></div><div class="buySell"><div style="left:0px;" id="buttonBuy10-10">Buy 10</div><div style="left:100px;" id="buttonSell-10">Sell 1</div><div style="left:200px;" id="buttonSellAll-10">Sell all</div></div></div></div>
+			</div>
+			
+			
+			<div id="support" style="margin-top: 130px; height: auto !important;">
+				<div class="supportComment">v Sponsored links v</div>
+				<div style="position: relative; height: auto !important;">
+				
+					<div style="position: relative; z-index: 100; min-height: 0px !important; height: auto !important;">
+					
+						<script async="" src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+						<!-- Cookie Clicker Responsive -->
+						<ins class="adsbygoogle" style="display: block; margin: auto; height: 600px;" data-ad-client="ca-pub-8491708950677704" data-ad-slot="9780186019" data-ad-format="auto" data-full-width-responsive="true" data-adsbygoogle-status="done" data-ad-status="filled"><div id="aswift_0_host" style="border: none; height: 600px; width: 300px; margin: 0px; padding: 0px; position: relative; visibility: visible; background-color: transparent; display: inline-block; overflow: visible;"><iframe id="aswift_0" name="aswift_0" browsingtopics="true" style="left:0;position:absolute;top:0;border:0;width:300px;height:600px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="300" height="600" frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allow="attribution-reporting; run-ad-auction" src="https://googleads.g.doubleclick.net/pagead/ads?gdpr=1&amp;gdpr_consent=CQIY4EAQIY4EAEsACBENBQFoAP_gAEPgABpYINJD7C7FbSFCwH5zaLsAMAhHRsAAQoQAAASBAmABQAKQIAQCgkAQFASgBAACAAAAICRBIQIECAAAAUAAQAAAAAAEAAAAAAAIIAAAgAEAAAAIAAACAIAAEAAIAAAAEAAAmAgAAIIACAAAgAAAAAAAAAAAAAAAAgCAAAAAAAAAAAAAAAAAAQOhSD2F2K2kKFkPCmwXYAYBCujYAAhQgAAAkCBMACgAUgQAgFJIAgCIFAAAAAAAAAQEiCQAAQABAAAIACgAAAAAAIAAAAAAAQQAABAAIAAAAAAAAEAQAAIAAQAAAAIAABEhCAAQQAEAAAAAAAQAAAAAAAAAAABAAA&amp;addtl_consent=2~70.89.93.108.122.149.196.236.259.311.313.323.358.415.449.486.494.495.540.574.609.864.981.1029.1048.1051.1095.1097.1126.1205.1276.1301.1365.1415.1449.1514.1570.1577.1598.1651.1716.1735.1753.1765.1870.1878.1889.1958.1960.2072.2253.2299.2373.2415.2506.2526.2531.2568.2571.2575.2624.2677.2778~dv.&amp;client=ca-pub-8491708950677704&amp;output=html&amp;h=600&amp;slotname=9780186019&amp;adk=3206912831&amp;adf=2938241456&amp;pi=t.ma~as.9780186019&amp;w=300&amp;abgtt=13&amp;fwrn=4&amp;fwrnh=100&amp;lmt=1561391221&amp;rafmt=1&amp;format=300x600&amp;url=https%3A%2F%2Forteil.dashnet.org%2Fcookieclicker%2Fv10466%2F&amp;fwr=0&amp;fwrattr=true&amp;rpe=1&amp;resp_fmts=4&amp;wgl=1&amp;uach=WyJDaHJvbWUgT1MiLCIxNjA2My4zMi4wIiwieDg2IiwiIiwiMTMxLjAuNjc3OC43NSIsbnVsbCwwLG51bGwsIjY0IixbWyJHb29nbGUgQ2hyb21lIiwiMTMxLjAuNjc3OC43NSJdLFsiQ2hyb21pdW0iLCIxMzEuMC42Nzc4Ljc1Il0sWyJOb3RfQSBCcmFuZCIsIjI0LjAuMC4wIl1dLDBd&amp;dt=1732131906484&amp;bpp=10&amp;bdt=383&amp;idt=215&amp;shv=r20241119&amp;mjsv=m202411140101&amp;ptt=9&amp;saldr=aa&amp;abxe=1&amp;cookie_enabled=1&amp;eoidce=1&amp;correlator=1115960840804&amp;frm=20&amp;pv=2&amp;u_tz=0&amp;u_his=1&amp;u_h=768&amp;u_w=1366&amp;u_ah=720&amp;u_aw=1366&amp;u_cd=24&amp;u_sd=1&amp;dmc=4&amp;adx=1066&amp;ady=447&amp;biw=1366&amp;bih=633&amp;scr_x=0&amp;scr_y=0&amp;eid=31088129%2C31088581%2C31088961%2C95345967&amp;oid=2&amp;pvsid=3306507364136498&amp;tmod=306773755&amp;uas=3&amp;nvt=1&amp;fc=896&amp;brdim=0%2C0%2C0%2C0%2C1366%2C0%2C1366%2C720%2C1366%2C633&amp;vis=1&amp;rsz=%7C%7CaeE%7C&amp;abl=CA&amp;pfx=0&amp;fu=128&amp;bc=31&amp;bz=1&amp;td=1&amp;tdf=2&amp;psd=W251bGwsbnVsbCxudWxsLDNd&amp;nt=1&amp;ifi=1&amp;uci=a!1&amp;fsb=1&amp;dtd=3902" data-google-container-id="a!1" tabindex="0" title="Advertisement" aria-label="Advertisement" data-google-query-id="CIjel5rW64kDFfluFQgdoeACIA" data-load-complete="true"></iframe></div></ins>
+						<script>
+						(adsbygoogle = window.adsbygoogle || []).push({});
+						</script>
+						
+						<div style="height:16px;"></div>
+						
+						<!-- AdventureQuest Worlds banner -->
+						<a class="ad" id="aqad" href="http://www.aq.com/landing/cookie/?utm_campaign=AQW_CookieClicker&amp;utm_source=CookieClicker" target="_blank" title="AdventureQuest Worlds" style="background:url(img/aqworldsbanner.jpg) no-repeat;width:300px;height:64px;display:block;position:relative;margin:0px auto;">
+						</a>
+						
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+		
+		<div id="focusButtons">
+			<div id="focusLeft" class="title">Cookie</div>
+			<div id="focusMiddle" class="title" style="font-size:80%;padding-top:18px;padding-bottom:14px;">Buildings</div>
+			<div id="focusRight" class="title">Store</div>
+			<div id="focusMenu" class="title">Menu</div>
+		</div>
+		<div id="compactOverlay" class="title">
+			<div id="compactCommentsText" class="commentsText">You feel like making cookies. But nobody wants to eat your cookies.</div>
+			<div id="compactCookies">0 cookies<div style="font-size:50%;">per second : 0.0</div></div>
+			<div class="separatorBottom"></div>
+		</div>
+		
+		<div id="tooltipAnchor" style="left: 790px; right: auto; top: 0px;"><div id="tooltip" class="framed" onmouseout="Game.tooltip.hide();" style="opacity: 1;"></div></div>
+
+	</div>
