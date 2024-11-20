@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Game</title>
+    <title>Clicker Game with Upgrades</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,7 +35,7 @@
         .upgrade {
             margin: 10px 0;
             padding: 10px 20px;
-            font-size: 18px;
+            font-size: 16px;
             background: #007bff;
             color: white;
             border: none;
@@ -57,8 +57,7 @@
     </div>
     <div class="upgrades">
         <h2>Upgrades</h2>
-        <button class="upgrade" id="upgradeCPC">Increase CPC (Cost: <span id="cpcCost">10</span>)</button>
-        <button class="upgrade" id="upgradeCPS">Increase CPS (Cost: <span id="cpsCost">25</span>)</button>
+        <div id="upgradeContainer"></div>
     </div>
 
     <script>
@@ -66,26 +65,43 @@
         let score = parseInt(localStorage.getItem("score")) || 0;
         let cpc = parseInt(localStorage.getItem("cpc")) || 1;
         let cps = parseInt(localStorage.getItem("cps")) || 0;
-        let cpcCost = parseInt(localStorage.getItem("cpcCost")) || 10;
-        let cpsCost = parseInt(localStorage.getItem("cpsCost")) || 25;
+        let upgrades = JSON.parse(localStorage.getItem("upgrades")) || [
+            { name: "Increase CPC", effect: () => cpc++, cost: 10 },
+            { name: "Increase CPS", effect: () => cps++, cost: 25 },
+            { name: "Double CPC", effect: () => (cpc *= 2), cost: 100 },
+            { name: "Double CPS", effect: () => (cps *= 2), cost: 250 },
+            { name: "Triple CPC", effect: () => (cpc *= 3), cost: 500 },
+            { name: "Triple CPS", effect: () => (cps *= 3), cost: 1000 },
+            { name: "Boost CPC by 5", effect: () => (cpc += 5), cost: 200 },
+            { name: "Boost CPS by 5", effect: () => (cps += 5), cost: 400 },
+            { name: "Multiplier x2", effect: () => (score *= 2), cost: 300 },
+            { name: "Multiplier x3", effect: () => (score *= 3), cost: 600 },
+            { name: "CPC +10", effect: () => (cpc += 10), cost: 1000 },
+            { name: "CPS +10", effect: () => (cps += 10), cost: 1500 }
+        ];
 
         // DOM elements
         const scoreDisplay = document.getElementById("score");
         const cpcDisplay = document.getElementById("cpc");
         const cpsDisplay = document.getElementById("cps");
-        const cpcCostDisplay = document.getElementById("cpcCost");
-        const cpsCostDisplay = document.getElementById("cpsCost");
         const clickButton = document.getElementById("clickButton");
-        const upgradeCPCButton = document.getElementById("upgradeCPC");
-        const upgradeCPSButton = document.getElementById("upgradeCPS");
+        const upgradeContainer = document.getElementById("upgradeContainer");
 
         // Update UI
         function updateUI() {
-            scoreDisplay.textContent = score;
+            scoreDisplay.textContent = Math.floor(score);
             cpcDisplay.textContent = cpc;
             cpsDisplay.textContent = cps;
-            cpcCostDisplay.textContent = cpcCost;
-            cpsCostDisplay.textContent = cpsCost;
+
+            upgradeContainer.innerHTML = ""; // Clear upgrade buttons
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade";
+                button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
+                button.disabled = score < upgrade.cost;
+                button.addEventListener("click", () => purchaseUpgrade(index));
+                upgradeContainer.appendChild(button);
+            });
         }
 
         // Save progress
@@ -93,8 +109,7 @@
             localStorage.setItem("score", score);
             localStorage.setItem("cpc", cpc);
             localStorage.setItem("cps", cps);
-            localStorage.setItem("cpcCost", cpcCost);
-            localStorage.setItem("cpsCost", cpsCost);
+            localStorage.setItem("upgrades", JSON.stringify(upgrades));
         }
 
         // Click button logic
@@ -104,27 +119,17 @@
             saveProgress();
         });
 
-        // Upgrade CPC
-        upgradeCPCButton.addEventListener("click", () => {
-            if (score >= cpcCost) {
-                score -= cpcCost;
-                cpc++;
-                cpcCost = Math.floor(cpcCost * 1.5);
+        // Purchase upgrade
+        function purchaseUpgrade(index) {
+            const upgrade = upgrades[index];
+            if (score >= upgrade.cost) {
+                score -= upgrade.cost;
+                upgrade.effect();
+                upgrade.cost = Math.floor(upgrade.cost * 1.5); // Increase cost
                 updateUI();
                 saveProgress();
             }
-        });
-
-        // Upgrade CPS
-        upgradeCPSButton.addEventListener("click", () => {
-            if (score >= cpsCost) {
-                score -= cpsCost;
-                cps++;
-                cpsCost = Math.floor(cpsCost * 1.5);
-                updateUI();
-                saveProgress();
-            }
-        });
+        }
 
         // Automatic clicks per second
         setInterval(() => {
