@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Game with Upgrades</title>
+    <title>Clicker Game with Offline Earnings</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -65,6 +65,7 @@
         let score = parseInt(localStorage.getItem("score")) || 0;
         let cpc = parseInt(localStorage.getItem("cpc")) || 1;
         let cps = parseInt(localStorage.getItem("cps")) || 0;
+        let lastActive = parseInt(localStorage.getItem("lastActive")) || Date.now();
         let upgrades = JSON.parse(localStorage.getItem("upgrades")) || [
             { name: "Increase CPC", effect: () => cpc++, cost: 10 },
             { name: "Increase CPS", effect: () => cps++, cost: 25 },
@@ -87,61 +88,16 @@
         const clickButton = document.getElementById("clickButton");
         const upgradeContainer = document.getElementById("upgradeContainer");
 
+        // Calculate offline earnings
+        function calculateOfflineEarnings() {
+            const currentTime = Date.now();
+            const elapsedTime = (currentTime - lastActive) / 1000; // Convert ms to seconds
+            const offlineEarnings = cps * elapsedTime;
+            score += offlineEarnings;
+            alert(`Welcome back! You earned ${Math.floor(offlineEarnings)} points while you were away.`);
+            updateUI();
+        }
+
         // Update UI
         function updateUI() {
-            scoreDisplay.textContent = Math.floor(score);
-            cpcDisplay.textContent = cpc;
-            cpsDisplay.textContent = cps;
-
-            upgradeContainer.innerHTML = ""; // Clear upgrade buttons
-            upgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade";
-                button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
-                button.disabled = score < upgrade.cost;
-                button.addEventListener("click", () => purchaseUpgrade(index));
-                upgradeContainer.appendChild(button);
-            });
-        }
-
-        // Save progress
-        function saveProgress() {
-            localStorage.setItem("score", score);
-            localStorage.setItem("cpc", cpc);
-            localStorage.setItem("cps", cps);
-            localStorage.setItem("upgrades", JSON.stringify(upgrades));
-        }
-
-        // Click button logic
-        clickButton.addEventListener("click", () => {
-            score += cpc;
-            updateUI();
-            saveProgress();
-        });
-
-        // Purchase upgrade
-        function purchaseUpgrade(index) {
-            const upgrade = upgrades[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                upgrade.effect();
-                upgrade.cost = Math.floor(upgrade.cost * 1.5); // Increase cost
-                updateUI();
-                saveProgress();
-            }
-        }
-
-        // Automatic clicks per second
-        setInterval(() => {
-            if (cps > 0) {
-                score += cps;
-                updateUI();
-                saveProgress();
-            }
-        }, 1000);
-
-        // Initial UI update
-        updateUI();
-    </script>
-</body>
-</html>
+            scoreDisplay.textContent = Math
