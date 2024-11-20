@@ -3,232 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organized Clicker Game</title>
+    <title>Clicker Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background: linear-gradient(to bottom, #87CEEB, #1E90FF);
-            color: white;
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background: #f0f4f8;
         }
         h1 {
-            margin-top: 20px;
+            color: #333;
         }
-        #clickButton {
-            margin-top: 20px;
-            padding: 20px 40px;
-            font-size: 24px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
+        #game-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         }
-        #clickButton:hover {
-            background: #218838;
-        }
-        .stats, .upgrades {
-            margin-top: 20px;
-        }
-        .upgrade-category {
-            margin: 20px 0;
-        }
-        .upgrade {
-            margin: 10px 0;
+        button {
             padding: 10px 20px;
+            margin: 10px;
             font-size: 16px;
             background: #007bff;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
         }
-        .upgrade:hover {
+        button:hover {
             background: #0056b3;
         }
-        #resetButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        #upgrades-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
         }
-        #resetButton:hover {
-            background: #c82333;
+        .upgrade {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            width: 200px;
+            text-align: left;
+        }
+        .upgrade button {
+            display: block;
+            margin: 10px 0 0;
+            background: #28a745;
+        }
+        .upgrade button:hover {
+            background: #218838;
         }
     </style>
 </head>
 <body>
     <h1>Clicker Game</h1>
-    <button id="clickButton">Click Me!</button>
-    <div class="stats">
-        <p>Score: <span id="score">0</span></p>
-        <p>Clicks Per Click (CPC): <span id="cpc">1</span></p>
-        <p>Clicks Per Second (CPS): <span id="cps">0</span></p>
+    <div id="game-container">
+        <h2 id="score">Score: 0</h2>
+        <button id="click-button">Click Me!</button>
+        <h3 id="cps">CPS: 0</h3>
+        <button id="reset-button">Reset</button>
+        <div id="upgrades-container"></div>
     </div>
-    <div class="upgrades">
-        <h2>Upgrades</h2>
-        <div class="upgrade-category">
-            <h3>CPC Upgrades</h3>
-            <div id="cpcUpgrades"></div>
-        </div>
-        <div class="upgrade-category">
-            <h3>CPS Upgrades</h3>
-            <div id="cpsUpgrades"></div>
-        </div>
-    </div>
-    <button id="resetButton">Reset Game</button>
 
     <script>
-        // Load saved data or set defaults
-        let score = parseInt(localStorage.getItem("score")) || 0;
-        let cpc = parseInt(localStorage.getItem("cpc")) || 1;
-        let cps = parseInt(localStorage.getItem("cps")) || 0;
-        let lastActive = parseInt(localStorage.getItem("lastActive")) || Date.now();
-        let cpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [
-            { name: "Increase CPC by 1", effect: () => cpc += 1, cost: 10 },
-            { name: "Boost CPC by 2", effect: () => cpc += 2, cost: 50 },
-            { name: "Boost CPC by 5", effect: () => cpc += 5, cost: 200 },
-            { name: "Boost CPC by 10", effect: () => cpc += 10, cost: 1000 },
-            { name: "CPC +20", effect: () => cpc += 20, cost: 5000 }
-        ];
-        let cpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [
-            { name: "Increase CPS by 1", effect: () => cps += 1, cost: 25 },
-            { name: "Boost CPS by 2", effect: () => cps += 2, cost: 100 },
-            { name: "Boost CPS by 5", effect: () => cps += 5, cost: 400 },
-            { name: "Boost CPS by 10", effect: () => cps += 10, cost: 2000 },
-            { name: "CPS +20", effect: () => cps += 20, cost: 10000 }
+        let score = 0;
+        let cpc = 1; // Clicks per click
+        let cps = 0; // Clicks per second
+        let lastActive = Date.now();
+
+        const cpcUpgrades = [
+            { name: "CPC +1", effect: () => cpc += 1, cost: 100 },
+            { name: "CPC +5", effect: () => cpc += 5, cost: 1000 },
+            { name: "CPC +10", effect: () => cpc += 10, cost: 5000 },
+            { name: "CPC +50", effect: () => cpc += 50, cost: 25000 },
+            { name: "CPC +100", effect: () => cpc += 100, cost: 100000 },
+            { name: "CPC +500", effect: () => cpc += 500, cost: 500000 },
+            { name: "CPC +1k", effect: () => cpc += 1000, cost: 2000000 },
+            { name: "CPC +5k", effect: () => cpc += 5000, cost: 10000000 },
+            { name: "CPC +10k", effect: () => cpc += 10000, cost: 50000000 },
+            { name: "CPC +50k", effect: () => cpc += 50000, cost: 200000000 }
         ];
 
-        // DOM elements
+        const cpsUpgrades = [
+            { name: "CPS +1", effect: () => cps += 1, cost: 200 },
+            { name: "CPS +5", effect: () => cps += 5, cost: 1500 },
+            { name: "CPS +10", effect: () => cps += 10, cost: 7500 },
+            { name: "CPS +50", effect: () => cps += 50, cost: 50000 },
+            { name: "CPS +100", effect: () => cps += 100, cost: 200000 },
+            { name: "CPS +500", effect: () => cps += 500, cost: 1000000 },
+            { name: "CPS +1k", effect: () => cps += 1000, cost: 5000000 },
+            { name: "CPS +5k", effect: () => cps += 5000, cost: 20000000 },
+            { name: "CPS +10k", effect: () => cps += 10000, cost: 100000000 },
+            { name: "CPS +50k", effect: () => cps += 50000, cost: 500000000 }
+        ];
+
+        const upgradesContainer = document.getElementById("upgrades-container");
         const scoreDisplay = document.getElementById("score");
-        const cpcDisplay = document.getElementById("cpc");
         const cpsDisplay = document.getElementById("cps");
-        const clickButton = document.getElementById("clickButton");
-        const cpcUpgradeContainer = document.getElementById("cpcUpgrades");
-        const cpsUpgradeContainer = document.getElementById("cpsUpgrades");
-        const resetButton = document.getElementById("resetButton");
+        const clickButton = document.getElementById("click-button");
+        const resetButton = document.getElementById("reset-button");
 
-        // Calculate offline earnings
-        function calculateOfflineEarnings() {
-            const currentTime = Date.now();
-            const elapsedTime = (currentTime - lastActive) / 1000; // Convert ms to seconds
-            const offlineEarnings = cps * elapsedTime;
-            score += offlineEarnings;
-            alert(`Welcome back! You earned ${Math.floor(offlineEarnings)} points while you were away.`);
-            updateUI();
+        // Format numbers into k/M/B
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+            return Math.floor(num).toString();
         }
 
-        // Update UI
         function updateUI() {
-            scoreDisplay.textContent = Math.floor(score);
-            cpcDisplay.textContent = cpc;
-            cpsDisplay.textContent = cps;
+            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+            upgradesContainer.innerHTML = "";
 
-            cpcUpgradeContainer.innerHTML = ""; // Clear CPC upgrade buttons
-            cpsUpgradeContainer.innerHTML = ""; // Clear CPS upgrade buttons
-
-            cpcUpgrades.forEach((upgrade, index) => {
+            [...cpcUpgrades, ...cpsUpgrades].forEach((upgrade, index) => {
+                const upgradeDiv = document.createElement("div");
+                upgradeDiv.className = "upgrade";
+                upgradeDiv.innerHTML = `
+                    <strong>${upgrade.name}</strong><br>
+                    Cost: ${formatNumber(upgrade.cost)}
+                `;
                 const button = document.createElement("button");
-                button.className = "upgrade";
-                button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
+                button.textContent = "Buy";
                 button.disabled = score < upgrade.cost;
-                button.addEventListener("click", () => purchaseUpgrade(cpcUpgrades, index));
-                cpcUpgradeContainer.appendChild(button);
-            });
 
-            cpsUpgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade";
-                button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
-                button.disabled = score < upgrade.cost;
-                button.addEventListener("click", () => purchaseUpgrade(cpsUpgrades, index));
-                cpsUpgradeContainer.appendChild(button);
+                button.addEventListener("click", () => {
+                    if (score >= upgrade.cost) {
+                        score -= upgrade.cost;
+                        upgrade.effect();
+                        upgrade.cost *= 2; // Costs double each time
+                        updateUI();
+                    }
+                });
+
+                upgradeDiv.appendChild(button);
+                upgradesContainer.appendChild(upgradeDiv);
             });
         }
 
-        // Save progress
         function saveProgress() {
             localStorage.setItem("score", score);
             localStorage.setItem("cpc", cpc);
             localStorage.setItem("cps", cps);
             localStorage.setItem("lastActive", Date.now());
-            localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades));
-            localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades));
         }
 
-        // Click button logic
+        function loadProgress() {
+            score = parseInt(localStorage.getItem("score")) || 0;
+            cpc = parseInt(localStorage.getItem("cpc")) || 1;
+            cps = parseInt(localStorage.getItem("cps")) || 0;
+            lastActive = parseInt(localStorage.getItem("lastActive")) || Date.now();
+        }
+
+        function calculateOfflineEarnings() {
+            const elapsed = (Date.now() - lastActive) / 1000;
+            score += Math.floor(elapsed * cps);
+        }
+
         clickButton.addEventListener("click", () => {
             score += cpc;
             updateUI();
             saveProgress();
         });
 
-        // Purchase upgrade
-        function purchaseUpgrade(upgradeList, index) {
-            const upgrade = upgradeList[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                upgrade.effect();
-                upgrade.cost = Math.floor(upgrade.cost * 1.25); // Gradual cost increase
-                updateUI();
-                saveProgress();
+        resetButton.addEventListener("click", () => {
+            if (confirm("Are you sure you want to reset the game? This will erase all progress.")) {
+                localStorage.clear();
+                location.reload();
             }
+        });
+
+        function gameLoop() {
+            score += cps / 20; // Increase score 20 times per second
+            updateUI();
+            saveProgress();
+            setTimeout(gameLoop, 50);
         }
 
-        // Automatic clicks per second
-        setInterval(() => {
-            if (cps > 0) {
-                score += cps;
-                updateUI();
-                saveProgress();
-            }
-        }, 1000);
-
-       // Reset game
-resetButton.addEventListener("click", () => {
-    if (confirm("Are you sure you want to reset the game? This will erase all progress.")) {
-        // Clear local storage
-        localStorage.clear();
-        
-        // Reset all game variables
-        score = 0;
-        cpc = 1;
-        cps = 0;
-        lastActive = Date.now();
-
-        // Reset upgrades
-        cpcUpgrades = [
-            { name: "Increase CPC by 1", effect: () => cpc += 1, cost: 10 },
-            { name: "Boost CPC by 2", effect: () => cpc += 2, cost: 50 },
-            { name: "Boost CPC by 5", effect: () => cpc += 5, cost: 200 },
-            { name: "Boost CPC by 10", effect: () => cpc += 10, cost: 1000 },
-            { name: "CPC +20", effect: () => cpc += 20, cost: 5000 }
-        ];
-        cpsUpgrades = [
-            { name: "Increase CPS by 1", effect: () => cps += 1, cost: 25 },
-            { name: "Boost CPS by 2", effect: () => cps += 2, cost: 100 },
-            { name: "Boost CPS by 5", effect: () => cps += 5, cost: 400 },
-            { name: "Boost CPS by 10", effect: () => cps += 10, cost: 2000 },
-            { name: "CPS +20", effect: () => cps += 20, cost: 10000 }
-        ];
-
-        // Update the UI and save progress
-        updateUI();
-        saveProgress();
-        alert("Game reset successfully!");
-    }
-});
-
-
-        // Handle page load and calculate offline earnings
+        loadProgress();
         calculateOfflineEarnings();
         updateUI();
+        gameLoop();
     </script>
 </body>
 </html>
