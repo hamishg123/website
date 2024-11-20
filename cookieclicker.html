@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Game with Balanced Upgrades</title>
+    <title>Organized Clicker Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,6 +32,9 @@
         .stats, .upgrades {
             margin-top: 20px;
         }
+        .upgrade-category {
+            margin: 20px 0;
+        }
         .upgrade {
             margin: 10px 0;
             padding: 10px 20px;
@@ -45,6 +48,19 @@
         .upgrade:hover {
             background: #0056b3;
         }
+        #resetButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #resetButton:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -57,8 +73,16 @@
     </div>
     <div class="upgrades">
         <h2>Upgrades</h2>
-        <div id="upgradeContainer"></div>
+        <div class="upgrade-category">
+            <h3>CPC Upgrades</h3>
+            <div id="cpcUpgrades"></div>
+        </div>
+        <div class="upgrade-category">
+            <h3>CPS Upgrades</h3>
+            <div id="cpsUpgrades"></div>
+        </div>
     </div>
+    <button id="resetButton">Reset Game</button>
 
     <script>
         // Load saved data or set defaults
@@ -66,16 +90,18 @@
         let cpc = parseInt(localStorage.getItem("cpc")) || 1;
         let cps = parseInt(localStorage.getItem("cps")) || 0;
         let lastActive = parseInt(localStorage.getItem("lastActive")) || Date.now();
-        let upgrades = JSON.parse(localStorage.getItem("upgrades")) || [
+        let cpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [
             { name: "Increase CPC by 1", effect: () => cpc += 1, cost: 10 },
-            { name: "Increase CPS by 1", effect: () => cps += 1, cost: 25 },
             { name: "Boost CPC by 2", effect: () => cpc += 2, cost: 50 },
-            { name: "Boost CPS by 2", effect: () => cps += 2, cost: 100 },
             { name: "Boost CPC by 5", effect: () => cpc += 5, cost: 200 },
-            { name: "Boost CPS by 5", effect: () => cps += 5, cost: 400 },
             { name: "Boost CPC by 10", effect: () => cpc += 10, cost: 1000 },
+            { name: "CPC +20", effect: () => cpc += 20, cost: 5000 }
+        ];
+        let cpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [
+            { name: "Increase CPS by 1", effect: () => cps += 1, cost: 25 },
+            { name: "Boost CPS by 2", effect: () => cps += 2, cost: 100 },
+            { name: "Boost CPS by 5", effect: () => cps += 5, cost: 400 },
             { name: "Boost CPS by 10", effect: () => cps += 10, cost: 2000 },
-            { name: "CPC +20", effect: () => cpc += 20, cost: 5000 },
             { name: "CPS +20", effect: () => cps += 20, cost: 10000 }
         ];
 
@@ -84,7 +110,9 @@
         const cpcDisplay = document.getElementById("cpc");
         const cpsDisplay = document.getElementById("cps");
         const clickButton = document.getElementById("clickButton");
-        const upgradeContainer = document.getElementById("upgradeContainer");
+        const cpcUpgradeContainer = document.getElementById("cpcUpgrades");
+        const cpsUpgradeContainer = document.getElementById("cpsUpgrades");
+        const resetButton = document.getElementById("resetButton");
 
         // Calculate offline earnings
         function calculateOfflineEarnings() {
@@ -102,14 +130,25 @@
             cpcDisplay.textContent = cpc;
             cpsDisplay.textContent = cps;
 
-            upgradeContainer.innerHTML = ""; // Clear upgrade buttons
-            upgrades.forEach((upgrade, index) => {
+            cpcUpgradeContainer.innerHTML = ""; // Clear CPC upgrade buttons
+            cpsUpgradeContainer.innerHTML = ""; // Clear CPS upgrade buttons
+
+            cpcUpgrades.forEach((upgrade, index) => {
                 const button = document.createElement("button");
                 button.className = "upgrade";
                 button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
                 button.disabled = score < upgrade.cost;
-                button.addEventListener("click", () => purchaseUpgrade(index));
-                upgradeContainer.appendChild(button);
+                button.addEventListener("click", () => purchaseUpgrade(cpcUpgrades, index));
+                cpcUpgradeContainer.appendChild(button);
+            });
+
+            cpsUpgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade";
+                button.textContent = `${upgrade.name} (Cost: ${upgrade.cost})`;
+                button.disabled = score < upgrade.cost;
+                button.addEventListener("click", () => purchaseUpgrade(cpsUpgrades, index));
+                cpsUpgradeContainer.appendChild(button);
             });
         }
 
@@ -119,7 +158,8 @@
             localStorage.setItem("cpc", cpc);
             localStorage.setItem("cps", cps);
             localStorage.setItem("lastActive", Date.now());
-            localStorage.setItem("upgrades", JSON.stringify(upgrades));
+            localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades));
+            localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades));
         }
 
         // Click button logic
@@ -130,8 +170,8 @@
         });
 
         // Purchase upgrade
-        function purchaseUpgrade(index) {
-            const upgrade = upgrades[index];
+        function purchaseUpgrade(upgradeList, index) {
+            const upgrade = upgradeList[index];
             if (score >= upgrade.cost) {
                 score -= upgrade.cost;
                 upgrade.effect();
@@ -149,6 +189,14 @@
                 saveProgress();
             }
         }, 1000);
+
+        // Reset game
+        resetButton.addEventListener("click", () => {
+            if (confirm("Are you sure you want to reset the game?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
 
         // Handle page load and calculate offline earnings
         calculateOfflineEarnings();
