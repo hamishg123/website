@@ -190,13 +190,41 @@
             }
         }, 1000);
 
-        // Reset game
-        resetButton.addEventListener("click", () => {
-            if (confirm("Are you sure you want to reset the game?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        });
+       // Reset game
+resetButton.addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset the game? This will erase all progress.")) {
+        // Clear local storage
+        localStorage.clear();
+        
+        // Reset all game variables
+        score = 0;
+        cpc = 1;
+        cps = 0;
+        lastActive = Date.now();
+
+        // Reset upgrades
+        cpcUpgrades = [
+            { name: "Increase CPC by 1", effect: () => cpc += 1, cost: 10 },
+            { name: "Boost CPC by 2", effect: () => cpc += 2, cost: 50 },
+            { name: "Boost CPC by 5", effect: () => cpc += 5, cost: 200 },
+            { name: "Boost CPC by 10", effect: () => cpc += 10, cost: 1000 },
+            { name: "CPC +20", effect: () => cpc += 20, cost: 5000 }
+        ];
+        cpsUpgrades = [
+            { name: "Increase CPS by 1", effect: () => cps += 1, cost: 25 },
+            { name: "Boost CPS by 2", effect: () => cps += 2, cost: 100 },
+            { name: "Boost CPS by 5", effect: () => cps += 5, cost: 400 },
+            { name: "Boost CPS by 10", effect: () => cps += 10, cost: 2000 },
+            { name: "CPS +20", effect: () => cps += 20, cost: 10000 }
+        ];
+
+        // Update the UI and save progress
+        updateUI();
+        saveProgress();
+        alert("Game reset successfully!");
+    }
+});
+
 
         // Handle page load and calculate offline earnings
         calculateOfflineEarnings();
