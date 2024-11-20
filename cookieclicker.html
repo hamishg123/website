@@ -16,30 +16,45 @@
             color: #333;
         }
         #game-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: auto;
             padding: 20px;
             background: white;
             border-radius: 8px;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         }
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
+        #click-button {
+            padding: 15px 30px;
+            margin: 20px;
+            font-size: 18px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
+        #click-button:hover {
             background: #0056b3;
+        }
+        #reset-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #reset-button:hover {
+            background: #c82333;
         }
         #upgrades-container {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .upgrade-column {
+            width: 48%;
         }
         .upgrade {
             margin: 10px;
@@ -47,16 +62,31 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             background: #f9f9f9;
-            width: 200px;
             text-align: left;
         }
         .upgrade button {
             display: block;
             margin: 10px 0 0;
             background: #28a745;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
         .upgrade button:hover {
             background: #218838;
+        }
+        .floating-text {
+            position: absolute;
+            font-size: 20px;
+            color: green;
+            pointer-events: none;
+            animation: fadeUp 1s ease forwards;
+        }
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
         }
     </style>
 </head>
@@ -67,7 +97,14 @@
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="reset-button">Reset</button>
-        <div id="upgrades-container"></div>
+        <div id="upgrades-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>CPC Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>CPS Upgrades</h3>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -81,12 +118,7 @@
             { name: "CPC +5", effect: () => cpc += 5, cost: 1000 },
             { name: "CPC +10", effect: () => cpc += 10, cost: 5000 },
             { name: "CPC +50", effect: () => cpc += 50, cost: 25000 },
-            { name: "CPC +100", effect: () => cpc += 100, cost: 100000 },
-            { name: "CPC +500", effect: () => cpc += 500, cost: 500000 },
-            { name: "CPC +1k", effect: () => cpc += 1000, cost: 2000000 },
-            { name: "CPC +5k", effect: () => cpc += 5000, cost: 10000000 },
-            { name: "CPC +10k", effect: () => cpc += 10000, cost: 50000000 },
-            { name: "CPC +50k", effect: () => cpc += 50000, cost: 200000000 }
+            { name: "CPC +100", effect: () => cpc += 100, cost: 100000 }
         ];
 
         const cpsUpgrades = [
@@ -94,21 +126,17 @@
             { name: "CPS +5", effect: () => cps += 5, cost: 1500 },
             { name: "CPS +10", effect: () => cps += 10, cost: 7500 },
             { name: "CPS +50", effect: () => cps += 50, cost: 50000 },
-            { name: "CPS +100", effect: () => cps += 100, cost: 200000 },
-            { name: "CPS +500", effect: () => cps += 500, cost: 1000000 },
-            { name: "CPS +1k", effect: () => cps += 1000, cost: 5000000 },
-            { name: "CPS +5k", effect: () => cps += 5000, cost: 20000000 },
-            { name: "CPS +10k", effect: () => cps += 10000, cost: 100000000 },
-            { name: "CPS +50k", effect: () => cps += 50000, cost: 500000000 }
+            { name: "CPS +100", effect: () => cps += 100, cost: 200000 }
         ];
 
-        const upgradesContainer = document.getElementById("upgrades-container");
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
         const clickButton = document.getElementById("click-button");
         const resetButton = document.getElementById("reset-button");
+        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        // Format numbers into k/M/B
+        // Format numbers
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -119,31 +147,44 @@
         function updateUI() {
             scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            upgradesContainer.innerHTML = "";
 
-            [...cpcUpgrades, ...cpsUpgrades].forEach((upgrade, index) => {
-                const upgradeDiv = document.createElement("div");
-                upgradeDiv.className = "upgrade";
-                upgradeDiv.innerHTML = `
-                    <strong>${upgrade.name}</strong><br>
-                    Cost: ${formatNumber(upgrade.cost)}
-                `;
-                const button = document.createElement("button");
-                button.textContent = "Buy";
-                button.disabled = score < upgrade.cost;
+            cpcUpgradesContainer.innerHTML = "";
+            cpsUpgradesContainer.innerHTML = "";
 
-                button.addEventListener("click", () => {
-                    if (score >= upgrade.cost) {
-                        score -= upgrade.cost;
-                        upgrade.effect();
-                        upgrade.cost *= 2; // Costs double each time
-                        updateUI();
-                    }
-                });
+            cpcUpgrades.forEach((upgrade) => addUpgrade(upgrade, cpcUpgradesContainer));
+            cpsUpgrades.forEach((upgrade) => addUpgrade(upgrade, cpsUpgradesContainer));
+        }
 
-                upgradeDiv.appendChild(button);
-                upgradesContainer.appendChild(upgradeDiv);
+        function addUpgrade(upgrade, container) {
+            const upgradeDiv = document.createElement("div");
+            upgradeDiv.className = "upgrade";
+            upgradeDiv.innerHTML = `<strong>${upgrade.name}</strong><br>Cost: ${formatNumber(upgrade.cost)}`;
+            const button = document.createElement("button");
+            button.textContent = "Buy";
+            button.disabled = score < upgrade.cost;
+
+            button.addEventListener("click", () => {
+                if (score >= upgrade.cost) {
+                    score -= upgrade.cost;
+                    upgrade.effect();
+                    upgrade.cost *= 2; // Costs double each time
+                    updateUI();
+                }
             });
+
+            upgradeDiv.appendChild(button);
+            container.appendChild(upgradeDiv);
+        }
+
+        function showFloatingText(text, x, y) {
+            const floatingText = document.createElement("div");
+            floatingText.textContent = text;
+            floatingText.className = "floating-text";
+            floatingText.style.left = `${x}px`;
+            floatingText.style.top = `${y}px`;
+            document.body.appendChild(floatingText);
+
+            setTimeout(() => floatingText.remove(), 1000);
         }
 
         function saveProgress() {
@@ -165,21 +206,26 @@
             score += Math.floor(elapsed * cps);
         }
 
-        clickButton.addEventListener("click", () => {
+        clickButton.addEventListener("click", (e) => {
             score += cpc;
             updateUI();
             saveProgress();
+
+            const rect = clickButton.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            showFloatingText(`+${cpc}`, x + rect.left, y + rect.top);
         });
 
         resetButton.addEventListener("click", () => {
-            if (confirm("Are you sure you want to reset the game? This will erase all progress.")) {
+            if (confirm("Are you sure you want to reset?")) {
                 localStorage.clear();
                 location.reload();
             }
         });
 
         function gameLoop() {
-            score += cps / 20; // Increase score 20 times per second
+            score += cps / 20;
             updateUI();
             saveProgress();
             setTimeout(gameLoop, 50);
