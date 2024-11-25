@@ -32,6 +32,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            position: relative;
         }
         #click-button:hover {
             background: #0056b3;
@@ -198,8 +199,8 @@
             const floatingText = document.createElement("div");
             floatingText.textContent = text;
             floatingText.className = "floating-text";
-            floatingText.style.left = `${x}px`;
-            floatingText.style.top = `${y}px`;
+            floatingText.style.left = `${x - 20}px`; // Centering above the button
+            floatingText.style.top = `${y - 30}px`; // Positioning above the button
             document.body.appendChild(floatingText);
 
             setTimeout(() => floatingText.remove(), 1000); // Remove the text after animation
@@ -238,8 +239,8 @@
 
             // Show floating text animation with CPC value
             const rect = clickButton.getBoundingClientRect();
-            const x = e.clientX + rect.left - 20; // Adjust position
-            const y = e.clientY + rect.top - 40; // Adjust position above button
+            const x = rect.left + rect.width / 2; // Center on the button
+            const y = rect.top; // Position right above the button
             showFloatingText(`+${cpc}`, x, y);
 
             // Button scaling animation
