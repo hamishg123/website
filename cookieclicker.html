@@ -77,6 +77,24 @@
         .upgrade button:hover {
             background: #218838;
         }
+
+        .floating-text {
+            position: absolute;
+            font-size: 20px;
+            color: green;
+            pointer-events: none;
+            animation: fadeUp 1s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        .click-animation {
+            transform: scale(1.1);
+            transition: transform 0.1s ease;
+        }
     </style>
 </head>
 <body>
@@ -176,6 +194,17 @@
             container.appendChild(upgradeDiv);
         }
 
+        function showFloatingText(text, x, y) {
+            const floatingText = document.createElement("div");
+            floatingText.textContent = text;
+            floatingText.className = "floating-text";
+            floatingText.style.left = `${x}px`;
+            floatingText.style.top = `${y}px`;
+            document.body.appendChild(floatingText);
+
+            setTimeout(() => floatingText.remove(), 1000); // Remove the text after animation
+        }
+
         function saveProgress() {
             localStorage.setItem("score", score);
             localStorage.setItem("cpc", cpc);
@@ -202,10 +231,22 @@
             score += Math.floor(elapsed * cps);
         }
 
-        clickButton.addEventListener("click", () => {
+        clickButton.addEventListener("click", (e) => {
             score += cpc;
             updateUI();
             saveProgress();
+
+            // Show floating text animation with CPC value
+            const rect = clickButton.getBoundingClientRect();
+            const x = e.clientX + rect.left - 20; // Adjust position
+            const y = e.clientY + rect.top - 40; // Adjust position above button
+            showFloatingText(`+${cpc}`, x, y);
+
+            // Button scaling animation
+            clickButton.classList.add("click-animation");
+            setTimeout(() => {
+                clickButton.classList.remove("click-animation");
+            }, 100);
         });
 
         resetButton.addEventListener("click", () => {
