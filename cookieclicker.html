@@ -117,33 +117,33 @@
     <script>
 
         function showFloatingText(text, x, y) {
-    const floatingText = document.createElement("div");
-    floatingText.textContent = text;
-    floatingText.className = "floating-text";
-    floatingText.style.left = `${x}px`;
-    floatingText.style.top = `${y}px`;
-    document.body.appendChild(floatingText);
+        const floatingText = document.createElement("div");
+        floatingText.textContent = text;
+        floatingText.className = "floating-text";
+        floatingText.style.left = `${x}px`;
+        floatingText.style.top = `${y}px`;
+        document.body.appendChild(floatingText);
 
-    setTimeout(() => floatingText.remove(), 1000); // Remove the text after animation
-}
+        setTimeout(() => floatingText.remove(), 1000); // Remove the text after animation
+        }
 
-clickButton.addEventListener("click", (e) => {
-    score += cpc;
-    updateUI();
-    saveProgress();
+        clickButton.addEventListener("click", (e) => {
+        score += cpc;
+        updateUI();
+        saveProgress();
 
-    // Animation for the CPC value
-    const rect = clickButton.getBoundingClientRect();
-    const x = e.clientX + rect.left - 20; // Adjust position for better centering
-    const y = e.clientY + rect.top - 40; // Adjust position above the button
-    showFloatingText(`+${cpc}`, x, y);
+        // Animation for the CPC value
+        const rect = clickButton.getBoundingClientRect();
+        const x = e.clientX + rect.left - 20; // Adjust position for better centering
+        const y = e.clientY + rect.top - 40; // Adjust position above the button
+        showFloatingText(`+${cpc}`, x, y);
 
-    // Button scaling animation
-    clickButton.classList.add("click-animation");
-    setTimeout(() => {
-        clickButton.classList.remove("click-animation");
-    }, 100);
-});
+        // Button scaling animation
+        clickButton.classList.add("click-animation");
+        setTimeout(() => {
+            clickButton.classList.remove("click-animation");
+        }, 100);
+        });
         let score = 0;
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
