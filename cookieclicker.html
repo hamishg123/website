@@ -77,10 +77,6 @@
         .upgrade button:hover {
             background: #218838;
         }
-        .click-animation {
-        transform: scale(1.1);
-        transition: transform 0.1s ease;
-    }
     </style>
 </head>
 <body>
@@ -101,22 +97,6 @@
     </div>
 
     <script>
-        clickButton.addEventListener("click", (e) => {
-        score += cpc;
-        updateUI();
-        saveProgress();
-
-        // Add click animation
-        clickButton.classList.add("click-animation");
-        setTimeout(() => {
-            clickButton.classList.remove("click-animation");
-        }, 100);
-
-        const rect = clickButton.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        showFloatingText(`+${cpc}`, x + rect.left, y + rect.top);
-    });
         let score = 0;
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
