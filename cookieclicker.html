@@ -112,20 +112,6 @@
             background: #ccc;
             cursor: not-allowed;
         }
-
-        /* Floating Text Animation */
-        .floating-text {
-            position: absolute;
-            font-size: 1rem;
-            color: green;
-            pointer-events: none;
-            animation: fadeUp 1s ease forwards;
-        }
-
-        @keyframes fadeUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
     </style>
 </head>
 <body>
@@ -144,8 +130,9 @@
             </div>
         </div>
     </div>
+
     <script>
-           let score = 0;
+        let score = 0;
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
         let lastActive = Date.now();
@@ -278,7 +265,7 @@
         loadProgress();
         calculateOfflineEarnings();
         updateUI();
-      
+        gameLoop();
     </script>
 </body>
 </html>
