@@ -239,7 +239,41 @@
 
         <!-- More levels 16–20 -->
         <!-- Repeat structure, changing puzzle content -->
+       <div class="puzzle" id="puzzle-16" style="display: none;">
+            <h2>Puzzle 16: maths</h2>
+            <p>32x2-5</p>
+            <div>
+                <button onclick="checkAnswer('wrong', 16)">64</button>
+                <button onclick="checkAnswer('correct', 16)">59</button>
+                <button onclick="checkAnswer('wrong', 16)">69</button>
+            </div>
+            <p class="hint">Hint: learn maths.</p>
+        </div>
+       <div class="puzzle" id="puzzle-17" style="display: none;">
+            <h2>Puzzle 17: chemistry</h2>
+            <p>what is the first element onthe pereodic table</p>
+            <div>
+                <button onclick="checkAnswer('correct', 17)">hydrogen</button>
+                <button onclick="checkAnswer('wrong', 17)">oxygen</button>
+                <button onclick="checkAnswer('wrong', 17)">neon</button>
+                <button onclick="checkAnswer('wrong', 17)">helium</button>
+            </div>
+            <p class="hint">Hint: starts with a "H".</p>
+        </div>
 
+         <div class="puzzle" id="puzzle-18" style="display: none;">
+            <h2>Puzzle 18: logic</h2>
+            <p>if today is a friday what day would it be in 5 days</p>
+            <div>
+                <button onclick="checkAnswer('wrong', 18)">monday</button>
+                <button onclick="checkAnswer('wrong', 18)">friday</button>
+                <button onclick="checkAnswer('wrong', 18)">thursday</button>
+                <button onclick="checkAnswer('correct', 18)">wensday</button>
+            </div>
+            <p class="hint">Hint: a week day.</p>
+        </div>
+
+        
         <p id="clue"></p>
     </main>
     <script>
