@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #333;
+            color: #fff;
+            text-align: center;
+        }
+        header {
+            background: #444;
+            padding: 20px;
+            font-size: 24px;
+        }
+        main {
+            padding: 20px;
+        }
+        .puzzle {
+            margin: 20px auto;
+            padding: 15px;
+            background: #555;
+            border-radius: 8px;
+            max-width: 500px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        }
+        .puzzle h2 {
+            margin: 10px 0;
+        }
+        .hint {
+            margin-top: 10px;
+            color: #f0ad4e;
+            font-size: 14px;
+        }
+        #timer {
+            margin: 20px;
+            font-size: 20px;
+            color: #f54242;
+        }
+        #clue {
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>Escape Room Simulator</header>
+    <main>
+        <h1>Can You Escape?</h1>
+        <p id="timer">Time Remaining: 60 seconds</p>
+        <div class="puzzle" id="puzzle-1">
+            <h2>Puzzle 1: Unlock the Door</h2>
+            <p>Find the correct key combination to unlock the door.</p>
+            <div>
+                <button onclick="checkKey('red')">Red Key</button>
+                <button onclick="checkKey('blue')">Blue Key</button>
+                <button onclick="checkKey('green')">Green Key</button>
+            </div>
+            <p class="hint" id="hint-1">Hint: The key matches the color of the sky at dusk.</p>
+        </div>
+        <div class="puzzle" id="puzzle-2" style="display: none;">
+            <h2>Puzzle 2: Crack the Code</h2>
+            <p>Solve this riddle: What has keys but can’t open locks?</p>
+            <div>
+                <button onclick="checkAnswer('keyboard')">Keyboard</button>
+                <button onclick="checkAnswer('map')">Map</button>
+                <button onclick="checkAnswer('clock')">Clock</button>
+            </div>
+            <p class="hint" id="hint-2">Hint: It's in front of you while typing.</p>
+        </div>
+        <p id="clue"></p>
+    </main>
+    <script>
+        let timer = 60;
+        const timerElement = document.getElementById('timer');
+        const clueElement = document.getElementById('clue');
+        const puzzles = [
+            { id: 'puzzle-1', answer: 'blue' },
+            { id: 'puzzle-2', answer: 'keyboard' }
+        ];
+        let currentPuzzle = 0;
+
+        function startTimer() {
+            const countdown = setInterval(() => {
+                if (timer <= 0) {
+                    clearInterval(countdown);
+                    alert("Time's up! You couldn't escape.");
+                    location.reload();
+                } else {
+                    timer--;
+                    timerElement.textContent = `Time Remaining: ${timer} seconds`;
+                }
+            }, 1000);
+        }
+
+        function checkKey(color) {
+            const current = puzzles[currentPuzzle];
+            if (color === current.answer) {
+                completePuzzle();
+            } else {
+                clueElement.textContent = 'Wrong key! Try again.';
+            }
+        }
+
+        function checkAnswer(answer) {
+            const current = puzzles[currentPuzzle];
+            if (answer === current.answer) {
+                completePuzzle();
+            } else {
+                clueElement.textContent = 'Wrong answer! Think harder.';
+            }
+        }
+
+        function completePuzzle() {
+            clueElement.textContent = '';
+            document.getElementById(puzzles[currentPuzzle].id).style.display = 'none';
+            currentPuzzle++;
+            if (currentPuzzle < puzzles.length) {
+                document.getElementById(puzzles[currentPuzzle].id).style.display = 'block';
+            } else {
+                alert('Congratulations! You escaped!');
+                location.reload();
+            }
+        }
+
+        startTimer();
+    </script>
+</body>
+</html>
