@@ -9,12 +9,12 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: #333;
-            color: #fff;
+            background: #2c3e50;
+            color: #ecf0f1;
             text-align: center;
         }
         header {
-            background: #444;
+            background: #34495e;
             padding: 20px;
             font-size: 24px;
         }
@@ -24,9 +24,9 @@
         .puzzle {
             margin: 20px auto;
             padding: 15px;
-            background: #555;
+            background: #16a085;
             border-radius: 8px;
-            max-width: 500px;
+            max-width: 600px;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
         }
         .puzzle h2 {
@@ -34,13 +34,13 @@
         }
         .hint {
             margin-top: 10px;
-            color: #f0ad4e;
+            color: #f39c12;
             font-size: 14px;
         }
         #timer {
             margin: 20px;
             font-size: 20px;
-            color: #f54242;
+            color: #e74c3c;
         }
         #clue {
             margin-top: 15px;
@@ -50,14 +50,14 @@
             margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
-            background: #007bff;
+            background: #2980b9;
             border: none;
             border-radius: 5px;
             color: white;
             cursor: pointer;
         }
         button:hover {
-            background: #0056b3;
+            background: #1abc9c;
         }
     </style>
 </head>
@@ -65,38 +65,55 @@
     <header>Escape Room Simulator</header>
     <main>
         <h1>Can You Escape?</h1>
-        <p id="timer">Time Remaining: 60 seconds</p>
+        <p id="timer">Time Remaining: 300 seconds</p>
+
         <div class="puzzle" id="puzzle-1">
-            <h2>Puzzle 1: Unlock the Door</h2>
-            <p>Find the correct key combination to unlock the door.</p>
+            <h2>Puzzle 1: Find the Key</h2>
+            <p>Click the correct key to unlock the door.</p>
             <div>
-                <button onclick="checkKey('red')">Red Key</button>
-                <button onclick="checkKey('blue')">Blue Key</button>
-                <button onclick="checkKey('green')">Green Key</button>
+                <button onclick="checkAnswer('wrong', 1)">Key 1</button>
+                <button onclick="checkAnswer('wrong', 1)">Key 2</button>
+                <button onclick="checkAnswer('correct', 1)">Key 3</button>
             </div>
-            <p class="hint" id="hint-1">Hint: The key matches the color of the sky at dusk.</p>
+            <p class="hint">Hint: It's the last one!</p>
         </div>
+
         <div class="puzzle" id="puzzle-2" style="display: none;">
-            <h2>Puzzle 2: Crack the Code</h2>
-            <p>Solve this riddle: What has keys but can’t open locks?</p>
+            <h2>Puzzle 2: Solve the Riddle</h2>
+            <p>What has hands but cannot clap?</p>
             <div>
-                <button onclick="checkAnswer('keyboard')">Keyboard</button>
-                <button onclick="checkAnswer('map')">Map</button>
-                <button onclick="checkAnswer('clock')">Clock</button>
+                <button onclick="checkAnswer('wrong', 2)">Monkey</button>
+                <button onclick="checkAnswer('correct', 2)">Clock</button>
+                <button onclick="checkAnswer('wrong', 2)">Tree</button>
             </div>
-            <p class="hint" id="hint-2">Hint: It's in front of you while typing.</p>
+            <p class="hint">Hint: It ticks.</p>
         </div>
+
+        <!-- Add more puzzles -->
+        <!-- Puzzle Template -->
+        <!-- Use the structure of Puzzle 1 and Puzzle 2 -->
+
+        <!-- Example Level -->
+        <div class="puzzle" id="puzzle-10" style="display: none;">
+            <h2>Puzzle 10: Final Challenge</h2>
+            <p>Guess the 4-digit combination: 4321, 1234, or 3142?</p>
+            <div>
+                <button onclick="checkAnswer('wrong', 10)">4321</button>
+                <button onclick="checkAnswer('wrong', 10)">1234</button>
+                <button onclick="checkAnswer('correct', 10)">3142</button>
+            </div>
+            <p class="hint">Hint: It starts with 3 and ends with 2.</p>
+        </div>
+
         <p id="clue"></p>
     </main>
     <script>
-        let timer = 60;
+        let timer = 300; // 5 minutes
+        const puzzles = 10;
+        let currentPuzzle = 1;
+
         const timerElement = document.getElementById('timer');
         const clueElement = document.getElementById('clue');
-        const puzzles = [
-            { id: 'puzzle-1', answer: 'blue' },
-            { id: 'puzzle-2', answer: 'keyboard' }
-        ];
-        let currentPuzzle = 0;
 
         function startTimer() {
             const countdown = setInterval(() => {
@@ -111,36 +128,28 @@
             }, 1000);
         }
 
-        function checkKey(color) {
-            const current = puzzles[currentPuzzle];
-            if (color === current.answer) {
-                completePuzzle();
+        function checkAnswer(answer, puzzleId) {
+            if (answer === 'correct') {
+                completePuzzle(puzzleId);
             } else {
-                clueElement.textContent = 'Wrong key! Try again.';
+                clueElement.textContent = 'Wrong answer! Try again.';
             }
         }
 
-        function checkAnswer(answer) {
-            const current = puzzles[currentPuzzle];
-            if (answer === current.answer) {
-                completePuzzle();
-            } else {
-                clueElement.textContent = 'Wrong answer! Think harder.';
-            }
-        }
-
-        function completePuzzle() {
+        function completePuzzle(puzzleId) {
             clueElement.textContent = '';
-            document.getElementById(puzzles[currentPuzzle].id).style.display = 'none';
-            currentPuzzle++;
-            if (currentPuzzle < puzzles.length) {
-                document.getElementById(puzzles[currentPuzzle].id).style.display = 'block';
+            document.getElementById(`puzzle-${puzzleId}`).style.display = 'none';
+
+            if (puzzleId < puzzles) {
+                currentPuzzle++;
+                document.getElementById(`puzzle-${currentPuzzle}`).style.display = 'block';
             } else {
                 alert('Congratulations! You escaped!');
                 location.reload();
             }
         }
 
+        // Start the timer and the game
         startTimer();
     </script>
 </body>
