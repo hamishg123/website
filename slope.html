@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,6 +41,7 @@
         const duplicateButton = document.getElementById("duplicateButton");
 
         let duplicateOnBounce = false;
+        let lastDuplicateTime = 0; // To store the time of the last duplication
 
         // Resize the canvas to fit the screen
         function resizeCanvas() {
@@ -163,7 +165,12 @@
                 ball.dy += randomVelocityOffset();
                 normalizeVelocity(ball);
                 if (duplicateOnBounce && Math.random() < 0.2) { // 20% chance of duplication
-                    duplicateBall(ball);
+                    // Check if 0.1 seconds have passed since the last duplication
+                    const currentTime = Date.now();
+                    if (currentTime - lastDuplicateTime > 100) { // 100 ms = 0.1 seconds
+                        lastDuplicateTime = currentTime;
+                        duplicateBall(ball);
+                    }
                 }
             }
         }
