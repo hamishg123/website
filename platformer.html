@@ -9,7 +9,6 @@
             margin: 0;
             overflow: hidden;
             background: linear-gradient(to bottom, #87CEEB, #1E90FF);
-            font-family: Arial, sans-serif;
         }
         canvas {
             display: block;
@@ -35,14 +34,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             display: none;
         }
-        #gameOverModal h1 {
-            margin: 0;
-            color: #333;
-        }
-        #gameOverModal p {
-            margin: 10px 0;
-            color: #555;
-        }
         #restartButton {
             padding: 10px 20px;
             font-size: 16px;
@@ -51,9 +42,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-        }
-        #restartButton:hover {
-            background: #218838;
         }
     </style>
 </head>
@@ -72,10 +60,7 @@
         canvas.width = 400;
         canvas.height = 600;
 
-        const GRAVITY = 0.5;
-        const JUMP_STRENGTH = -10;
-        const LAVA_HEIGHT = 20;
-
+        // Player properties
         const player = {
             x: 200,
             y: 500,
@@ -83,20 +68,25 @@
             height: 30,
             color: "red",
             vy: 0,
-            isGrounded: false,
+            grounded: false,
         };
 
+        // Game constants
+        const GRAVITY = 0.5;
+        const JUMP_STRENGTH = -10;
+        const LAVA_HEIGHT = 20;
+
+        // Platforms
         const platforms = [];
-        const platformConfig = {
-            width: 80,
-            height: 10,
-            color: "green",
-            spacing: { min: 50, max: 80, maxHorizontal: 150 },
-        };
+        const PLATFORM_WIDTH = 80;
+        const PLATFORM_HEIGHT = 10;
+        const MIN_VERTICAL_SPACING = 50;
+        const MAX_VERTICAL_SPACING = 70;
+        const MAX_HORIZONTAL_SPACING = 120;
 
         let score = 0;
         let highScore = localStorage.getItem("highScore") || 0;
-        let isGameOver = false;
+        let gameOver = false;
         const keys = {};
 
         // DOM elements
@@ -110,58 +100,58 @@
         // Initialize platforms
         function initializePlatforms() {
             platforms.length = 0;
-            let startY = canvas.height - 100;
+            const startingPlatform = { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 100 };
+            platforms.push(startingPlatform);
 
-            // Generate starting platforms
-            for (let i = 0; i < 8; i++) {
-                const x = Math.random() * (canvas.width - platformConfig.width);
-                const y = startY - i * platformConfig.spacing.max;
+            for (let i = 1; i < 8; i++) {
+                const previous = platforms[i - 1];
+                const x = Math.min(Math.random() * canvas.width, canvas.width - PLATFORM_WIDTH);
+                const y = previous.y - (Math.random() * (MAX_VERTICAL_SPACING - MIN_VERTICAL_SPACING) + MIN_VERTICAL_SPACING);
                 platforms.push({ x, y });
             }
 
             // Position player on the first platform
-            player.x = platforms[0].x + platformConfig.width / 2 - player.width / 2;
-            player.y = platforms[0].y - player.height;
+            player.x = startingPlatform.x + PLATFORM_WIDTH / 2 - player.width / 2;
+            player.y = startingPlatform.y - player.height;
             player.vy = 0;
         }
 
-        // Handle input
-        window.addEventListener("keydown", (e) => (keys[e.key] = true));
-        window.addEventListener("keyup", (e) => (keys[e.key] = false));
+        // Input handlers
+        window.addEventListener("keydown", (e) => keys[e.key] = true);
+        window.addEventListener("keyup", (e) => keys[e.key] = false);
 
         // Update game state
         function update() {
-            if (isGameOver) return;
+            if (gameOver) return;
 
             // Horizontal movement
-            if (keys["ArrowLeft"]) player.x -= 5;
-            if (keys["ArrowRight"]) player.x += 5;
+            if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
+            if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += 5;
 
-            // Gravity
+            // Gravity and movement
             player.vy += GRAVITY;
             player.y += player.vy;
-            player.isGrounded = false;
+            player.grounded = false;
 
             // Platform collision
-            platforms.forEach((platform) => {
+            for (const platform of platforms) {
                 if (
-                    player.vy > 0 && // Falling down
-                    player.y + player.height <= platform.y && // Above the platform
-                    player.y + player.height + player.vy >= platform.y && // Crossing the platform
-                    player.x + player.width > platform.x && // Horizontal collision
-                    player.x < platform.x + platformConfig.width
+                    player.vy >= 0 &&
+                    player.y + player.height <= platform.y &&
+                    player.y + player.height + player.vy >= platform.y &&
+                    player.x + player.width > platform.x &&
+                    player.x < platform.x + PLATFORM_WIDTH
                 ) {
-                    player.isGrounded = true;
+                    player.grounded = true;
                     player.vy = 0;
                     player.y = platform.y - player.height;
-                    score++;
+                    break;
                 }
-            });
+            }
 
             // Jump
-            if (player.isGrounded && keys["ArrowUp"]) {
+            if (player.grounded && keys["ArrowUp"]) {
                 player.vy = JUMP_STRENGTH;
-                player.isGrounded = false;
             }
 
             // Lava collision
@@ -169,17 +159,18 @@
                 endGame();
             }
 
-            // Scroll platforms and player
+            // Scroll platforms and create new ones
             if (player.y < canvas.height / 2) {
                 const scrollSpeed = 2;
                 player.y += scrollSpeed;
-                platforms.forEach((platform) => (platform.y += scrollSpeed));
+                platforms.forEach((platform) => platform.y += scrollSpeed);
 
-                // Add new platforms at the top
+                // Remove off-screen platforms and add new ones
                 if (platforms[0].y > canvas.height) {
                     platforms.shift();
-                    const x = Math.random() * (canvas.width - platformConfig.width);
-                    const y = platforms[platforms.length - 1].y - Math.random() * (platformConfig.spacing.max - platformConfig.spacing.min) + platformConfig.spacing.min;
+                    const lastPlatform = platforms[platforms.length - 1];
+                    const x = Math.random() * (canvas.width - PLATFORM_WIDTH);
+                    const y = lastPlatform.y - (Math.random() * (MAX_VERTICAL_SPACING - MIN_VERTICAL_SPACING) + MIN_VERTICAL_SPACING);
                     platforms.push({ x, y });
                 }
             }
@@ -194,9 +185,9 @@
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
             // Draw platforms
-            ctx.fillStyle = platformConfig.color;
+            ctx.fillStyle = "green";
             platforms.forEach((platform) => {
-                ctx.fillRect(platform.x, platform.y, platformConfig.width, platformConfig.height);
+                ctx.fillRect(platform.x, platform.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
             });
 
             // Draw lava
@@ -209,9 +200,9 @@
             ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
-        // Handle game over
+        // End game
         function endGame() {
-            isGameOver = true;
+            gameOver = true;
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem("highScore", highScore);
@@ -221,9 +212,9 @@
             gameOverModal.style.display = "block";
         }
 
-        // Restart the game
+        // Restart game
         restartButton.addEventListener("click", () => {
-            isGameOver = false;
+            gameOver = false;
             score = 0;
             initializePlatforms();
             gameOverModal.style.display = "none";
@@ -236,7 +227,7 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Initialize the game
+        // Initialize and start the game
         initializePlatforms();
         gameLoop();
     </script>
