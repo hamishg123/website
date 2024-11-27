@@ -139,9 +139,11 @@
         function update() {
             if (gameOver) return;
 
+            // Horizontal movement
             if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
             if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += 5;
 
+            // Apply gravity if not grounded
             if (!player.grounded) {
                 player.vy += 0.5;
                 player.y += player.vy;
@@ -149,6 +151,7 @@
 
             let grounded = false;
 
+            // Platform collision and grounding
             platforms.forEach(platform => {
                 if (
                     player.vy >= 0 &&
@@ -166,14 +169,22 @@
 
             player.grounded = grounded;
 
+            // Jumping
+            if (grounded && keys["ArrowUp"]) {
+                player.vy = player.jumpStrength;
+            }
+
+            // Lava collision
             if (!grounded && player.y + player.height > canvas.height - lavaHeight) {
                 endGame();
             }
 
+            // Scroll platforms and player
             if (player.y < canvas.height / 2) {
                 platforms.forEach(platform => platform.y += 2);
                 player.y += 2;
 
+                // Remove off-screen platform and create a new one
                 if (platforms[0].y > canvas.height) {
                     platforms.shift();
 
