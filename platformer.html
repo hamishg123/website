@@ -127,10 +127,7 @@
                     newPlatformX = Math.random() * (canvas.width - platformWidth);
                 }
 
-                const newPlatform = { x: newPlatformX, y: newPlatformY };
-                if (newPlatform.x >= 0 && newPlatform.x + platformWidth <= canvas.width) {
-                    platforms.push(newPlatform);
-                }
+                platforms.push({ x: newPlatformX, y: newPlatformY });
             }
         }
 
@@ -154,14 +151,14 @@
 
             platforms.forEach(platform => {
                 if (
-                    platform &&
+                    player.vy >= 0 &&
                     player.y + player.height <= platform.y &&
                     player.y + player.height + player.vy >= platform.y &&
                     player.x + player.width > platform.x &&
                     player.x < platform.x + platformWidth
                 ) {
                     grounded = true;
-                    player.vy = player.jumpStrength;
+                    player.vy = 0;
                     player.y = platform.y - player.height;
                     score++;
                 }
