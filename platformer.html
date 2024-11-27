@@ -49,196 +49,84 @@
     </div>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = 400;
-        canvas.height = 600;
+    // Check for collisions with platforms
+    function checkPlatformCollision(player, platform) {
+        const gravityDirection = player.flipped ? -1 : 1;
 
-        // Game elements
-        const player = {
-            x: 180,
-            y: 500,
-            width: 20,
-            height: 20,
-            color: "red",
-            vy: 0,
-            speed: 5,
-            gravity: 0.5,
-            flipped: false, // Gravity direction
-        };
+        const isMovingDown = player.vy * gravityDirection > 0;
+        const isAbovePlatform = player.y + player.height <= platform.y;
+        const isBelowPlatform = player.y >= platform.y + PLATFORM_HEIGHT;
+        const willOverlapPlatform = 
+            player.x + player.width > platform.x &&
+            player.x < platform.x + PLATFORM_WIDTH &&
+            ((isAbovePlatform && (player.y + player.height + player.vy >= platform.y)) ||
+            (isBelowPlatform && (player.y + player.vy <= platform.y + PLATFORM_HEIGHT)));
 
-        const platforms = [];
-        const spikes = [];
-        const PLATFORM_WIDTH = 80;
-        const PLATFORM_HEIGHT = 10;
-        const SPIKE_SIZE = 20;
-
-        let score = 0;
-        let gameOver = false;
-
-        // Game Over Modal
-        const gameOverModal = document.getElementById("gameOverModal");
-        const restartButton = document.getElementById("restartButton");
-
-        // Input
-        const keys = {};
-
-        window.addEventListener("keydown", (e) => keys[e.key] = true);
-        window.addEventListener("keyup", (e) => keys[e.key] = false);
-
-        // Initialize platforms and spikes
-        function initializeLevel() {
-            platforms.length = 0;
-            spikes.length = 0;
-
-            platforms.push({ x: 160, y: canvas.height - 50 });
-
-            // Add random platforms and spikes
-            for (let i = 1; i < 8; i++) {
-                const prev = platforms[platforms.length - 1];
-                const x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-                const y = prev.y - 100;
-
-                platforms.push({ x, y });
-
-                // Add spikes randomly
-                if (Math.random() > 0.5) {
-                    spikes.push({
-                        x: x + Math.random() * (PLATFORM_WIDTH - SPIKE_SIZE),
-                        y: y - SPIKE_SIZE,
-                    });
-                }
-            }
-
-            // Reset player position
-            player.x = 180;
-            player.y = platforms[0].y - player.height;
+        if (isMovingDown && willOverlapPlatform) {
+            // Snap the player to the platform
             player.vy = 0;
-            player.flipped = false;
-            score = 0;
+            player.grounded = true;
+            player.y = player.flipped ? platform.y + PLATFORM_HEIGHT : platform.y - player.height;
+            return true;
+        }
+        return false;
+    }
+
+    // Update function
+    function update() {
+        if (gameOver) return;
+
+        // Move left or right
+        if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+        if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
+
+        // Apply gravity
+        const gravityDirection = player.flipped ? -1 : 1;
+        player.vy += player.gravity * gravityDirection;
+        player.y += player.vy;
+
+        // Flip gravity
+        if (keys[" "] && player.grounded) {
+            player.flipped = !player.flipped;
+            player.vy = 0; // Reset velocity after flip
         }
 
-        // Update game state
-        function update() {
-            if (gameOver) return;
+        player.grounded = false;
 
-            // Move left or right
-            if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-            if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
-
-            // Apply gravity
-            const gravityDirection = player.flipped ? -1 : 1;
-            player.vy += player.gravity * gravityDirection;
-            player.y += player.vy;
-
-            // Flip gravity
-            if (keys[" "] && player.grounded) {
-                player.flipped = !player.flipped;
-                player.vy = 0; // Reset velocity after flip
+        // Check platform collisions
+        for (const platform of platforms) {
+            if (checkPlatformCollision(player, platform)) {
+                score++; // Increment score when player lands on a platform
             }
+        }
 
-            player.grounded = false;
-
-            // Check for collisions with platforms
-            for (const platform of platforms) {
-                const platformTop = player.flipped ? platform.y + PLATFORM_HEIGHT : platform.y;
-
-                if (
-                    player.vy * gravityDirection > 0 &&
-                    ((player.y + player.height <= platformTop && player.y + player.height + player.vy >= platformTop) ||
-                    (player.y >= platform.y && player.y + player.vy <= platform.y)) &&
-                    player.x + player.width > platform.x &&
-                    player.x < platform.x + PLATFORM_WIDTH
-                ) {
-                    player.grounded = true;
-                    player.vy = 0;
-                    player.y = player.flipped ? platform.y + PLATFORM_HEIGHT : platform.y - player.height;
-                    score++;
-                }
-            }
-
-            // Spike collision
-            for (const spike of spikes) {
-                if (
-                    player.x < spike.x + SPIKE_SIZE &&
-                    player.x + player.width > spike.x &&
-                    player.y < spike.y + SPIKE_SIZE &&
-                    player.y + player.height > spike.y
-                ) {
-                    endGame();
-                }
-            }
-
-            // Scroll platforms
-            if (!player.flipped && player.y < canvas.height / 3) {
-                const scroll = 2;
-                player.y += scroll;
-                platforms.forEach(platform => platform.y += scroll);
-                spikes.forEach(spike => spike.y += scroll);
-            }
-
-            // Game over if player falls out of bounds
-            if (player.y > canvas.height || player.y < -player.height) {
+        // Spike collision
+        for (const spike of spikes) {
+            if (
+                player.x < spike.x + SPIKE_SIZE &&
+                player.x + player.width > spike.x &&
+                player.y < spike.y + SPIKE_SIZE &&
+                player.y + player.height > spike.y
+            ) {
                 endGame();
             }
         }
 
-        // Draw the game
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw player
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-
-            // Draw platforms
-            ctx.fillStyle = "green";
-            for (const platform of platforms) {
-                ctx.fillRect(platform.x, platform.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
-            }
-
-            // Draw spikes
-            ctx.fillStyle = "orange";
-            for (const spike of spikes) {
-                ctx.beginPath();
-                ctx.moveTo(spike.x, spike.y + SPIKE_SIZE);
-                ctx.lineTo(spike.x + SPIKE_SIZE / 2, spike.y);
-                ctx.lineTo(spike.x + SPIKE_SIZE, spike.y + SPIKE_SIZE);
-                ctx.closePath();
-                ctx.fill();
-            }
-
-            // Draw score
-            ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText(`Score: ${score}`, 10, 30);
+        // Scroll platforms
+        if (!player.flipped && player.y < canvas.height / 3) {
+            const scroll = 2;
+            player.y += scroll;
+            platforms.forEach(platform => platform.y += scroll);
+            spikes.forEach(spike => spike.y += scroll);
         }
 
-        // End game
-        function endGame() {
-            gameOver = true;
-            gameOverModal.style.display = "block";
+        // Game over if player falls out of bounds
+        if (player.y > canvas.height || player.y < -player.height) {
+            endGame();
         }
+    }
+</script>
 
-        // Restart game
-        restartButton.addEventListener("click", () => {
-            gameOver = false;
-            initializeLevel();
-            gameOverModal.style.display = "none";
-        });
-
-        // Game loop
-        function gameLoop() {
-            update();
-            draw();
-            if (!gameOver) {
-                requestAnimationFrame(gameLoop);
-            }
-        }
-
-        // Initialize and start the game
-        initializeLevel();
-        gameLoop();
-    </script>
+        
 </body>
 </html>
