@@ -157,9 +157,14 @@
                 }
             });
 
-            // Duplicate ball on bounce if enabled
-            if (bounced && duplicateOnBounce) {
-                duplicateBall(ball);
+            // Adjust velocity slightly on bounce
+            if (bounced) {
+                ball.dx += randomVelocityOffset();
+                ball.dy += randomVelocityOffset();
+                normalizeVelocity(ball);
+                if (duplicateOnBounce) {
+                    duplicateBall(ball);
+                }
             }
         }
 
@@ -205,10 +210,25 @@
                 x: originalBall.x,
                 y: originalBall.y,
                 radius: originalBall.radius,
-                dx: originalBall.dx,
-                dy: originalBall.dy,
+                dx: originalBall.dx + randomVelocityOffset(),
+                dy: originalBall.dy + randomVelocityOffset(),
                 color: getRandomColor(),
             });
+        }
+
+        // Random offset for velocity
+        function randomVelocityOffset() {
+            return (Math.random() - 0.5) * 2; // Small random value between -1 and 1
+        }
+
+        // Normalize velocity to prevent extremely high speeds
+        function normalizeVelocity(ball) {
+            const maxSpeed = 10;
+            const speed = Math.sqrt(ball.dx ** 2 + ball.dy ** 2);
+            if (speed > maxSpeed) {
+                ball.dx = (ball.dx / speed) * maxSpeed;
+                ball.dy = (ball.dy / speed) * maxSpeed;
+            }
         }
 
         // Get a random color
