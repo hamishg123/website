@@ -159,6 +159,9 @@
                 ) {
                     grounded = true;
                     player.vy = player.jumpStrength;
+
+                    // Snap to the platform's surface
+                    player.y = platform.y - player.height;
                     score++;
                 }
             });
