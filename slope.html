@@ -13,13 +13,33 @@
             display: block;
             cursor: crosshair;
         }
+        #duplicateButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        #duplicateButton.active {
+            background-color: #ff6347;
+        }
     </style>
 </head>
 <body>
+    <button id="duplicateButton">Duplicate On Bounce: OFF</button>
     <canvas id="gameCanvas"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const duplicateButton = document.getElementById("duplicateButton");
+
+        let duplicateOnBounce = false;
 
         // Resize the canvas to fit the screen
         function resizeCanvas() {
@@ -29,15 +49,24 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
+        // Toggle duplication feature
+        duplicateButton.addEventListener("click", () => {
+            duplicateOnBounce = !duplicateOnBounce;
+            duplicateButton.textContent = `Duplicate On Bounce: ${duplicateOnBounce ? "ON" : "OFF"}`;
+            duplicateButton.classList.toggle("active", duplicateOnBounce);
+        });
+
         // Ball properties
-        const ball = {
-            x: 200,
-            y: 200,
-            radius: 15,
-            dx: 4,
-            dy: 3,
-            color: "blue",
-        };
+        const balls = [
+            {
+                x: 200,
+                y: 200,
+                radius: 15,
+                dx: 4,
+                dy: 3,
+                color: "blue",
+            },
+        ];
 
         // Obstacles array to hold user-drawn lines
         const obstacles = [];
@@ -71,8 +100,8 @@
             }
         });
 
-        // Draw the ball
-        function drawBall() {
+        // Draw a ball
+        function drawBall(ball) {
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
             ctx.fillStyle = ball.color;
@@ -99,16 +128,19 @@
         }
 
         // Update ball position and check for collisions
-        function updateBall() {
+        function updateBall(ball) {
             ball.x += ball.dx;
             ball.y += ball.dy;
 
             // Bounce off walls
+            let bounced = false;
             if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
                 ball.dx *= -1;
+                bounced = true;
             }
             if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
                 ball.dy *= -1;
+                bounced = true;
             }
 
             // Check collisions with obstacles
@@ -118,11 +150,17 @@
                     const p2 = path[i];
 
                     if (lineIntersectsCircle(p1, p2, ball)) {
-                        handleBounce(p1, p2);
+                        handleBounce(p1, p2, ball);
+                        bounced = true;
                         return; // Prevent further checks for smoother behavior
                     }
                 }
             });
+
+            // Duplicate ball on bounce if enabled
+            if (bounced && duplicateOnBounce) {
+                duplicateBall(ball);
+            }
         }
 
         // Detect if a line segment intersects with the ball
@@ -145,7 +183,7 @@
         }
 
         // Handle the bounce when the ball hits an obstacle
-        function handleBounce(p1, p2) {
+        function handleBounce(p1, p2, ball) {
             const lineDX = p2.x - p1.x;
             const lineDY = p2.y - p1.y;
             const length = Math.sqrt(lineDX ** 2 + lineDY ** 2);
@@ -161,6 +199,18 @@
             ball.color = getRandomColor();
         }
 
+        // Duplicate the ball
+        function duplicateBall(originalBall) {
+            balls.push({
+                x: originalBall.x,
+                y: originalBall.y,
+                radius: originalBall.radius,
+                dx: originalBall.dx,
+                dy: originalBall.dy,
+                color: getRandomColor(),
+            });
+        }
+
         // Get a random color
         function getRandomColor() {
             return "#" + Math.floor(Math.random() * 16777215).toString(16);
@@ -170,10 +220,12 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawBall();
-            drawObstacles();
-            updateBall();
+            balls.forEach((ball) => {
+                drawBall(ball);
+                updateBall(ball);
+            });
 
+            drawObstacles();
             requestAnimationFrame(animate);
         }
 
