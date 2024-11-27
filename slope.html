@@ -162,7 +162,7 @@
                 ball.dx += randomVelocityOffset();
                 ball.dy += randomVelocityOffset();
                 normalizeVelocity(ball);
-                if (duplicateOnBounce) {
+                if (duplicateOnBounce && Math.random() < 0.2) { // 20% chance of duplication
                     duplicateBall(ball);
                 }
             }
