@@ -1,1 +1,77 @@
 <h1>this is the end your word is this"ZGVjb2RlIHRoaXMgLi4tLS0gLi4uLS0gLyAuLS0tLSAuLi4uLiAvIC4tLS0tIC0tLS4uIC8gLi4uLi0=" decoded tell that to me and if your the top 3 people then your name gets to go on my website. </h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPS and CPC Doubler</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #111;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #stats {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="doubleButton">Double CPS & CPC</button>
+    <div id="stats">
+        <p id="cps">CPS: 0</p>
+        <p id="cpc">CPC: 1</p>
+    </div>
+
+    <script>
+        
+
+        
+        
+
+            
+
+            // Update the displayed stats
+            document.getElementById("cps").textContent = `CPS: ${cps.toFixed(2)}`;
+            document.getElementById("cpc").textContent = `CPC: ${cpc}`;
+        }, 1000);
+
+        // Handle button click (doubling CPS and CPC)
+        const doubleButton = document.getElementById("doubleButton");
+        doubleButton.addEventListener("click", () => {
+            cpc *= 2; // Double the CPC
+            cps *= 2; // Double the CPS
+
+            // Disable the button to prevent further clicks
+            doubleButton.disabled = true;
+        });
+
+        // Track user clicks to count CPC and CPS
+        document.addEventListener("click", () => {
+            clickCount++; // Increment click count for CPC and CPS calculation
+        });
+    </script>
+
+</body>
+</html>
