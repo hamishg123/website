@@ -109,7 +109,6 @@
         function initializePlatforms() {
             platforms.length = 0;
 
-            // First platform directly beneath the player
             const startingPlatform = {
                 x: canvas.width / 2 - platformWidth / 2,
                 y: canvas.height - 100
@@ -128,7 +127,10 @@
                     newPlatformX = Math.random() * (canvas.width - platformWidth);
                 }
 
-                platforms.push({ x: newPlatformX, y: newPlatformY });
+                const newPlatform = { x: newPlatformX, y: newPlatformY };
+                if (newPlatform.x >= 0 && newPlatform.x + platformWidth <= canvas.width) {
+                    platforms.push(newPlatform);
+                }
             }
         }
 
@@ -152,6 +154,7 @@
 
             platforms.forEach(platform => {
                 if (
+                    platform &&
                     player.y + player.height <= platform.y &&
                     player.y + player.height + player.vy >= platform.y &&
                     player.x + player.width > platform.x &&
@@ -159,8 +162,6 @@
                 ) {
                     grounded = true;
                     player.vy = player.jumpStrength;
-
-                    // Snap to the platform's surface
                     player.y = platform.y - player.height;
                     score++;
                 }
