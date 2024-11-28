@@ -1,12 +1,20 @@
+<input id="password" type="password" placeholder="Enter password">
+<input id="input" type="number" placeholder="Set CPC value">
+<button id="submit-button">Submit</button>
 
-<input id="password" type="password">
-<input id="input">
 <script>
-let password = document.getElementById("password");
-let val = document.getElementById("input");
-    if password.value == "admin123";
-        let cpc = parseInt(localStorage.getItem("cpc"), 10); // Retrieve and parse the value from localStorage
-        cpc = val.value;
-        localStorage.setItem("cpc", cpc);
-</script>
+    let password = document.getElementById("password");
+    let val = document.getElementById("input");
+    let submitButton = document.getElementById("submit-button");
 
+    submitButton.addEventListener("click", function() {
+        if (password.value === "admin123") {
+            let cpc = parseInt(localStorage.getItem("cpc"), 10); // Retrieve and parse the value from localStorage
+            cpc = parseInt(val.value, 10); // Get the value from the input field
+            localStorage.setItem("cpc", cpc); // Save the updated value to localStorage
+            alert("CPC value has been updated!");
+        } else {
+            alert("Incorrect password!");
+        }
+    });
+</script>
