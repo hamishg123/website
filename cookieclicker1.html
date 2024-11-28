@@ -93,10 +93,9 @@
 <body>
     <h1>Clicker Game</h1>
     <div id="game-container">
-        <h2 id="score">CPC: 0</h2>
+        <h2 id="score">Score: 0</h2>
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
-        <h3 id="offline-earning">Offline Earning: 0</h3>
         <button id="rebirth-button">Rebirth</button>
 
         <div class="upgrade-container">
@@ -115,12 +114,9 @@
         let score = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
-        let offlineEarnings = 0;
-        const lastLogin = localStorage.getItem('lastLogin') ? new Date(localStorage.getItem('lastLogin')) : new Date();
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
-        const offlineEarningDisplay = document.getElementById("offline-earning");
         const clickButton = document.getElementById("click-button");
         const rebirthButton = document.getElementById("rebirth-button");
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
@@ -160,9 +156,8 @@
         }
 
         function updateUI() {
-            scoreDisplay.textContent = `CPC: ${formatNumber(cpc)}`;
+            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            offlineEarningDisplay.textContent = `Offline Earning: ${formatNumber(offlineEarnings)}`;
         }
 
         function saveProgress() {
@@ -174,7 +169,6 @@
                 rebirthBoost,
                 cpcUpgrades,
                 cpsUpgrades,
-                lastLogin: new Date().toString(),
             };
             localStorage.setItem("cpcGame", JSON.stringify(progress));
         }
@@ -190,10 +184,6 @@
 
                 if (progress.cpcUpgrades) cpcUpgrades.forEach((u, i) => u.cost = progress.cpcUpgrades[i].cost);
                 if (progress.cpsUpgrades) cpsUpgrades.forEach((u, i) => u.cost = progress.cpsUpgrades[i].cost);
-
-                const lastLoginTime = new Date(progress.lastLogin);
-                const diff = (new Date() - lastLoginTime) / 1000;
-                offlineEarnings = Math.floor((diff / 60) * cps); // Earning while offline in minutes
             }
         }
 
