@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicker Game</title>
     <style>
-        body {
+    body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
@@ -37,23 +37,17 @@
         #click-button:hover {
             background: #0056b3;
         }
-        #rebirth-button {
+        #reset-button {
             padding: 10px 20px;
             font-size: 16px;
-            background: #ff7f50;
+            background: #dc3545;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            display: inline-block;
-            margin-top: 10px;
         }
-        #rebirth-button:disabled {
-            background: #ffb199;
-            cursor: not-allowed;
-        }
-        #rebirth-button:hover:enabled {
-            background: #ff5733;
+        #reset-button:hover {
+            background: #c82333;
         }
         #upgrades-container {
             display: flex;
@@ -84,6 +78,24 @@
         .upgrade button:hover {
             background: #218838;
         }
+
+        .floating-text {
+            position: absolute;
+            font-size: 20px;
+            color: green;
+            pointer-events: none;
+            animation: fadeUp 1s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        .click-animation {
+            transform: scale(1.1);
+            transition: transform 0.1s ease;
+        }
     </style>
 </head>
 <body>
@@ -105,23 +117,18 @@
 
     <script>
         let score = 0;
-        let cpc = 1; // Clicks per click
-        let cps = 0; // Clicks per second
-        let lastActive = Date.now();
-        let rebirthBoost = 1; // Boost multiplier
+        let cpc = 1;
+        let cps = 0;
+        let rebirthBoost = 1; // Default boost is 1 (no bonus)
 
         const cpcUpgrades = [
             { name: "CPC +1", effect: () => cpc += 1, cost: 100 },
-            { name: "CPC +5", effect: () => cpc += 5, cost: 1000 },
-            { name: "CPC +10", effect: () => cpc += 10, cost: 5000 },
-            { name: "CPC +50", effect: () => cpc += 50, cost: 25000 }
+            { name: "CPC +5", effect: () => cpc += 5, cost: 1000 }
         ];
 
         const cpsUpgrades = [
             { name: "CPS +1", effect: () => cps += 1, cost: 200 },
-            { name: "CPS +5", effect: () => cps += 5, cost: 1500 },
-            { name: "CPS +10", effect: () => cps += 10, cost: 7500 },
-            { name: "CPS +50", effect: () => cps += 50, cost: 50000 }
+            { name: "CPS +5", effect: () => cps += 5, cost: 1500 }
         ];
 
         const scoreDisplay = document.getElementById("score");
@@ -131,6 +138,7 @@
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
         const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
+        // Format numbers for display
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -141,7 +149,7 @@
         function updateUI() {
             scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            rebirthButton.disabled = score < 2e11; // Disable if score < 200B
+            rebirthButton.disabled = score < 2e11; // Disable rebirth if score < 200B
 
             cpcUpgradesContainer.innerHTML = "";
             cpsUpgradesContainer.innerHTML = "";
@@ -163,6 +171,7 @@
                     score -= upgrade.cost;
                     upgrade.effect();
                     upgrade.cost *= 2;
+                    saveProgress(); // Save progress after purchase
                     updateUI();
                 }
             });
@@ -173,24 +182,50 @@
 
         clickButton.addEventListener("click", () => {
             score += cpc * rebirthBoost;
+            saveProgress(); // Save progress on click
             updateUI();
         });
 
         rebirthButton.addEventListener("click", () => {
             if (score >= 2e11) {
                 score = 0;
-                rebirthBoost += 0.25; // Add 25% boost
+                rebirthBoost += 0.25; // Increase rebirth boost by 25%
+                saveProgress(); // Save rebirth progress
                 updateUI();
                 alert(`Rebirth successful! You now have a ${rebirthBoost * 100}% boost to CPC and CPS.`);
             }
         });
 
+        function saveProgress() {
+            localStorage.setItem("score", score);
+            localStorage.setItem("cpc", cpc);
+            localStorage.setItem("cps", cps);
+            localStorage.setItem("rebirthBoost", rebirthBoost);
+            localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
+            localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+        }
+
+        function loadProgress() {
+            score = parseFloat(localStorage.getItem("score")) || 0;
+            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+            cps = parseFloat(localStorage.getItem("cps")) || 0;
+            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+
+            const cpcCosts = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
+            const cpsCosts = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
+            cpcUpgrades.forEach((upgrade, index) => upgrade.cost = cpcCosts[index] || upgrade.cost);
+            cpsUpgrades.forEach((upgrade, index) => upgrade.cost = cpsCosts[index] || upgrade.cost);
+        }
+
         function gameLoop() {
             score += (cps * rebirthBoost) / 20; // CPS works with rebirth boost
+            saveProgress(); // Periodically save progress
             updateUI();
             setTimeout(gameLoop, 50);
         }
 
+        loadProgress(); // Load progress on startup
+        updateUI();
         gameLoop();
     </script>
 </body>
