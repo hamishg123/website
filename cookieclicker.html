@@ -50,6 +50,22 @@
         #rebirth-button:hover {
             background: #218838;
         }
+        #upgrade-buttons {
+            margin-top: 20px;
+        }
+        .upgrade-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .upgrade-button:hover {
+            background: #e68900;
+        }
         .floating-text {
             position: absolute;
             font-size: 20px;
@@ -73,6 +89,11 @@
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="rebirth-button">Rebirth</button>
+
+        <div id="upgrade-buttons">
+            <button class="upgrade-button" id="cpc-upgrade">Upgrade CPC (+10) - Cost: 100</button>
+            <button class="upgrade-button" id="cps-upgrade">Upgrade CPS (+1) - Cost: 100</button>
+        </div>
     </div>
 
     <script>
@@ -86,6 +107,12 @@
         const cpsDisplay = document.getElementById("cps");
         const clickButton = document.getElementById("click-button");
         const rebirthButton = document.getElementById("rebirth-button");
+        const cpcUpgradeButton = document.getElementById("cpc-upgrade");
+        const cpsUpgradeButton = document.getElementById("cps-upgrade");
+
+        // Upgrade cost progression for CPC and CPS
+        let cpcUpgradeCost = 100;
+        let cpsUpgradeCost = 100;
 
         // Format numbers for easier display
         function formatNumber(num) {
@@ -98,6 +125,10 @@
         function updateUI() {
             scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+
+            // Update the cost for upgrades
+            cpcUpgradeButton.textContent = `Upgrade CPC (+10) - Cost: ${formatNumber(cpcUpgradeCost)}`;
+            cpsUpgradeButton.textContent = `Upgrade CPS (+1) - Cost: ${formatNumber(cpsUpgradeCost)}`;
         }
 
         function showFloatingText(text, x, y) {
@@ -122,6 +153,8 @@
             localStorage.setItem("cps", cps);
             localStorage.setItem("rebirths", rebirths);
             localStorage.setItem("rebirthBoost", rebirthBoost);
+            localStorage.setItem("cpcUpgradeCost", cpcUpgradeCost);
+            localStorage.setItem("cpsUpgradeCost", cpsUpgradeCost);
         }
 
         function loadProgress() {
@@ -130,6 +163,8 @@
             cps = parseInt(localStorage.getItem("cps")) || 0;
             rebirths = parseInt(localStorage.getItem("rebirths")) || 0;
             rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+            cpcUpgradeCost = parseInt(localStorage.getItem("cpcUpgradeCost")) || 100;
+            cpsUpgradeCost = parseInt(localStorage.getItem("cpsUpgradeCost")) || 100;
         }
 
         clickButton.addEventListener("click", (e) => {
@@ -157,6 +192,32 @@
                 updateUI();
             } else {
                 alert("You need at least 200B score to rebirth.");
+            }
+        });
+
+        // CPC Upgrade Button
+        cpcUpgradeButton.addEventListener("click", () => {
+            if (score >= cpcUpgradeCost) {
+                score -= cpcUpgradeCost;
+                cpc += 10; // Increase CPC by 10
+                cpcUpgradeCost *= 1.5; // Increase the cost for the next upgrade by 1.5x
+                saveProgress();
+                updateUI();
+            } else {
+                alert("Not enough score for CPC upgrade.");
+            }
+        });
+
+        // CPS Upgrade Button
+        cpsUpgradeButton.addEventListener("click", () => {
+            if (score >= cpsUpgradeCost) {
+                score -= cpsUpgradeCost;
+                cps += 1; // Increase CPS by 1
+                cpsUpgradeCost *= 1.5; // Increase the cost for the next upgrade by 1.5x
+                saveProgress();
+                updateUI();
+            } else {
+                alert("Not enough score for CPS upgrade.");
             }
         });
 
