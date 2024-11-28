@@ -96,6 +96,7 @@
         <h2 id="score">CPC: 0</h2>
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
+        <h3 id="offline-earning">Offline Earning: 0</h3>
         <button id="rebirth-button">Rebirth</button>
 
         <div class="upgrade-container">
@@ -111,11 +112,15 @@
     <script>
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
+        let score = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
+        let offlineEarnings = 0;
+        const lastLogin = localStorage.getItem('lastLogin') ? new Date(localStorage.getItem('lastLogin')) : new Date();
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
+        const offlineEarningDisplay = document.getElementById("offline-earning");
         const clickButton = document.getElementById("click-button");
         const rebirthButton = document.getElementById("rebirth-button");
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
@@ -157,31 +162,38 @@
         function updateUI() {
             scoreDisplay.textContent = `CPC: ${formatNumber(cpc)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+            offlineEarningDisplay.textContent = `Offline Earning: ${formatNumber(offlineEarnings)}`;
         }
 
         function saveProgress() {
             const progress = {
                 cpc,
                 cps,
+                score,
                 rebirths,
                 rebirthBoost,
                 cpcUpgrades,
                 cpsUpgrades,
+                lastLogin: new Date().toString(),
             };
-            localStorage.setItem("cpc", JSON.stringify(progress)); // Change here: storing under "cpc"
+            localStorage.setItem("cpcGame", JSON.stringify(progress));
         }
 
         function loadProgress() {
-            const progress = JSON.parse(localStorage.getItem("cpc"));
+            const progress = JSON.parse(localStorage.getItem("cpcGame"));
             if (progress) {
                 cpc = progress.cpc || 1;
                 cps = progress.cps || 0;
+                score = progress.score || 0;
                 rebirths = progress.rebirths || 0;
                 rebirthBoost = progress.rebirthBoost || 1;
 
-                // Restore upgrade costs and effects
                 if (progress.cpcUpgrades) cpcUpgrades.forEach((u, i) => u.cost = progress.cpcUpgrades[i].cost);
                 if (progress.cpsUpgrades) cpsUpgrades.forEach((u, i) => u.cost = progress.cpsUpgrades[i].cost);
+
+                const lastLoginTime = new Date(progress.lastLogin);
+                const diff = (new Date() - lastLoginTime) / 1000;
+                offlineEarnings = Math.floor((diff / 60) * cps); // Earning while offline in minutes
             }
         }
 
@@ -225,24 +237,23 @@
         }
 
         clickButton.addEventListener("click", () => {
-            cpc += 1; // Increase CPC by 1 each click
-            score += cpc * rebirthBoost;
+            score += cpc * rebirthBoost; // Increase score by CPC * rebirthBoost
             showClickAnimation(cpc); // Show animation
             updateUI();
             saveProgress();
         });
 
         rebirthButton.addEventListener("click", () => {
-            if (score >= 2e11) {
+            if (score >= 2e11) { // Need at least 200 billion to rebirth
                 score = 0;
                 cps = 0;
                 cpc = 1;
                 rebirths++;
                 rebirthBoost *= 1.25;
 
-                // Reduce all upgrade costs by 10%
-                cpcUpgrades.forEach(u => u.cost *= 0.9);
-                cpsUpgrades.forEach(u => u.cost *= 0.9);
+                // Reduce all upgrade costs by 25%
+                cpcUpgrades.forEach(u => u.cost *= 0.75);
+                cpsUpgrades.forEach(u => u.cost *= 0.75);
 
                 alert(`Rebirth successful! Boost: x${rebirthBoost}`);
                 saveProgress();
