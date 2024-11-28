@@ -111,32 +111,32 @@
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
         const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        const cpcUpgrades = [
-            { effect: 10, cost: 100 },
-            { effect: 100, cost: 1e3 },
-            { effect: 1e3, cost: 1e4 },
-            { effect: 1e4, cost: 1e5 },
-            { effect: 1e5, cost: 1e6 },
-            { effect: 1e6, cost: 1e7 },
-            { effect: 1e7, cost: 1e8 },
-            { effect: 1e8, cost: 1e9 },
-            { effect: 1e9, cost: 1e10 },
-            { effect: 1e10, cost: 1e11 },
-        ];
+         const cpcUpgrades = [
+        { effect: 1, cost: 100 },
+        { effect: 10, cost: 1e3 },
+        { effect: 100, cost: 1e4 },
+        { effect: 1e3, cost: 1e5 },
+        { effect: 1e4, cost: 1e6 },
+        { effect: 1e5, cost: 1e7 },
+        { effect: 1e6, cost: 1e8 },
+        { effect: 1e7, cost: 1e9 },
+        { effect: 1e8, cost: 1e10 },
+        { effect: 1e9, cost: 1e11 },
+    ];
 
-        const cpsUpgrades = [
-            { effect: 1, cost: 100 },
-            { effect: 10, cost: 1e3 },
-            { effect: 100, cost: 1e4 },
-            { effect: 1e3, cost: 1e5 },
-            { effect: 1e4, cost: 1e6 },
-            { effect: 1e5, cost: 1e7 },
-            { effect: 1e6, cost: 1e8 },
-            { effect: 1e7, cost: 1e9 },
-            { effect: 1e8, cost: 1e10 },
-            { effect: 1e9, cost: 1e11 },
-        ];
-
+    // CPS upgrades remain unchanged
+    const cpsUpgrades = [
+        { effect: 1, cost: 100 },
+        { effect: 10, cost: 1e3 },
+        { effect: 100, cost: 1e4 },
+        { effect: 1e3, cost: 1e5 },
+        { effect: 1e4, cost: 1e6 },
+        { effect: 1e5, cost: 1e7 },
+        { effect: 1e6, cost: 1e8 },
+        { effect: 1e7, cost: 1e9 },
+        { effect: 1e8, cost: 1e10 },
+        { effect: 1e9, cost: 1e11 },
+    ];
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
