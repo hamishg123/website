@@ -37,42 +37,54 @@
         #click-button:hover {
             background: #0056b3;
         }
-        #rebirth-button {
+        #reset-button {
             padding: 10px 20px;
             font-size: 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #reset-button:hover {
+            background: #c82333;
+        }
+        #upgrades-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .upgrade-column {
+            width: 48%;
+        }
+        .upgrade {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            text-align: left;
+        }
+        .upgrade button {
+            display: block;
+            margin: 10px 0 0;
             background: #28a745;
             color: white;
+            padding: 8px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 20px;
         }
-        #rebirth-button:hover {
+        .upgrade button:hover {
             background: #218838;
         }
-        #upgrade-buttons {
-            margin-top: 20px;
-        }
-        .upgrade-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 10px;
-        }
-        .upgrade-button:hover {
-            background: #e68900;
-        }
+
         .floating-text {
             position: absolute;
             font-size: 20px;
             color: green;
             pointer-events: none;
             animation: fadeUp 1s ease forwards;
-            z-index: 1000;
         }
 
         @keyframes fadeUp {
@@ -80,6 +92,10 @@
             100% { opacity: 0; transform: translateY(-50px); }
         }
 
+        .click-animation {
+            transform: scale(1.1);
+            transition: transform 0.1s ease;
+        }
     </style>
 </head>
 <body>
@@ -88,11 +104,14 @@
         <h2 id="score">Score: 0</h2>
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
-        <button id="rebirth-button">Rebirth</button>
-
-        <div id="upgrade-buttons">
-            <button class="upgrade-button" id="cpc-upgrade">Upgrade CPC (+10) - Cost: 100</button>
-            <button class="upgrade-button" id="cps-upgrade">Upgrade CPS (+1) - Cost: 100</button>
+        <button id="reset-button">Reset</button>
+        <div id="upgrades-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>CPC Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>CPS Upgrades</h3>
+            </div>
         </div>
     </div>
 
@@ -100,21 +119,42 @@
         let score = 0;
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
-        let rebirths = 0; // Rebirth count
-        let rebirthBoost = 1; // Rebirth boost multiplier
+        let lastActive = Date.now();
+
+        const cpcUpgrades = [
+            { name: "CPC +1", effect: () => cpc += 1, cost: 100 },
+            { name: "CPC +5", effect: () => cpc += 5, cost: 1000 },
+            { name: "CPC +10", effect: () => cpc += 10, cost: 5000 },
+            { name: "CPC +50", effect: () => cpc += 50, cost: 25000 },
+            { name: "CPC +100", effect: () => cpc += 100, cost: 100000 },
+            { name: "CPC +500", effect: () => cpc += 500, cost: 1e6 },
+            { name: "CPC +1K", effect: () => cpc += 1000, cost: 1e7 },
+            { name: "CPC +10K", effect: () => cpc += 10000, cost: 1e8 },
+            { name: "CPC +50K", effect: () => cpc += 50000, cost: 5e9 },
+            { name: "CPC +100K", effect: () => cpc += 100000, cost: 1e11 }
+        ];
+
+        const cpsUpgrades = [
+            { name: "CPS +1", effect: () => cps += 1, cost: 200 },
+            { name: "CPS +5", effect: () => cps += 5, cost: 1500 },
+            { name: "CPS +10", effect: () => cps += 10, cost: 7500 },
+            { name: "CPS +50", effect: () => cps += 50, cost: 50000 },
+            { name: "CPS +100", effect: () => cps += 100, cost: 200000 },
+            { name: "CPS +500", effect: () => cps += 500, cost: 1e6 },
+            { name: "CPS +1K", effect: () => cps += 1000, cost: 1e7 },
+            { name: "CPS +10K", effect: () => cps += 10000, cost: 1e9 },
+            { name: "CPS +50K", effect: () => cps += 50000, cost: 5e10 },
+            { name: "CPS +100K", effect: () => cps += 100000, cost: 1e12 }
+        ];
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
         const clickButton = document.getElementById("click-button");
-        const rebirthButton = document.getElementById("rebirth-button");
-        const cpcUpgradeButton = document.getElementById("cpc-upgrade");
-        const cpsUpgradeButton = document.getElementById("cps-upgrade");
+        const resetButton = document.getElementById("reset-button");
+        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        // Upgrade cost progression for CPC and CPS
-        let cpcUpgradeCost = 100;
-        let cpsUpgradeCost = 100;
-
-        // Format numbers for easier display
+        // Format numbers
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -123,107 +163,111 @@
         }
 
         function updateUI() {
-            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
-            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+            scoreDisplay.textContent = Score: ${formatNumber(score)};
+            cpsDisplay.textContent = CPS: ${formatNumber(cps)};
 
-            // Update the cost for upgrades
-            cpcUpgradeButton.textContent = `Upgrade CPC (+10) - Cost: ${formatNumber(cpcUpgradeCost)}`;
-            cpsUpgradeButton.textContent = `Upgrade CPS (+1) - Cost: ${formatNumber(cpsUpgradeCost)}`;
+            cpcUpgradesContainer.innerHTML = "";
+            cpsUpgradesContainer.innerHTML = "";
+
+            cpcUpgrades.forEach((upgrade) => addUpgrade(upgrade, cpcUpgradesContainer));
+            cpsUpgrades.forEach((upgrade) => addUpgrade(upgrade, cpsUpgradesContainer));
+        }
+
+        function addUpgrade(upgrade, container) {
+            const upgradeDiv = document.createElement("div");
+            upgradeDiv.className = "upgrade";
+            upgradeDiv.innerHTML = <strong>${upgrade.name}</strong><br>Cost: ${formatNumber(upgrade.cost)};
+            const button = document.createElement("button");
+            button.textContent = "Buy";
+            button.disabled = score < upgrade.cost;
+
+            button.addEventListener("click", () => {
+                if (score >= upgrade.cost) {
+                    score -= upgrade.cost;
+                    upgrade.effect();
+                    upgrade.cost *= 2; // Costs double each time
+                    saveProgress();
+                    updateUI();
+                }
+            });
+
+            upgradeDiv.appendChild(button);
+            container.appendChild(upgradeDiv);
         }
 
         function showFloatingText(text, x, y) {
             const floatingText = document.createElement("div");
             floatingText.textContent = text;
             floatingText.className = "floating-text";
-
-            // Append the floating text to the document
+            floatingText.style.left = ${x - 20}px; // Centering above the button
+            floatingText.style.top = ${y - 30}px; // Positioning above the button
             document.body.appendChild(floatingText);
 
-            // Position the text
-            floatingText.style.left = `${x}px`;
-            floatingText.style.top = `${y}px`;
-
-            // Remove the text after the animation ends
-            setTimeout(() => floatingText.remove(), 1000);
+            setTimeout(() => floatingText.remove(), 1000); // Remove the text after animation
         }
 
         function saveProgress() {
             localStorage.setItem("score", score);
             localStorage.setItem("cpc", cpc);
             localStorage.setItem("cps", cps);
-            localStorage.setItem("rebirths", rebirths);
-            localStorage.setItem("rebirthBoost", rebirthBoost);
-            localStorage.setItem("cpcUpgradeCost", cpcUpgradeCost);
-            localStorage.setItem("cpsUpgradeCost", cpsUpgradeCost);
+            localStorage.setItem("lastActive", Date.now());
+            localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades.map((u) => u.cost)));
+            localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades.map((u) => u.cost)));
         }
 
         function loadProgress() {
             score = parseInt(localStorage.getItem("score")) || 0;
             cpc = parseInt(localStorage.getItem("cpc")) || 1;
             cps = parseInt(localStorage.getItem("cps")) || 0;
-            rebirths = parseInt(localStorage.getItem("rebirths")) || 0;
-            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
-            cpcUpgradeCost = parseInt(localStorage.getItem("cpcUpgradeCost")) || 100;
-            cpsUpgradeCost = parseInt(localStorage.getItem("cpsUpgradeCost")) || 100;
+            lastActive = parseInt(localStorage.getItem("lastActive")) || Date.now();
+
+            const cpcCosts = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
+            const cpsCosts = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
+            cpcUpgrades.forEach((upgrade, index) => upgrade.cost = cpcCosts[index] || upgrade.cost);
+            cpsUpgrades.forEach((upgrade, index) => upgrade.cost = cpsCosts[index] || upgrade.cost);
+        }
+
+        function calculateOfflineEarnings() {
+            const elapsed = (Date.now() - lastActive) / 1000;
+            score += Math.floor(elapsed * cps);
         }
 
         clickButton.addEventListener("click", (e) => {
-            score += cpc * rebirthBoost;
-
-            // Calculate the button's position for floating text
-            const rect = clickButton.getBoundingClientRect();
-            const x = rect.left + rect.width / 2 - 10; // Center horizontally
-            const y = rect.top - 20; // Slightly above the button
-
-            // Show the floating text
-            showFloatingText(`+${cpc}`, x, y);
-
+            score += cpc;
             updateUI();
             saveProgress();
+
+            // Show floating text animation with CPC value
+            const rect = clickButton.getBoundingClientRect();
+            const x = rect.left + rect.width / 2; // Center on the button
+            const y = rect.top; // Position right above the button
+            showFloatingText(+${cpc}, x, y);
+
+            // Button scaling animation
+            clickButton.classList.add("click-animation");
+            setTimeout(() => {
+                clickButton.classList.remove("click-animation");
+            }, 100);
         });
 
-        rebirthButton.addEventListener("click", () => {
-            if (score >= 200e9) { // Rebirth cost threshold
-                score = 0; // Reset score
-                rebirths += 1; // Increment rebirths
-                rebirthBoost *= 1.25; // Increase the rebirth boost by 25%
-                alert(`Rebirth successful! You now have a ${rebirthBoost * 100}% boost.`);
-                saveProgress();
-                updateUI();
-            } else {
-                alert("You need at least 200B score to rebirth.");
+        resetButton.addEventListener("click", () => {
+            if (confirm("Are you sure you want to reset?")) {
+                localStorage.clear();
+                location.reload();
             }
         });
 
-        // CPC Upgrade Button
-        cpcUpgradeButton.addEventListener("click", () => {
-            if (score >= cpcUpgradeCost) {
-                score -= cpcUpgradeCost;
-                cpc += 10; // Increase CPC by 10
-                cpcUpgradeCost *= 1.5; // Increase the cost for the next upgrade by 1.5x
-                saveProgress();
-                updateUI();
-            } else {
-                alert("Not enough score for CPC upgrade.");
-            }
-        });
+        function gameLoop() {
+            score += cps / 20;
+            updateUI();
+            saveProgress();
+            setTimeout(gameLoop, 50);
+        }
 
-        // CPS Upgrade Button
-        cpsUpgradeButton.addEventListener("click", () => {
-            if (score >= cpsUpgradeCost) {
-                score -= cpsUpgradeCost;
-                cps += 1; // Increase CPS by 1
-                cpsUpgradeCost *= 1.5; // Increase the cost for the next upgrade by 1.5x
-                saveProgress();
-                updateUI();
-            } else {
-                alert("Not enough score for CPS upgrade.");
-            }
-        });
-
-        // Load progress and update UI on page load
         loadProgress();
+        calculateOfflineEarnings();
         updateUI();
+        gameLoop();
     </script>
 </body>
 </html>
