@@ -212,4 +212,14 @@
                 saveProgress();
                 updateUI();
             } else {
-                alert(`You need at least
+                alert(`You need at least ${formatNumber(rebirthCost)} to rebirth!`);
+            }
+        });
+
+        loadProgress();
+        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
+        updateUI();
+    </script>
+</body>
+</html>
