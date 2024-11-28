@@ -109,9 +109,9 @@
     </div>
 
     <script>
-        let cpc = 1; // Clicks per click
-        let cps = 0; // Clicks per second
-        let score = 0;
+        let cpc = parseInt(localStorage.getItem("cpc")) || 1; // Clicks per click
+        let cps = parseInt(localStorage.getItem("cps")) || 0; // Clicks per second
+        let score = parseInt(localStorage.getItem("score")) || 0; // Total score
         let rebirths = 0;
         let rebirthBoost = 1;
 
@@ -161,30 +161,9 @@
         }
 
         function saveProgress() {
-            const progress = {
-                cpc,
-                cps,
-                score,
-                rebirths,
-                rebirthBoost,
-                cpcUpgrades,
-                cpsUpgrades,
-            };
-            localStorage.setItem("cpcGame", JSON.stringify(progress));
-        }
-
-        function loadProgress() {
-            const progress = JSON.parse(localStorage.getItem("cpcGame"));
-            if (progress) {
-                cpc = progress.cpc || 1;
-                cps = progress.cps || 0;
-                score = progress.score || 0;
-                rebirths = progress.rebirths || 0;
-                rebirthBoost = progress.rebirthBoost || 1;
-
-                if (progress.cpcUpgrades) cpcUpgrades.forEach((u, i) => u.cost = progress.cpcUpgrades[i].cost);
-                if (progress.cpsUpgrades) cpsUpgrades.forEach((u, i) => u.cost = progress.cpsUpgrades[i].cost);
-            }
+            localStorage.setItem("cpc", cpc);
+            localStorage.setItem("cps", cps);
+            localStorage.setItem("score", score);
         }
 
         function createUpgradeButtons(upgrades, container, type) {
@@ -261,7 +240,6 @@
 
         setInterval(cpsLoop, 50); // Call cpsLoop every 50ms
 
-        loadProgress();
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
