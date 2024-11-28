@@ -97,7 +97,6 @@
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="rebirth-button">Rebirth</button>
-        <h3 id="rebirth-info">Rebirths: 0 | Boost: x1</h3>
 
         <div class="upgrade-container">
             <div id="cpc-upgrades" class="upgrade-column">
@@ -110,32 +109,29 @@
     </div>
 
     <script>
-        // Load values from localStorage or initialize defaults
-        let cpc = parseInt(localStorage.getItem("cpc")) || 1;
-        let cps = parseInt(localStorage.getItem("cps")) || 0;
-        let score = parseInt(localStorage.getItem("score")) || 0;
-        let rebirths = parseInt(localStorage.getItem("rebirths")) || 0;
-        let rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+        let score = 0; // Player's current score
+        let cpc = 1; // Clicks per click
+        let cps = 0; // Clicks per second
+        let rebirths = 0;
+        let rebirthBoost = 1;
+        const rebirthCost = 2e11; // 200B for rebirth
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
-        const rebirthInfo = document.getElementById("rebirth-info");
         const clickButton = document.getElementById("click-button");
         const rebirthButton = document.getElementById("rebirth-button");
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
         const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        let cpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [
-            { effect: 1, cost: 100 },
-            { effect: 10, cost: 1e3 },
-            { effect: 100, cost: 1e4 },
-        ];
+        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
+            effect: Math.pow(10, i + 1),
+            cost: Math.pow(10, i + 2)
+        }));
 
-        let cpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [
-            { effect: 1, cost: 100 },
-            { effect: 10, cost: 1e3 },
-            { effect: 100, cost: 1e4 },
-        ];
+        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
+            effect: Math.pow(10, i + 1),
+            cost: Math.pow(10, i + 2)
+        }));
 
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
@@ -147,17 +143,28 @@
         function updateUI() {
             scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            rebirthInfo.textContent = `Rebirths: ${rebirths} | Boost: x${rebirthBoost.toFixed(2)}`;
         }
 
         function saveProgress() {
+            localStorage.setItem("score", score);
             localStorage.setItem("cpc", cpc);
             localStorage.setItem("cps", cps);
-            localStorage.setItem("score", score);
             localStorage.setItem("rebirths", rebirths);
             localStorage.setItem("rebirthBoost", rebirthBoost);
             localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades));
             localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades));
+        }
+
+        function loadProgress() {
+            score = parseFloat(localStorage.getItem("score")) || 0;
+            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+            cps = parseFloat(localStorage.getItem("cps")) || 0;
+            rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades"));
+            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades"));
+            if (savedCpcUpgrades) cpcUpgrades.forEach((u, i) => u.cost = savedCpcUpgrades[i].cost);
+            if (savedCpsUpgrades) cpsUpgrades.forEach((u, i) => u.cost = savedCpsUpgrades[i].cost);
         }
 
         function createUpgradeButtons(upgrades, container, type) {
@@ -172,7 +179,7 @@
                         if (type === "CPC") cpc += upgrade.effect;
                         else if (type === "CPS") cps += upgrade.effect;
 
-                        upgrade.cost *= 1.5;
+                        upgrade.cost *= 1.5; // Upgrade cost increases by 50%
                         button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                         updateUI();
                         saveProgress();
@@ -184,58 +191,25 @@
             });
         }
 
-        // Animation for click
-        function showClickAnimation(amount) {
-            const animation = document.createElement("div");
-            animation.className = "cpc-animation";
-            animation.textContent = `+${amount}`;
-            document.body.appendChild(animation);
-            const clickButtonRect = clickButton.getBoundingClientRect();
-            animation.style.left = `${clickButtonRect.left + clickButtonRect.width / 2}px`;
-            animation.style.top = `${clickButtonRect.top + clickButtonRect.height / 2}px`;
-
-            setTimeout(() => {
-                animation.remove();
-            }, 1000);
-        }
-
         clickButton.addEventListener("click", () => {
             score += cpc * rebirthBoost;
-            showClickAnimation(cpc);
             updateUI();
             saveProgress();
         });
 
         rebirthButton.addEventListener("click", () => {
-            if (score >= 2e9) { // Require 1M score to rebirth
+            if (score >= rebirthCost) {
                 score = 0;
                 cpc = 1;
                 cps = 0;
                 rebirths++;
                 rebirthBoost *= 1.25;
 
-                cpcUpgrades.forEach(upgrade => upgrade.cost *= 0.75);
-                cpsUpgrades.forEach(upgrade => upgrade.cost *= 0.75);
+                cpcUpgrades.forEach(u => u.cost = Math.max(1, Math.floor(u.cost * 0.75)));
+                cpsUpgrades.forEach(u => u.cost = Math.max(1, Math.floor(u.cost * 0.75)));
 
                 alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
                 saveProgress();
                 updateUI();
             } else {
-                alert("You need at least 200b score to rebirth!");
-            }
-        });
-
-        function cpsLoop() {
-            score += cps / 20;
-            updateUI();
-        }
-
-        setInterval(cpsLoop, 50); // 20 times per second
-
-        // Initialize UI
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        updateUI();
-    </script>
-</body>
-</html>
+                alert(`You need at least
