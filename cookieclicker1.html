@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background: #f0f4f8;
+        }
+        h1 {
+            color: #333;
+        }
+        #game-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #click-button {
+            padding: 15px 30px;
+            margin: 20px;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #click-button:hover {
+            background: #0056b3;
+        }
+        #rebirth-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #rebirth-button:hover {
+            background: #218838;
+        }
+        .upgrade-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .upgrade-button:hover {
+            background: #e68900;
+        }
+        .upgrade-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .upgrade-column {
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #special-upgrade-container {
+            margin-top: 20px;
+        }
+        #double-upgrade-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #double-upgrade-button:hover {
+            background: #e68900;
+        }
+        #double-upgrade-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clicker Game</h1>
+    <div id="game-container">
+        <h2 id="score">Score: 0</h2>
+        <button id="click-button">Click Me!</button>
+        <h3 id="cps">CPS: 0</h3>
+        <button id="rebirth-button">Rebirth</button>
+
+        <div class="upgrade-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>CPC Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>CPS Upgrades</h3>
+            </div>
+        </div>
+
+        <!-- Double Upgrade Button Section -->
+        <div id="special-upgrade-container">
+            <button id="double-upgrade-button">Double CPC and CPS</button>
+        </div>
+    </div>
+
+    <script>
+        let score = parseFloat(localStorage.getItem("score")) || 0;
+        let cpc = parseFloat(localStorage.getItem("cpc")) || 1; // Clicks per click
+        let cps = parseFloat(localStorage.getItem("cps")) || 0; // Clicks per second
+        let rebirths = 0;
+        let rebirthBoost = 1;
+
+        const scoreDisplay = document.getElementById("score");
+        const cpsDisplay = document.getElementById("cps");
+        const clickButton = document.getElementById("click-button");
+        const rebirthButton = document.getElementById("rebirth-button");
+        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
+        const doubleUpgradeButton = document.getElementById("double-upgrade-button");
+
+        const doubleUpgradeUsed = JSON.parse(localStorage.getItem("doubleUpgradeUsed")) || false;
+
+        const cpcUpgrades = [
+            { effect: 1, cost: 100 },
+            { effect: 10, cost: 1e3 },
+            { effect: 100, cost: 1e4 },
+            { effect: 1e3, cost: 1e5 },
+            { effect: 1e4, cost: 1e6 },
+            { effect: 1e5, cost: 1e7 },
+            { effect: 1e6, cost: 1e8 },
+            { effect: 1e7, cost: 1e9 },
+            { effect: 1e8, cost: 1e10 },
+            { effect: 1e9, cost: 1e11 },
+        ];
+
+        const cpsUpgrades = [...cpcUpgrades];
+
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+            return Math.floor(num).toString();
+        }
+
+        function updateUI() {
+            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+        }
+
+        function saveProgress() {
+            localStorage.setItem("score", score);
+            localStorage.setItem("cpc", cpc);
+            localStorage.setItem("cps", cps);
+        }
+
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = ""; // Clear existing buttons
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade-button";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.addEventListener("click", () => {
+                    if (score >= upgrade.cost) {
+                        score -= upgrade.cost;
+                        if (type === "CPC") cpc += upgrade.effect;
+                        else if (type === "CPS") cps += upgrade.effect;
+
+                        upgrade.cost *= 1.5; // Cost increases by 50%
+                        button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                        updateUI();
+                        saveProgress();
+                    }
+                });
+                container.appendChild(button);
+            });
+        }
+
+        clickButton.addEventListener("click", () => {
+            score += cpc * rebirthBoost;
+            updateUI();
+            saveProgress();
+        });
+
+        rebirthButton.addEventListener("click", () => {
+            if (score >= 2e11) {
+                score = 0;
+                cps = 0;
+                cpc = 1;
+                rebirths++;
+                rebirthBoost *= 1.25;
+                saveProgress();
+                updateUI();
+            }
+        });
+
+        doubleUpgradeButton.addEventListener("click", () => {
+            if (!doubleUpgradeUsed) {
+                cpc *= 2;
+                cps *= 2;
+                localStorage.setItem("doubleUpgradeUsed", JSON.stringify(true));
+                doubleUpgradeButton.disabled = true;
+                doubleUpgradeButton.textContent = "Upgrade Used";
+                saveProgress();
+            }
+        });
+
+        if (doubleUpgradeUsed) {
+            doubleUpgradeButton.disabled = true;
+            doubleUpgradeButton.textContent = "Upgrade Used";
+        }
+
+        setInterval(() => {
+            score += cps / 20; // CPS effect happens 20 times per second
+            updateUI();
+            saveProgress();
+        }, 50);
+
+        updateUI();
+        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
+    </script>
+</body>
+</html>
