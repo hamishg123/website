@@ -93,7 +93,7 @@
 <body>
     <h1>Clicker Game</h1>
     <div id="game-container">
-        <h2 id="score">Score: 0</h2>
+        <h2 id="score">CPC: 0</h2>
         <button id="click-button">Click Me!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="rebirth-button">Rebirth</button>
@@ -109,7 +109,6 @@
     </div>
 
     <script>
-        let score = 0;
         let cpc = 1; // Clicks per click
         let cps = 0; // Clicks per second
         let rebirths = 0;
@@ -156,13 +155,12 @@
         }
 
         function updateUI() {
-            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+            scoreDisplay.textContent = `CPC: ${formatNumber(cpc)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
         }
 
         function saveProgress() {
             const progress = {
-                score,
                 cpc,
                 cps,
                 rebirths,
@@ -170,13 +168,12 @@
                 cpcUpgrades,
                 cpsUpgrades,
             };
-            localStorage.setItem("clickerGame", JSON.stringify(progress));
+            localStorage.setItem("cpcCpsGame", JSON.stringify(progress));
         }
 
         function loadProgress() {
-            const progress = JSON.parse(localStorage.getItem("clickerGame"));
+            const progress = JSON.parse(localStorage.getItem("cpcCpsGame"));
             if (progress) {
-                score = progress.score || 0;
                 cpc = progress.cpc || 1;
                 cps = progress.cps || 0;
                 rebirths = progress.rebirths || 0;
@@ -228,8 +225,9 @@
         }
 
         clickButton.addEventListener("click", () => {
+            cpc += 1; // Increase CPC by 1 each click
             score += cpc * rebirthBoost;
-            showClickAnimation(cpc * rebirthBoost); // Show animation
+            showClickAnimation(cpc); // Show animation
             updateUI();
             saveProgress();
         });
