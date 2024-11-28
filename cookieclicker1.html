@@ -168,11 +168,11 @@
                 cpcUpgrades,
                 cpsUpgrades,
             };
-            localStorage.setItem("cpcCpsGame", JSON.stringify(progress));
+            localStorage.setItem("cpc", JSON.stringify(progress)); // Change here: storing under "cpc"
         }
 
         function loadProgress() {
-            const progress = JSON.parse(localStorage.getItem("cpcCpsGame"));
+            const progress = JSON.parse(localStorage.getItem("cpc"));
             if (progress) {
                 cpc = progress.cpc || 1;
                 cps = progress.cps || 0;
