@@ -228,6 +228,22 @@
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
+
+        function updateUpgradeButtons() {
+    document.querySelectorAll(".upgrade-button").forEach(button => {
+        const index = parseInt(button.dataset.index, 10);
+        const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+        const upgrade = upgrades[index];
+        
+        // Update button text with current cost
+        const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
+        button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+        
+        // Enable/disable based on score
+        button.disabled = score < upgrade.cost;
+    });
+}
+
     </script>
 </body>
 </html>
