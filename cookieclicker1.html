@@ -77,17 +77,6 @@
         h3 {
             margin-bottom: 10px;
         }
-        .cpc-animation {
-            position: absolute;
-            font-size: 20px;
-            color: #007bff;
-            animation: fadeInOut 1s ease;
-        }
-        @keyframes fadeInOut {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; transform: translateY(-10px); }
-            100% { opacity: 0; transform: translateY(-20px); }
-        }
     </style>
 </head>
 <body>
@@ -161,10 +150,16 @@
             cps = parseFloat(localStorage.getItem("cps")) || 0;
             rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
             rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
-            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades"));
-            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades"));
-            if (savedCpcUpgrades) cpcUpgrades.forEach((u, i) => u.cost = savedCpcUpgrades[i].cost);
-            if (savedCpsUpgrades) cpsUpgrades.forEach((u, i) => u.cost = savedCpsUpgrades[i].cost);
+            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
+            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
+            cpcUpgrades.forEach((u, i) => {
+                u.cost = savedCpcUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpcUpgrades[i]?.effect || Math.pow(10, i + 1);
+            });
+            cpsUpgrades.forEach((u, i) => {
+                u.cost = savedCpsUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpsUpgrades[i]?.effect || Math.pow(10, i + 1);
+            });
         }
 
         function createUpgradeButtons(upgrades, container, type) {
@@ -172,7 +167,7 @@
             upgrades.forEach((upgrade, index) => {
                 const button = document.createElement("button");
                 button.className = "upgrade-button";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.textContent = `${type} +${formatNumber(upgrade.effect || 0)} - Cost: ${formatNumber(upgrade.cost || 0)}`;
                 button.addEventListener("click", () => {
                     if (score >= upgrade.cost) {
                         score -= upgrade.cost;
