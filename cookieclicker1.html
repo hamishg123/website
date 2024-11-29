@@ -149,53 +149,60 @@
             updateUpgradeButtons();
         }
 
-        function createClickAnimation(x, y) {
-            const anim = document.createElement("div");
-            anim.className = "click-animation";
-            anim.style.left = `${x}px`;
-            anim.style.top = `${y}px`;
-            anim.textContent = `+${formatNumber(cpc * rebirthBoost)}`;
-            document.body.appendChild(anim);
-            setTimeout(() => anim.remove(), 1000);
-        }
-
-        clickButton.addEventListener("click", (e) => {
-            const rect = clickButton.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            score += cpc * rebirthBoost;
-            createClickAnimation(e.clientX, e.clientY);
-            updateUI();
-            saveProgress();
-        });
-
-        function updateUpgradeButtons() {
-            document.querySelectorAll(".upgrade-button").forEach(button => {
-                const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
-                const upgrade = upgrades[index];
-                button.textContent = `${button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS"} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = ""; // Clear old buttons
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade-button";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.dataset.index = index;
                 button.disabled = score < upgrade.cost;
+                container.appendChild(button);
             });
         }
 
-        function handleUpgradeClick(type, index) {
-            const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
-            const upgrade = upgrades[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                if (type === "CPC") cpc += upgrade.effect;
-                else cps += upgrade.effect;
-
-                upgrade.cost *= 1.5; // Cost increase
-                updateUI();
-                saveProgress();
-            }
+        function updateUpgradeButtons() {
+            createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+            createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         }
 
-        // Other unchanged functions...
+        clickButton.addEventListener("click", () => {
+            score += cpc * rebirthBoost;
+            updateUI();
+        });
 
+        cpcUpgradesContainer.addEventListener("click", event => {
+            if (event.target.classList.contains("upgrade-button")) {
+                const index = parseInt(event.target.dataset.index, 10);
+                const upgrade = cpcUpgrades[index];
+                if (score >= upgrade.cost) {
+                    score -= upgrade.cost;
+                    cpc += upgrade.effect;
+                    upgrade.cost *= 1.5;
+                    updateUI();
+                }
+            }
+        });
+
+        cpsUpgradesContainer.addEventListener("click", event => {
+            if (event.target.classList.contains("upgrade-button")) {
+                const index = parseInt(event.target.dataset.index, 10);
+                const upgrade = cpsUpgrades[index];
+                if (score >= upgrade.cost) {
+                    score -= upgrade.cost;
+                    cps += upgrade.effect;
+                    upgrade.cost *= 1.5;
+                    updateUI();
+                }
+            }
+        });
+
+        setInterval(() => {
+            score += cps;
+            updateUI();
+        }, 1000);
+
+        updateUpgradeButtons();
         updateUI();
     </script>
 </body>
