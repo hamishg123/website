@@ -1,4 +1,123 @@
-let score = 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Game</title>
+    <style>
+        .floating-text {
+        position: absolute;
+        color: #007bff;
+        font-size: 16px;
+        animation: floatUp 1s ease-out forwards;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+    }
+        /* Same styling as before */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background: #f0f4f8;
+        }
+        h1 {
+            color: #333;
+        }
+        #game-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #click-button {
+            padding: 15px 30px;
+            margin: 20px;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #click-button:hover {
+            background: #0056b3;
+        }
+        #rebirth-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #rebirth-button:hover {
+            background: #218838;
+        }
+        .upgrade-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .upgrade-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .upgrade-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .upgrade-column {
+            width: 48%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Clicker Game</h1>
+    <div id="game-container">
+        <h2 id="score">Score: 0</h2>
+        <h3 id="rebirths">Rebirths: 0</h3>
+        <button id="click-button">Click Me!</button>
+        <h3 id="cps">CPS: 0</h3>
+        <button id="rebirth-button">Rebirth</button>
+
+        <div class="upgrade-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>CPC Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>CPS Upgrades</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let score = 0;
 let cpc = 1;
 let cps = 0;
 let rebirths = 0;
@@ -173,3 +292,10 @@ function showCpcAnimation(event, cpcValue) {
         floatingText.remove();
     });
 }
+
+</script>
+
+
+    
+</body>
+</html>
