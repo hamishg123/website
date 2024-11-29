@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,24 +78,6 @@
         h3 {
             margin-bottom: 10px;
         }
-        /* Floating text animation */
-        .floating-text {
-            position: absolute;
-            font-size: 16px;
-            color: #007bff;
-            animation: fadeUp 1s ease-out;
-            pointer-events: none;
-        }
-        @keyframes fadeUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-40px);
-            }
-        }
     </style>
 </head>
 <body>
@@ -168,30 +151,83 @@
             cps = parseFloat(localStorage.getItem("cps")) || 0;
             rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
             rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
+            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
+            cpcUpgrades.forEach((u, i) => {
+                u.cost = savedCpcUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpcUpgrades[i]?.effect || Math.pow(10, i + 1);
+            });
+            cpsUpgrades.forEach((u, i) => {
+                u.cost = savedCpsUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpsUpgrades[i]?.effect || Math.pow(10, i + 1);
+            });
         }
 
-        function createFloatingText(value, x, y) {
-            const floatingText = document.createElement("div");
-            floatingText.className = "floating-text";
-            floatingText.textContent = `+${formatNumber(value)}`;
-            floatingText.style.left = `${x}px`;
-            floatingText.style.top = `${y}px`;
-            document.body.appendChild(floatingText);
-            setTimeout(() => floatingText.remove(), 1000); // Remove after animation
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = "";
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade-button";
+                button.textContent = `${type} +${formatNumber(upgrade.effect || 0)} - Cost: ${formatNumber(upgrade.cost || 0)}`;
+                button.addEventListener("click", () => {
+                    if (score >= upgrade.cost) {
+                        score -= upgrade.cost;
+                        if (type === "CPC") cpc += upgrade.effect;
+                        else if (type === "CPS") cps += upgrade.effect;
+
+                        upgrade.cost *= 1.5; // Upgrade cost increases by 50%
+                        button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                        updateUI();
+                        saveProgress();
+                    } else {
+                        alert("Not enough score for upgrade!");
+                    }
+                });
+                container.appendChild(button);
+            });
         }
 
-        clickButton.addEventListener("click", (event) => {
-            const rect = clickButton.getBoundingClientRect();
-            const x = event.clientX - rect.left + rect.x;
-            const y = event.clientY - rect.top + rect.y;
+        clickButton.addEventListener("click", () => {
             score += cpc * rebirthBoost;
-            createFloatingText(cpc * rebirthBoost, x, y);
             updateUI();
             saveProgress();
         });
 
+        rebirthButton.addEventListener("click", () => {
+            if (score >= rebirthCost) {
+                score = 0;
+                cpc = 1;
+                cps = 0;
+                rebirths++;
+                rebirthBoost *= 1.25;
+
+                cpcUpgrades.forEach(u => u.cost = Math.max(1, Math.floor(u.cost * 0.75)));
+                cpsUpgrades.forEach(u => u.cost = Math.max(1, Math.floor(u.cost * 0.75)));
+
+                alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
+                saveProgress();
+                updateUI();
+            } else {
+                alert(`You need at least ${formatNumber(rebirthCost)} to rebirth!`);
+            }
+        });
+
         loadProgress();
+        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
+        // Function to increase the score by CPS every second
+function startCpsInterval() {
+    setInterval(() => {
+        score += cps;
+        updateUI();
+        saveProgress();
+    }, 1000); // Runs every 1000 milliseconds (1 second)
+}
+
+// Start the CPS interval when the page loads
+startCpsInterval();
+
     </script>
 </body>
 </html>
