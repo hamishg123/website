@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -215,6 +217,18 @@
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
+        // Function to increase the score by CPS every second
+function startCpsInterval() {
+    setInterval(() => {
+        score += cps;
+        updateUI();
+        saveProgress();
+    }, 1000); // Runs every 1000 milliseconds (1 second)
+}
+
+// Start the CPS interval when the page loads
+startCpsInterval();
+
     </script>
 </body>
 </html>
