@@ -1,249 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicker Game</title>
-    <style>
-        /* Same styling as before */
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-            background: #f0f4f8;
-        }
-        h1 {
-            color: #333;
-        }
-        #game-container {
-            max-width: 800px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        #click-button {
-            padding: 15px 30px;
-            margin: 20px;
-            font-size: 18px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #click-button:hover {
-            background: #0056b3;
-        }
-        #rebirth-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        #rebirth-button:hover {
-            background: #218838;
-        }
-        .upgrade-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        .upgrade-button:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-        .upgrade-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            margin-top: 20px;
-        }
-        .upgrade-column {
-            width: 48%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-    </style>
-</head>
-<body>
-    <h1>Clicker Game</h1>
-    <div id="game-container">
-        <h2 id="score">Score: 0</h2>
-        <h3 id="rebirths">Rebirths: 0</h3>
-        <button id="click-button">Click Me!</button>
-        <h3 id="cps">CPS: 0</h3>
-        <button id="rebirth-button">Rebirth</button>
+<script>
+    let score = 0;
+    let cpc = 1;
+    let cps = 0;
+    let rebirths = 0;
+    let rebirthBoost = 1;
+    const rebirthCost = 2e11; // 200B for rebirth
 
-        <div class="upgrade-container">
-            <div id="cpc-upgrades" class="upgrade-column">
-                <h3>CPC Upgrades</h3>
-            </div>
-            <div id="cps-upgrades" class="upgrade-column">
-                <h3>CPS Upgrades</h3>
-            </div>
-        </div>
-    </div>
+    const scoreDisplay = document.getElementById("score");
+    const cpsDisplay = document.getElementById("cps");
+    const rebirthsDisplay = document.getElementById("rebirths");
+    const clickButton = document.getElementById("click-button");
+    const rebirthButton = document.getElementById("rebirth-button");
+    const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+    const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-    <script>
-        let score = 0;
-        let cpc = 1;
-        let cps = 0;
-        let rebirths = 0;
-        let rebirthBoost = 1;
-        const rebirthCost = 2e11; // 200B for rebirth
+    const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
+        effect: Math.pow(10, i + 1) / 10,
+        cost: Math.pow(10, i + 2),
+    }));
 
-        const scoreDisplay = document.getElementById("score");
-        const cpsDisplay = document.getElementById("cps");
-        const rebirthsDisplay = document.getElementById("rebirths");
-        const clickButton = document.getElementById("click-button");
-        const rebirthButton = document.getElementById("rebirth-button");
-        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
-        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
+    const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
+        effect: Math.pow(10, i + 1) / 10,
+        cost: Math.pow(10, i + 2),
+    }));
 
-        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2)
-        }));
+    function formatNumber(num) {
+        if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+        if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+        if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+        return Math.floor(num).toString();
+    }
 
-        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2)
-        }));
+    function updateUI() {
+        scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+        cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+        rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
+        updateUpgradeButtons();
+    }
 
-        function formatNumber(num) {
-            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
-            return Math.floor(num).toString();
-        }
+    function saveProgress() {
+        localStorage.setItem("score", score);
+        localStorage.setItem("cpc", cpc);
+        localStorage.setItem("cps", cps);
+        localStorage.setItem("rebirths", rebirths);
+        localStorage.setItem("rebirthBoost", rebirthBoost);
+        localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
+        localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+    }
 
-        function updateUI() {
-            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
-            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
-            updateUpgradeButtons();
-        }
+    function loadProgress() {
+        score = parseFloat(localStorage.getItem("score")) || 0;
+        cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+        cps = parseFloat(localStorage.getItem("cps")) || 0;
+        rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+        rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
 
-        function saveProgress() {
-            localStorage.setItem("score", score);
-            localStorage.setItem("cpc", cpc);
-            localStorage.setItem("cps", cps);
-            localStorage.setItem("rebirths", rebirths);
-            localStorage.setItem("rebirthBoost", rebirthBoost);
-        }
+        const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
+        const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
 
-        function loadProgress() {
-            score = parseFloat(localStorage.getItem("score")) || 0;
-            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
-            cps = parseFloat(localStorage.getItem("cps")) || 0;
-            rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
-            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
-        }
-
-        function createUpgradeButtons(upgrades, container, type) {
-            container.innerHTML = "";
-            upgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade-button";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.dataset.index = index;
-                container.appendChild(button);
+        if (savedCpcCosts) {
+            cpcUpgrades.forEach((upgrade, i) => {
+                upgrade.cost = savedCpcCosts[i];
             });
         }
 
-        function updateUpgradeButtons() {
-            document.querySelectorAll(".upgrade-button").forEach(button => {
-                const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
-                const upgrade = upgrades[index];
-                button.disabled = score < upgrade.cost;
+        if (savedCpsCosts) {
+            cpsUpgrades.forEach((upgrade, i) => {
+                upgrade.cost = savedCpsCosts[i];
             });
         }
+    }
 
-        function handleUpgradeClick(type, index) {
-            const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
+    function createUpgradeButtons(upgrades, container, type) {
+        container.innerHTML = "";
+        upgrades.forEach((upgrade, index) => {
+            const button = document.createElement("button");
+            button.className = "upgrade-button";
+            button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+            button.dataset.index = index;
+            container.appendChild(button);
+        });
+    }
+
+    function updateUpgradeButtons() {
+        document.querySelectorAll(".upgrade-button").forEach(button => {
+            const index = parseInt(button.dataset.index, 10);
+            const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
             const upgrade = upgrades[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                if (type === "CPC") cpc += upgrade.effect;
-                else cps += upgrade.effect;
-
-                upgrade.cost *= 1.5;
-                updateUI();
-                saveProgress();
-            }
-        }
-
-        clickButton.addEventListener("click", () => {
-            score += cpc * rebirthBoost;
-            updateUI();
-            saveProgress();
+            
+            // Update button text with current cost
+            const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
+            button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+            
+            // Enable/disable based on score
+            button.disabled = score < upgrade.cost;
         });
+    }
 
-        rebirthButton.addEventListener("click", () => {
-            if (score >= rebirthCost) {
-                score = 0;
-                cpc = 1;
-                cps = 0;
-                rebirths++;
-                rebirthBoost *= 1.25;
-                alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-                updateUI();
-                saveProgress();
-            }
-        });
-
-        cpcUpgradesContainer.addEventListener("click", event => {
-            if (event.target.classList.contains("upgrade-button")) {
-                handleUpgradeClick("CPC", event.target.dataset.index);
-            }
-        });
-
-        cpsUpgradesContainer.addEventListener("click", event => {
-            if (event.target.classList.contains("upgrade-button")) {
-                handleUpgradeClick("CPS", event.target.dataset.index);
-            }
-        });
-
-        setInterval(() => {
-            score += cps;
-            updateUI();
-            saveProgress();
-        }, 1000);
-
-        loadProgress();
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        updateUI();
-
-        function updateUpgradeButtons() {
-    document.querySelectorAll(".upgrade-button").forEach(button => {
-        const index = parseInt(button.dataset.index, 10);
-        const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+    function handleUpgradeClick(type, index) {
+        const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
         const upgrade = upgrades[index];
-        
-        // Update button text with current cost
-        const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
-        button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-        
-        // Enable/disable based on score
-        button.disabled = score < upgrade.cost;
-    });
-}
+        if (score >= upgrade.cost) {
+            score -= upgrade.cost;
+            if (type === "CPC") cpc += upgrade.effect;
+            else cps += upgrade.effect;
 
-    </script>
-</body>
-</html>
+            upgrade.cost *= 1.5;
+            updateUI();
+            saveProgress();
+        }
+    }
+
+    clickButton.addEventListener("click", () => {
+        score += cpc * rebirthBoost;
+        updateUI();
+        saveProgress();
+    });
+
+    rebirthButton.addEventListener("click", () => {
+        if (score >= rebirthCost) {
+            score = 0;
+            cpc = 1;
+            cps = 0;
+            rebirths++;
+            rebirthBoost *= 1.25;
+            alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
+            updateUI();
+            saveProgress();
+        }
+    });
+
+    cpcUpgradesContainer.addEventListener("click", event => {
+        if (event.target.classList.contains("upgrade-button")) {
+            handleUpgradeClick("CPC", event.target.dataset.index);
+        }
+    });
+
+    cpsUpgradesContainer.addEventListener("click", event => {
+        if (event.target.classList.contains("upgrade-button")) {
+            handleUpgradeClick("CPS", event.target.dataset.index);
+        }
+    });
+
+    setInterval(() => {
+        score += cps;
+        updateUI();
+        saveProgress();
+    }, 1000);
+
+    loadProgress();
+    createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+    createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
+    updateUI();
+</script>
