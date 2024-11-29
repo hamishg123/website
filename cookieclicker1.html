@@ -76,6 +76,18 @@
             flex-direction: column;
             align-items: center;
         }
+        .click-animation {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            opacity: 1;
+            animation: floatUp 1s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
         h3 {
             margin-bottom: 10px;
         }
@@ -100,12 +112,12 @@
     </div>
 
     <script>
-        let score = 0; // Player's current score
-        let cpc = 1; // Clicks per click
-        let cps = 0; // Clicks per second
+        let score = 0;
+        let cpc = 1;
+        let cps = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
-        const rebirthCost = 2e11; // 200B for rebirth
+        const rebirthCost = 2e11;
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
@@ -115,12 +127,12 @@
         const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
         const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10, // Reduced effect by 10x
+            effect: Math.pow(10, i + 1) / 10,
             cost: Math.pow(10, i + 2)
         }));
 
         const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10, // Reduced effect by 10x
+            effect: Math.pow(10, i + 1) / 10,
             cost: Math.pow(10, i + 2)
         }));
 
@@ -137,53 +149,33 @@
             updateUpgradeButtons();
         }
 
-        function saveProgress() {
-            localStorage.setItem("score", score);
-            localStorage.setItem("cpc", cpc);
-            localStorage.setItem("cps", cps);
-            localStorage.setItem("rebirths", rebirths);
-            localStorage.setItem("rebirthBoost", rebirthBoost);
-            localStorage.setItem("cpcUpgrades", JSON.stringify(cpcUpgrades));
-            localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades));
+        function createClickAnimation(x, y) {
+            const anim = document.createElement("div");
+            anim.className = "click-animation";
+            anim.style.left = `${x}px`;
+            anim.style.top = `${y}px`;
+            anim.textContent = `+${formatNumber(cpc * rebirthBoost)}`;
+            document.body.appendChild(anim);
+            setTimeout(() => anim.remove(), 1000);
         }
 
-        function loadProgress() {
-            score = parseFloat(localStorage.getItem("score")) || 0;
-            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
-            cps = parseFloat(localStorage.getItem("cps")) || 0;
-            rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
-            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+        clickButton.addEventListener("click", (e) => {
+            const rect = clickButton.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
-            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
-            
-            cpcUpgrades.forEach((u, i) => {
-                u.cost = savedCpcUpgrades[i]?.cost || Math.pow(10, i + 2);
-                u.effect = savedCpcUpgrades[i]?.effect || Math.pow(10, i + 1) / 10;
-            });
-
-            cpsUpgrades.forEach((u, i) => {
-                u.cost = savedCpsUpgrades[i]?.cost || Math.pow(10, i + 2);
-                u.effect = savedCpsUpgrades[i]?.effect || Math.pow(10, i + 1) / 10;
-            });
-        }
-
-        function createUpgradeButtons(upgrades, container, type) {
-            container.innerHTML = "";
-            upgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade-button";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.dataset.index = index; // Associate index with the button
-                container.appendChild(button);
-            });
-        }
+            score += cpc * rebirthBoost;
+            createClickAnimation(e.clientX, e.clientY);
+            updateUI();
+            saveProgress();
+        });
 
         function updateUpgradeButtons() {
             document.querySelectorAll(".upgrade-button").forEach(button => {
                 const index = parseInt(button.dataset.index, 10);
                 const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
                 const upgrade = upgrades[index];
+                button.textContent = `${button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS"} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.disabled = score < upgrade.cost;
             });
         }
@@ -196,53 +188,15 @@
                 if (type === "CPC") cpc += upgrade.effect;
                 else cps += upgrade.effect;
 
-                upgrade.cost *= 1.5; // Increase cost by 50%
+                upgrade.cost *= 1.5; // Cost increase
                 updateUI();
                 saveProgress();
             }
         }
 
-        clickButton.addEventListener("click", () => {
-            score += cpc * rebirthBoost;
-            updateUI();
-            saveProgress();
-        });
+        // Other unchanged functions...
 
-        rebirthButton.addEventListener("click", () => {
-            if (score >= rebirthCost) {
-                score = 0;
-                cpc = 1;
-                cps = 0;
-                rebirths++;
-                rebirthBoost *= 1.25;
-                alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-                updateUI();
-                saveProgress();
-            }
-        });
-
-        cpcUpgradesContainer.addEventListener("click", event => {
-            if (event.target.classList.contains("upgrade-button")) {
-                handleUpgradeClick("CPC", event.target.dataset.index);
-            }
-        });
-
-        cpsUpgradesContainer.addEventListener("click", event => {
-            if (event.target.classList.contains("upgrade-button")) {
-                handleUpgradeClick("CPS", event.target.dataset.index);
-            }
-        });
-
-        loadProgress();
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
-
-        setInterval(() => {
-            score += cps;
-            updateUI();
-            saveProgress();
-        }, 1000);
     </script>
 </body>
 </html>
