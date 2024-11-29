@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicker Game</title>
     <style>
+        .floating-text {
+        position: absolute;
+        color: #007bff;
+        font-size: 16px;
+        animation: floatUp 1s ease-out forwards;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+    }
         /* Same styling as before */
         body {
             font-family: Arial, sans-serif;
@@ -251,6 +270,36 @@
     createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
     createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
     updateUI();
+
+    function showCpcAnimation(event) {
+        const cpcValue = `+${formatNumber(cpc * rebirthBoost)}`;
+        
+        // Create the floating text element
+        const floatingText = document.createElement("span");
+        floatingText.textContent = cpcValue;
+        floatingText.className = "floating-text";
+
+        // Append to the body and position it near the click event
+        document.body.appendChild(floatingText);
+        const rect = clickButton.getBoundingClientRect();
+        floatingText.style.left = `${rect.left + rect.width / 2}px`;
+        floatingText.style.top = `${rect.top}px`;
+
+        // Remove the floating text after the animation
+        floatingText.addEventListener("animationend", () => {
+            floatingText.remove();
+        });
+    }
+
+    // Add event listener for click animation
+    clickButton.addEventListener("click", event => {
+        score += cpc * rebirthBoost;
+        updateUI();
+        saveProgress();
+        showCpcAnimation(event); // Trigger the animation
+    });
+
+    // Existing code...
 </script>
 
 
