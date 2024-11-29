@@ -146,6 +146,27 @@
             localStorage.setItem("cpsUpgrades", JSON.stringify(cpsUpgrades));
         }
 
+        function loadProgress() {
+            score = parseFloat(localStorage.getItem("score")) || 0;
+            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+            cps = parseFloat(localStorage.getItem("cps")) || 0;
+            rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+
+            const savedCpcUpgrades = JSON.parse(localStorage.getItem("cpcUpgrades")) || [];
+            const savedCpsUpgrades = JSON.parse(localStorage.getItem("cpsUpgrades")) || [];
+            
+            cpcUpgrades.forEach((u, i) => {
+                u.cost = savedCpcUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpcUpgrades[i]?.effect || Math.pow(10, i + 1) / 10;
+            });
+
+            cpsUpgrades.forEach((u, i) => {
+                u.cost = savedCpsUpgrades[i]?.cost || Math.pow(10, i + 2);
+                u.effect = savedCpsUpgrades[i]?.effect || Math.pow(10, i + 1) / 10;
+            });
+        }
+
         function createUpgradeButtons(upgrades, container, type) {
             container.innerHTML = "";
             upgrades.forEach((upgrade, index) => {
@@ -211,6 +232,7 @@
             }
         });
 
+        loadProgress();
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
         updateUI();
