@@ -228,6 +228,49 @@ function startCpsInterval() {
 
 // Start the CPS interval when the page loads
 startCpsInterval();
+        // Function to create and animate CPC pop-up
+function showCpcAnimation(value, x, y) {
+    const animation = document.createElement("div");
+    animation.textContent = `+${value}`;
+    animation.style.position = "absolute";
+    animation.style.left = `${x}px`;
+    animation.style.top = `${y}px`;
+    animation.style.fontSize = "20px";
+    animation.style.fontWeight = "bold";
+    animation.style.color = "#28a745"; // Green color
+    animation.style.pointerEvents = "none";
+    animation.style.transition = "transform 1s ease-out, opacity 1s ease-out";
+    animation.style.transform = "translateY(-50px)";
+    animation.style.opacity = "1";
+
+    document.body.appendChild(animation);
+
+    // Trigger the animation
+    setTimeout(() => {
+        animation.style.transform = "translateY(-100px)";
+        animation.style.opacity = "0";
+    }, 0);
+
+    // Remove the animation after it finishes
+    setTimeout(() => {
+        document.body.removeChild(animation);
+    }, 1000);
+}
+
+// Update the click event listener
+clickButton.addEventListener("click", (event) => {
+    const rect = clickButton.getBoundingClientRect();
+    const x = rect.left + rect.width / 2; // Center of the button
+    const y = rect.top; // Top of the button
+
+    score += cpc * rebirthBoost;
+    updateUI();
+    saveProgress();
+
+    // Show the CPC animation
+    showCpcAnimation(cpc * rebirthBoost, x, y);
+});
+
 
     </script>
 </body>
