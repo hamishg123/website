@@ -191,7 +191,82 @@
         loadProgress();
         initializeUpgrades();
 
-        // Create and update UI functions remain the same
+        function saveProgress() {
+    localStorage.setItem("score", score);
+    localStorage.setItem("cpc", cpc);
+    localStorage.setItem("cps", cps);
+    localStorage.setItem("rebirths", rebirths);
+    localStorage.setItem("rebirthBoost", rebirthBoost);
+    localStorage.setItem("currentWorld", currentWorld);
+}
+
+function loadProgress() {
+    score = parseFloat(localStorage.getItem("score")) || 0;
+    cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+    cps = parseFloat(localStorage.getItem("cps")) || 0;
+    rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+    rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+    currentWorld = localStorage.getItem("currentWorld") || "Default";
+
+    initializeUpgrades();
+}
+
+function createUpgradeButtons(upgrades, container) {
+    container.innerHTML = "";
+    upgrades.forEach((upgrade, index) => {
+        const button = document.createElement("button");
+        button.className = "upgrade-button";
+        button.textContent = ${upgrade.name} - Cost: ${formatNumber(upgrade.cost)};
+        button.dataset.index = index;
+        container.appendChild(button);
+    });
+}
+
+function updateUpgradeButtons() {
+    document.querySelectorAll(".upgrade-button").forEach(button => {
+        const index = parseInt(button.dataset.index, 10);
+        const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+        const upgrade = upgrades[index];
+        button.textContent = ${upgrade.name} - Cost: ${formatNumber(upgrade.cost)};
+        button.disabled = score < upgrade.cost;
+    });
+}
+
+rebirthButton.addEventListener("click", () => {
+    if (rebirths >= 5 && currentWorld === "Default" && score >= nextWorldCost) {
+        // Transition to Fire World
+        score = 0;
+        cpc = 1;
+        cps = 0;
+        rebirthBoost *= 1.5;
+        currentWorld = "Fire";
+        initializeUpgrades();
+        alert("Welcome to the Fire World!");
+    } else if (rebirths < 5 && score >= rebirthCost) {
+        // Perform a regular rebirth
+        score = 0;
+        cpc = 1;
+        cps = 0;
+        rebirths++;
+        rebirthBoost *= 1.25;
+        initializeUpgrades();
+        alert(Rebirth successful! Boost: x${rebirthBoost.toFixed(2)});
+    }
+    updateUI();
+    saveProgress();
+});
+
+setInterval(() => {
+    score += cps;
+    updateUI();
+    saveProgress();
+}, 1000);
+
+// Initialize game
+loadProgress();
+createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer);
+createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer);
+updateUI();
     </script>
 </body>
 </html>
