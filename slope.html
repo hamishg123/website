@@ -13,17 +13,19 @@
             display: block;
             cursor: crosshair;
         }
-        #duplicateButton, #clearButton {
+        button {
             position: absolute;
             top: 10px;
             padding: 10px 20px;
             font-size: 16px;
-            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             z-index: 10;
+        }
+        #duplicateButton {
+            background-color: #28a745;
         }
         #duplicateButton.active {
             background-color: #ff6347;
@@ -32,28 +34,42 @@
             top: 50px;
             background-color: #dc3545;
         }
+        #gravityButton {
+            top: 90px;
+            background-color: #007bff;
+        }
+        #bounceButton {
+            top: 130px;
+            background-color: #6c757d;
+        }
     </style>
 </head>
 <body>
     <button id="duplicateButton">Duplicate On Bounce: OFF</button>
     <button id="clearButton">Clear Drawings</button>
+    <button id="gravityButton">Gravity: OFF</button>
+    <button id="bounceButton">Bounce: ON</button>
     <canvas id="gameCanvas"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+
         const duplicateButton = document.getElementById("duplicateButton");
         const clearButton = document.getElementById("clearButton");
+        const gravityButton = document.getElementById("gravityButton");
+        const bounceButton = document.getElementById("bounceButton");
 
         let duplicateOnBounce = false;
-        let lastDuplicateTime = 0; // To store the time of the last duplication
+        let gravityEnabled = false;
+        let bounceEnabled = true;
 
-        // Resize the canvas to fit the screen
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
+        // Ball properties
+        const balls = [
+            { x: 200, y: 200, radius: 15, dx: 4, dy: 3, color: "blue" },
+        ];
+
+        const obstacles = [];
+        let isDrawing = false;
 
         // Toggle duplication feature
         duplicateButton.addEventListener("click", () => {
@@ -62,26 +78,30 @@
             duplicateButton.classList.toggle("active", duplicateOnBounce);
         });
 
-        // Clear all drawings (obstacles)
-        clearButton.addEventListener("click", () => {
-            obstacles.length = 0; // Clear the obstacles array
+        // Toggle gravity
+        gravityButton.addEventListener("click", () => {
+            gravityEnabled = !gravityEnabled;
+            gravityButton.textContent = `Gravity: ${gravityEnabled ? "ON" : "OFF"}`;
         });
 
-        // Ball properties
-        const balls = [
-            {
-                x: 200,
-                y: 200,
-                radius: 15,
-                dx: 4,
-                dy: 3,
-                color: "blue",
-            },
-        ];
+        // Toggle bounce
+        bounceButton.addEventListener("click", () => {
+            bounceEnabled = !bounceEnabled;
+            bounceButton.textContent = `Bounce: ${bounceEnabled ? "ON" : "OFF"}`;
+        });
 
-        // Obstacles array to hold user-drawn lines
-        const obstacles = [];
-        let isDrawing = false;
+        // Clear all drawings
+        clearButton.addEventListener("click", () => {
+            obstacles.length = 0;
+        });
+
+        // Resize the canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
 
         // Mouse tracking
         const mouse = { x: 0, y: 0 };
@@ -92,18 +112,16 @@
             mouse.y = event.clientY - rect.top;
         });
 
-        // Start drawing obstacles
+        // Start/stop drawing
         canvas.addEventListener("mousedown", () => {
             isDrawing = true;
             obstacles.push([]);
         });
 
-        // Stop drawing obstacles
         canvas.addEventListener("mouseup", () => {
             isDrawing = false;
         });
 
-        // Draw obstacles as the mouse moves
         canvas.addEventListener("mousemove", () => {
             if (isDrawing) {
                 const currentPath = obstacles[obstacles.length - 1];
@@ -111,7 +129,7 @@
             }
         });
 
-        // Draw a ball
+        // Draw ball
         function drawBall(ball) {
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
@@ -138,116 +156,91 @@
             });
         }
 
-        // Update ball position and check for collisions
+        // Update ball position
         function updateBall(ball) {
+            if (gravityEnabled) ball.dy += 0.2; // Apply gravity
+
             ball.x += ball.dx;
             ball.y += ball.dy;
 
-            // Bounce off walls
             let bounced = false;
+
+            // Bounce off walls
             if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
-                ball.dx *= -1;
+                if (bounceEnabled) ball.dx *= -1;
                 bounced = true;
             }
-            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-                ball.dy *= -1;
+            if (ball.y + ball.radius > canvas.height) {
+                if (bounceEnabled) ball.dy *= -0.8; // Reduce speed slightly on ground
+                else ball.dy = 0; // Stop the ball
+                ball.y = canvas.height - ball.radius; // Prevent sinking
                 bounced = true;
             }
 
-            // Check collisions with obstacles
+            // Collide with obstacles
             obstacles.forEach((path) => {
                 for (let i = 1; i < path.length; i++) {
                     const p1 = path[i - 1];
                     const p2 = path[i];
-
                     if (lineIntersectsCircle(p1, p2, ball)) {
                         handleBounce(p1, p2, ball);
                         bounced = true;
-                        return; // Prevent further checks for smoother behavior
+                        break;
                     }
                 }
             });
 
-            // Adjust velocity slightly on bounce
-            if (bounced) {
-                ball.dx += randomVelocityOffset();
-                ball.dy += randomVelocityOffset();
-                normalizeVelocity(ball);
-                if (duplicateOnBounce && Math.random() < 0.2) { // 20% chance of duplication
-                    // Check if 0.1 seconds have passed since the last duplication
-                    const currentTime = Date.now();
-                    if (currentTime - lastDuplicateTime > 100) { // 100 ms = 0.1 seconds
-                        lastDuplicateTime = currentTime;
-                        duplicateBall(ball);
-                    }
-                }
-            }
+            // Ball duplication on bounce
+            if (bounced && duplicateOnBounce) duplicateBall(ball);
         }
 
-        // Detect if a line segment intersects with the ball
+        // Collision with a line segment
         function lineIntersectsCircle(p1, p2, ball) {
             const A = p2.x - p1.x;
             const B = p2.y - p1.y;
-            const length = Math.sqrt(A * A + B * B);
-
-            const unitX = A / length;
-            const unitY = B / length;
-
-            const projection = ((ball.x - p1.x) * unitX + (ball.y - p1.y) * unitY);
+            const len = Math.sqrt(A * A + B * B);
+            const unitX = A / len;
+            const unitY = B / len;
+            const projection = (ball.x - p1.x) * unitX + (ball.y - p1.y) * unitY;
             const closestX = p1.x + projection * unitX;
             const closestY = p1.y + projection * unitY;
-
-            const distanceToLine = Math.sqrt((closestX - ball.x) ** 2 + (closestY - ball.y) ** 2);
-
-            const withinSegment = projection >= 0 && projection <= length;
-            return distanceToLine <= ball.radius && withinSegment;
+            const distance = Math.sqrt((closestX - ball.x) ** 2 + (closestY - ball.y) ** 2);
+            return distance <= ball.radius;
         }
 
-        // Handle the bounce when the ball hits an obstacle
+        // Handle bounce on collision
         function handleBounce(p1, p2, ball) {
             const lineDX = p2.x - p1.x;
             const lineDY = p2.y - p1.y;
             const length = Math.sqrt(lineDX ** 2 + lineDY ** 2);
-
             const normalX = -lineDY / length;
             const normalY = lineDX / length;
-
             const dotProduct = ball.dx * normalX + ball.dy * normalY;
 
-            ball.dx -= 2 * dotProduct * normalX;
-            ball.dy -= 2 * dotProduct * normalY;
+            if (bounceEnabled) {
+                ball.dx -= 2 * dotProduct * normalX;
+                ball.dy -= 2 * dotProduct * normalY;
+            } else {
+                ball.dx = 0;
+                ball.dy = 0;
+            }
 
             ball.color = getRandomColor();
         }
 
-        // Duplicate the ball
+        // Duplicate ball
         function duplicateBall(originalBall) {
             balls.push({
                 x: originalBall.x,
                 y: originalBall.y,
                 radius: originalBall.radius,
-                dx: originalBall.dx + randomVelocityOffset(),
-                dy: originalBall.dy + randomVelocityOffset(),
+                dx: originalBall.dx,
+                dy: originalBall.dy,
                 color: getRandomColor(),
             });
         }
 
-        // Random offset for velocity
-        function randomVelocityOffset() {
-            return (Math.random() - 0.5) * 2; // Small random value between -1 and 1
-        }
-
-        // Normalize velocity to prevent extremely high speeds
-        function normalizeVelocity(ball) {
-            const maxSpeed = 10;
-            const speed = Math.sqrt(ball.dx ** 2 + ball.dy ** 2);
-            if (speed > maxSpeed) {
-                ball.dx = (ball.dx / speed) * maxSpeed;
-                ball.dy = (ball.dy / speed) * maxSpeed;
-            }
-        }
-
-        // Get a random color
+        // Random color
         function getRandomColor() {
             return "#" + Math.floor(Math.random() * 16777215).toString(16);
         }
@@ -265,7 +258,7 @@
             requestAnimationFrame(animate);
         }
 
-        animate(); // Start the animation loop
+        animate();
     </script>
 </body>
 </html>
