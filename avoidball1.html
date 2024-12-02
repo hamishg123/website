@@ -3,223 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Platformer Game</title>
+    <title>Avoid the Ball Game</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             overflow: hidden;
-            background: linear-gradient(to bottom, #1E1E2F, #39394D);
         }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background-color: #252535;
+
+        #gameArea {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            background: #d3e4ff;
+            border: 5px solid #4a90e2;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
-        #gameOverModal {
-            position: fixed;
+
+        .timer {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
+        .player {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ff5722;
+            border-radius: 5px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+        }
+
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ffeb3b;
+            border-radius: 50%;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e74c3c;
+            font-size: 2em;
+            font-weight: bold;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            display: none;
         }
-        #restartButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+
+        .game-over p {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #333;
         }
-        #restartButton:hover {
-            background: #218838;
+
+        /* Leaderboard Styling */
+        #leaderboard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 2px solid #4a90e2;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        #leaderboard h2 {
+            margin: 0 0 10px;
+            font-size: 1.5em;
+            color: #4a90e2;
+        }
+
+        #leaderboard ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #leaderboard li {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Pause Message */
+        .pause-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff5722;
+            font-size: 2em;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="gameOverModal">
-        <h1>Game Over!</h1>
-        <button id="restartButton">Play Again</button>
+    <div id="gameArea">
+        <div class="timer" id="timer">Time: 0</div>
+        <div class="player" id="player"></div>
+        <div class="ball" id="ball"></div>
+    </div>
+
+    <div id="leaderboard">
+        <h2>Leaderboard</h2>
+        <ul id="leaderboardList">
+            <!-- Leaderboard entries will go here -->
+        </ul>
     </div>
 
     <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+        const gameArea = document.getElementById('gameArea');
+        const player = document.getElementById('player');
+        const ball = document.getElementById('ball');
+        const timerDisplay = document.getElementById('timer');
+        const leaderboardList = document.getElementById('leaderboardList');
 
-    // Game constants
-    const PLATFORM_WIDTH = 100;
-    const PLATFORM_HEIGHT = 20;
-    const GRAVITY = 0.8;
-    const PLAYER_WIDTH = 50;
-    const PLAYER_HEIGHT = 50;
-    const JUMP_STRENGTH = 12;
+        let playerX = 285, playerY = 285;
+        let ballX = 100, ballY = 100;
+        let ballSpeed = 2;
+        let ballSize = 20;
+        let keysPressed = {};
+        let gameLoopId;
+        let isGameOver = false;
+        let timeElapsed = 0;
+        let timerInterval;
+        let paused = false; // Game pause state
+        let pauseMessage = null; // Pause message element
 
-    // Initialize canvas
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        // Load leaderboard from localStorage
+        let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
-    // Game state
-    let player = {
-        x: canvas.width / 2,
-        y: canvas.height - 150,
-        width: PLAYER_WIDTH,
-        height: PLAYER_HEIGHT,
-        speed: 5,
-        velocityX: 0,
-        velocityY: 0,
-        grounded: false
-    };
+        // Get and store player's best score in localStorage
+        let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;
 
-    let platforms = [
-        { x: 100, y: canvas.height - 100, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
-        { x: 300, y: canvas.height - 200, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
-        { x: 500, y: canvas.height - 300, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }
-    ];
-
-    let keys = {};
-    let gameOver = false;
-    let paused = false; // Flag to track whether the game is paused
-
-    // Event listeners for key presses
-    window.addEventListener("keydown", (e) => {
-        keys[e.key] = true;
-    });
-    window.addEventListener("keyup", (e) => {
-        keys[e.key] = false;
-    });
-
-    // Game over function
-    function endGame() {
-        gameOver = true;
-        document.getElementById("gameOverModal").style.display = "block";
-    }
-
-    // Restart game
-    document.getElementById("restartButton").addEventListener("click", () => {
-        player.y = canvas.height - 150;
-        player.velocityY = 0;
-        player.velocityX = 0;
-        player.grounded = false;
-        gameOver = false;
-        document.getElementById("gameOverModal").style.display = "none";
-        update();
-    });
-
-    // Toggle pause state
-    function togglePause() {
-        paused = !paused;
-        if (!paused) {
-            update(); // Resume the game if unpaused
+        // Update leaderboard in the UI
+        function updateLeaderboard() {
+            leaderboardList.innerHTML = '';
+            leaderboard.slice(0, 10).forEach((score, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${score} seconds`;
+                leaderboardList.appendChild(li);
+            });
         }
-    }
 
-    // Check for collisions with platforms
-    function checkPlatformCollision(player, platform) {
-        if (
-            player.x + player.width > platform.x &&
-            player.x < platform.x + platform.width &&
-            player.y + player.height <= platform.y &&
-            player.y + player.height + player.velocityY >= platform.y
-        ) {
-            player.velocityY = 0;
-            player.grounded = true;
-            player.y = platform.y - player.height;
-            return true;
+        // Add score to leaderboard if it's a top score
+        function addScoreToLeaderboard(score) {
+            // Only add if the score is better than the previous best
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('bestScore', bestScore); // Update best score
+            }
+
+            leaderboard.push(score);
+            leaderboard.sort((a, b) => b - a); // Sort in descending order
+            leaderboard = leaderboard.slice(0, 10); // Keep only top 10 scores
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            updateLeaderboard();
         }
-        return false;
-    }
 
-    // Spawn player on the first platform
-    function spawnOnPlatform() {
-        for (let platform of platforms) {
+        // Timer functionality
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (!isGameOver && !paused) {
+                    timeElapsed++;
+                    timerDisplay.textContent = `Time: ${timeElapsed}`;
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // Smooth player movement
+        document.addEventListener('keydown', (e) => {
+            keysPressed[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keysPressed[e.key] = false;
+        });
+
+        function movePlayer() {
+            if (isGameOver || paused) return;
+
+            const step = 5;
+            if (keysPressed['ArrowUp'] && playerY > 0) playerY -= step;
+            if (keysPressed['ArrowDown'] && playerY < gameArea.offsetHeight - player.offsetHeight) playerY += step;
+            if (keysPressed['ArrowLeft'] && playerX > 0) playerX -= step;
+            if (keysPressed['ArrowRight'] && playerX < gameArea.offsetWidth - player.offsetWidth) playerX += step;
+
+            player.style.top = `${playerY}px`;
+            player.style.left = `${playerX}px`;
+        }
+
+        // Move the ball towards the player
+        function moveBall() {
+            if (isGameOver || paused) return;
+
+            const dx = playerX - ballX;
+            const dy = playerY - ballY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            ballX += (dx / distance) * ballSpeed;
+            ballY += (dy / distance) * ballSpeed;
+
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+        }
+
+        // Check for collision
+        function checkCollision() {
+            const playerRect = player.getBoundingClientRect();
+            const ballRect = ball.getBoundingClientRect();
+
             if (
-                player.x + player.width > platform.x &&
-                player.x < platform.x + platform.width &&
-                player.y + player.height <= platform.y
+                playerRect.left < ballRect.right &&
+                playerRect.right > ballRect.left &&
+                playerRect.top < ballRect.bottom &&
+                playerRect.bottom > ballRect.top
             ) {
-                player.y = platform.y - player.height; // Spawn player on top of the platform
-                break;
+                endGame();
             }
         }
-    }
 
-    // Update function
-    function update() {
-        if (gameOver || paused) return; // Stop updating if the game is over or paused
+        // End the game
+        function endGame() {
+            isGameOver = true;
 
-        // Move left or right
-        if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-        if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
+            cancelAnimationFrame(gameLoopId);
+            stopTimer();
 
-        // Apply gravity
-        player.velocityY += GRAVITY;
-        player.y += player.velocityY;
+            // Check if current time is a new top score
+            if (timeElapsed > 0) {
+                addScoreToLeaderboard(timeElapsed);
+            }
 
-        // Jump
-        if (keys[" "] && player.grounded) {
-            player.velocityY = -JUMP_STRENGTH; // Jump upwards
-            player.grounded = false;
+            const gameOverScreen = document.createElement('div');
+            gameOverScreen.classList.add('game-over');
+            gameOverScreen.innerHTML = `
+                Game Over!<br>
+                <p>Restart Page To Try Again</p>
+            `;
+            gameArea.appendChild(gameOverScreen);
         }
 
-        // Check platform collisions
-        player.grounded = false;
-        for (const platform of platforms) {
-            checkPlatformCollision(player, platform);
+        // Difficulty scaling
+        function increaseDifficulty() {
+            if (isGameOver || paused) return;
+
+            ballSpeed += 0.5; // Increment ball speed
+            ballSize += 2; // Increment ball size
+            ball.style.width = `${ballSize}px`;
+            ball.style.height = `${ballSize}px`;
+
+            setTimeout(increaseDifficulty, 5000); // Increase difficulty every 5 seconds
         }
 
-        // Game over if player falls off the screen
-        if (player.y > canvas.height) {
-            endGame();
+        // Pause the game
+        function togglePause() {
+            paused = !paused;
+
+            if (paused) {
+                pauseMessage = document.createElement('div');
+                pauseMessage.classList.add('pause-message');
+                pauseMessage.textContent = 'PAUSED';
+                gameArea.appendChild(pauseMessage);
+            } else {
+                gameArea.removeChild(pauseMessage);
+                pauseMessage = null;
+            }
         }
 
-        // Draw the scene
-        draw();
+        // Listen for "P" key to toggle pause
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                togglePause();
+            }
+        });
 
-        // Call the update function for the next frame
-        requestAnimationFrame(update);
-    }
-
-    // Draw function
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-        // Draw player
-        ctx.fillStyle = "#FF6347"; // Player color (tomato)
-        ctx.fillRect(player.x, player.y, player.width, player.height);
-
-        // Draw platforms
-        ctx.fillStyle = "#6A5ACD"; // Platform color (SlateBlue)
-        for (const platform of platforms) {
-            ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        // Game loop
+        function gameLoop() {
+            if (!isGameOver && !paused) {
+                movePlayer();
+                moveBall();
+                checkCollision();
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
         }
 
-        // Draw pause message
-        if (paused) {
-            ctx.fillStyle = "white";
-            ctx.font = "30px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
-        }
-    }
-
-    // Spawn the player on a platform when the game starts
-    spawnOnPlatform();
-
-    // Start the game loop
-    update();
-
-    // Listen for the "P" key to pause/unpause
-    window.addEventListener("keydown", (e) => {
-        if (e.key === "p" || e.key === "P") {
-            togglePause(); // Toggle pause when "P" is pressed
-        }
-    });
+        // Start the game
+        startTimer();
+        gameLoop();
+        increaseDifficulty(); // Begin difficulty scaling
+        updateLeaderboard(); // Display current leaderboard
     </script>
 </body>
 </html>
