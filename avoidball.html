@@ -99,8 +99,10 @@
         // Timer functionality
         function startTimer() {
             timerInterval = setInterval(() => {
-                timeElapsed++;
-                timerDisplay.textContent = `Time: ${timeElapsed}`;
+                if (!isGameOver) {
+                    timeElapsed++;
+                    timerDisplay.textContent = `Time: ${timeElapsed}`;
+                }
             }, 1000);
         }
 
@@ -142,3 +144,54 @@
             ballY += (dy / distance) * ballSpeed;
 
             ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+        }
+
+        // Check for collision
+        function checkCollision() {
+            const playerRect = player.getBoundingClientRect();
+            const ballRect = ball.getBoundingClientRect();
+
+            if (
+                playerRect.left < ballRect.right &&
+                playerRect.right > ballRect.left &&
+                playerRect.top < ballRect.bottom &&
+                playerRect.bottom > ballRect.top
+            ) {
+                endGame();
+            }
+        }
+
+        // End the game
+        function endGame() {
+            isGameOver = true; // Prevent further movement
+
+            cancelAnimationFrame(gameLoopId); // Stop the game loop
+            stopTimer(); // Stop the timer
+
+            // Display game-over screen
+            const gameOverScreen = document.createElement('div');
+            gameOverScreen.classList.add('game-over');
+            gameOverScreen.innerHTML = `
+                Game Over!<br>
+                <p>Restart Page To Try Again</p>
+            `;
+            gameArea.appendChild(gameOverScreen);
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!isGameOver) {
+                movePlayer();
+                moveBall();
+                checkCollision();
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start the game
+        startTimer();
+        gameLoop();
+    </script>
+</body>
+</html>
