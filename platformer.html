@@ -122,6 +122,20 @@
         return false;
     }
 
+    // Spawn player on the first platform
+    function spawnOnPlatform() {
+        for (let platform of platforms) {
+            if (
+                player.x + player.width > platform.x &&
+                player.x < platform.x + platform.width &&
+                player.y + player.height <= platform.y
+            ) {
+                player.y = platform.y - player.height; // Spawn player on top of the platform
+                break;
+            }
+        }
+    }
+
     // Update function
     function update() {
         if (gameOver) return;
@@ -172,6 +186,9 @@
             ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
         }
     }
+
+    // Spawn the player on a platform when the game starts
+    spawnOnPlatform();
 
     // Start the game loop
     update();
