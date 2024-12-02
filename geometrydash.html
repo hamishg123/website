@@ -24,44 +24,99 @@
       margin: auto;
       border: 2px solid #000;
     }
+
+    #menu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #4CAF50, #87CEEB);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #menu h1 {
+      font-size: 50px;
+      margin-bottom: 20px;
+      color: white;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    }
+
+    .menu-button {
+      padding: 15px 30px;
+      font-size: 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #f39c12;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .menu-button:hover {
+      background: #e67e22;
+    }
   </style>
 </head>
 <body>
+  <div id="menu">
+    <h1>Geometry Dash</h1>
+    <button class="menu-button" onclick="startGame('easy')">Easy</button>
+    <button class="menu-button" onclick="startGame('medium')">Medium</button>
+    <button class="menu-button" onclick="startGame('hard')">Hard</button>
+  </div>
   <canvas id="gameCanvas"></canvas>
   <script>
-    // Game settings
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    canvas.width = 800;
-    canvas.height = 400;
+    // Set canvas size to full screen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    let player = { 
-      x: 50, 
-      y: 300, 
-      width: 30, 
-      height: 30, 
-      color: "orange", 
-      velocityY: 0, 
-      jumpForce: -10, // Adjusted jump height
-      isJumping: false 
-    };
+    let player, obstacles, gameSpeed, gravity, score, isGameOver, isPaused, level;
+    const spikeHeight = 50; // Fixed spike height
 
-    let obstacles = [];
-    let gameSpeed = 5;
-    let gravity = 0.5;
-    let score = 0;
-    let isGameOver = false;
-    let isPaused = false;
+    // Function to start the game
+    function startGame(selectedLevel) {
+      document.getElementById("menu").style.display = "none";
 
-    const spikeHeight = 30; // Fixed spike height
+      // Set level difficulty
+      level = selectedLevel;
+      if (level === "easy") gameSpeed = 4;
+      if (level === "medium") gameSpeed = 6;
+      if (level === "hard") gameSpeed = 8;
+
+      // Initialize game variables
+      player = { 
+        x: 50, 
+        y: canvas.height - 80, 
+        width: 40, 
+        height: 40, 
+        color: "orange", 
+        velocityY: 0, 
+        jumpForce: -12, 
+        isJumping: false 
+      };
+      obstacles = [];
+      gravity = 0.6;
+      score = 0;
+      isGameOver = false;
+      isPaused = false;
+
+      gameLoop();
+    }
 
     // Generate spikes
     function generateObstacle() {
       obstacles.push({ 
         x: canvas.width, 
         y: canvas.height - spikeHeight, 
-        width: 20, 
+        width: 30, 
         height: spikeHeight, 
         color: "red" 
       });
@@ -90,8 +145,8 @@
       player.y += player.velocityY;
 
       // Prevent falling below ground
-      if (player.y + player.height >= canvas.height) {
-        player.y = canvas.height - player.height;
+      if (player.y + player.height >= canvas.height - spikeHeight) {
+        player.y = canvas.height - spikeHeight - player.height;
         player.isJumping = false;
       }
 
@@ -134,11 +189,11 @@
       // Draw player's face
       ctx.fillStyle = "black";
       ctx.beginPath();
-      ctx.arc(player.x + 10, player.y + 10, 3, 0, Math.PI * 2); // Left eye
-      ctx.arc(player.x + 20, player.y + 10, 3, 0, Math.PI * 2); // Right eye
+      ctx.arc(player.x + 12, player.y + 12, 3, 0, Math.PI * 2); // Left eye
+      ctx.arc(player.x + 28, player.y + 12, 3, 0, Math.PI * 2); // Right eye
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(player.x + 15, player.y + 20, 6, 0, Math.PI, false); // Smile
+      ctx.arc(player.x + 20, player.y + 28, 8, 0, Math.PI, false); // Smile
       ctx.stroke();
 
       // Draw obstacles
@@ -153,7 +208,7 @@
       }
 
       // Draw score
-      ctx.fillStyle = "black";
+      ctx.fillStyle = "white";
       ctx.font = "20px Arial";
       ctx.fillText(`Score: ${score}`, 10, 30);
 
@@ -179,9 +234,6 @@
       draw();
       requestAnimationFrame(gameLoop);
     }
-
-    // Start the game
-    gameLoop();
   </script>
 </body>
 </html>
