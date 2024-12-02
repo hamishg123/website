@@ -27,6 +27,16 @@
             overflow: hidden;
         }
 
+        .timer {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
         .player {
             position: absolute;
             width: 30px;
@@ -57,24 +67,16 @@
             text-align: center;
         }
 
-        .game-over button {
+        .game-over p {
             margin-top: 20px;
-            padding: 10px 20px;
             font-size: 1em;
-            color: #fff;
-            background-color: #4a90e2;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .game-over button:hover {
-            background-color: #357ab8;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div id="gameArea">
+        <div class="timer" id="timer">Time: 0</div>
         <div class="player" id="player"></div>
         <div class="ball" id="ball"></div>
     </div>
@@ -83,6 +85,7 @@
         const gameArea = document.getElementById('gameArea');
         const player = document.getElementById('player');
         const ball = document.getElementById('ball');
+        const timerDisplay = document.getElementById('timer');
 
         let playerX = 285, playerY = 285;
         let ballX = 100, ballY = 100;
@@ -90,6 +93,20 @@
         let keysPressed = {};
         let gameLoopId;
         let isGameOver = false;
+        let timeElapsed = 0;
+        let timerInterval;
+
+        // Timer functionality
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                timerDisplay.textContent = `Time: ${timeElapsed}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
 
         // Smooth player movement
         document.addEventListener('keydown', (e) => {
@@ -125,77 +142,3 @@
             ballY += (dy / distance) * ballSpeed;
 
             ball.style.left = `${ballX}px`;
-            ball.style.top = `${ballY}px`;
-        }
-
-        // Check for collision
-        function checkCollision() {
-            const playerRect = player.getBoundingClientRect();
-            const ballRect = ball.getBoundingClientRect();
-
-            if (
-                playerRect.left < ballRect.right &&
-                playerRect.right > ballRect.left &&
-                playerRect.top < ballRect.bottom &&
-                playerRect.bottom > ballRect.top
-            ) {
-                endGame();
-            }
-        }
-
-        // End the game
-        function endGame() {
-            isGameOver = true; // Prevent further movement
-
-            cancelAnimationFrame(gameLoopId); // Stop the game loop
-
-            // Display game-over screen
-            const gameOverScreen = document.createElement('div');
-            gameOverScreen.classList.add('game-over');
-            gameOverScreen.innerHTML = `
-                Game Over!<br>
-                <button id="restartButton">Try Again</button>
-            `;
-            gameArea.appendChild(gameOverScreen);
-
-            // Add event listener to the restart button
-            document.getElementById('restartButton').addEventListener('click', restartGame);
-        }
-
-        // Restart the game
-        function restartGame() {
-            // Reset positions
-            playerX = 285;
-            playerY = 285;
-            ballX = 100;
-            ballY = 100;
-
-            // Reset game state
-            isGameOver = false;
-
-            // Remove the game-over screen
-            const gameOverScreen = document.querySelector('.game-over');
-            if (gameOverScreen) gameOverScreen.remove();
-
-            // Update positions
-            ball.style.left = `${ballX}px`;
-            ball.style.top = `${ballY}px`;
-            player.style.left = `${playerX}px`;
-            player.style.top = `${playerY}px`;
-
-            // Restart the game loop
-            gameLoop();
-        }
-
-        // Game loop
-        function gameLoop() {
-            movePlayer();
-            moveBall();
-            checkCollision();
-            gameLoopId = requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
-    </script>
-</body>
-</html>
