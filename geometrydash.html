@@ -34,7 +34,17 @@
     canvas.width = 800;
     canvas.height = 400;
 
-    let player = { x: 50, y: 300, width: 30, height: 30, color: "orange", velocityY: 0, jumpForce: -12, isJumping: false };
+    let player = { 
+      x: 50, 
+      y: 300, 
+      width: 30, 
+      height: 30, 
+      color: "orange", 
+      velocityY: 0, 
+      jumpForce: -8, // Reduced jump height
+      isJumping: false 
+    };
+
     let obstacles = [];
     let gameSpeed = 5;
     let gravity = 0.5;
@@ -42,10 +52,17 @@
     let isGameOver = false;
     let isPaused = false;
 
-    // Generate obstacles
+    const spikeHeight = 30; // Fixed spike height
+
+    // Generate spikes
     function generateObstacle() {
-      let height = Math.random() * (200 - 50) + 50;
-      obstacles.push({ x: canvas.width, y: canvas.height - height, width: 20, height: height, color: "red" });
+      obstacles.push({ 
+        x: canvas.width, 
+        y: canvas.height - spikeHeight, 
+        width: 20, 
+        height: spikeHeight, 
+        color: "red" 
+      });
     }
 
     // Handle player jump
@@ -97,7 +114,7 @@
         }
       }
 
-      // Add new obstacles periodically
+      // Add new spikes periodically
       if (Math.random() < 0.02) {
         generateObstacle();
       }
@@ -115,7 +132,12 @@
       // Draw obstacles
       for (let obs of obstacles) {
         ctx.fillStyle = obs.color;
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        ctx.beginPath();
+        ctx.moveTo(obs.x, obs.y);
+        ctx.lineTo(obs.x + obs.width / 2, obs.y - obs.height); // Create triangular spike
+        ctx.lineTo(obs.x + obs.width, obs.y);
+        ctx.closePath();
+        ctx.fill();
       }
 
       // Draw score
