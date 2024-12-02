@@ -18,7 +18,9 @@
 
     canvas {
       display: block;
-      background: linear-gradient(to bottom, #87CEEB, #4CAF50);
+      background: linear-gradient(to bottom, #1e3c72, #2a5298), 
+                  radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 10%, transparent 70%);
+      background-blend-mode: overlay;
       margin: auto;
       border: 2px solid #000;
     }
@@ -41,7 +43,7 @@
       height: 30, 
       color: "orange", 
       velocityY: 0, 
-      jumpForce: -8, // Reduced jump height
+      jumpForce: -10, // Adjusted jump height
       isJumping: false 
     };
 
@@ -128,6 +130,16 @@
       // Draw player
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Draw player's face
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      ctx.arc(player.x + 10, player.y + 10, 3, 0, Math.PI * 2); // Left eye
+      ctx.arc(player.x + 20, player.y + 10, 3, 0, Math.PI * 2); // Right eye
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(player.x + 15, player.y + 20, 6, 0, Math.PI, false); // Smile
+      ctx.stroke();
 
       // Draw obstacles
       for (let obs of obstacles) {
