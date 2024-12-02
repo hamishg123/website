@@ -89,7 +89,8 @@
 
         let playerX = 285, playerY = 285;
         let ballX = 100, ballY = 100;
-        const ballSpeed = 2;
+        let ballSpeed = 2;
+        let ballSize = 20;
         let keysPressed = {};
         let gameLoopId;
         let isGameOver = false;
@@ -120,7 +121,7 @@
         });
 
         function movePlayer() {
-            if (isGameOver) return; // Stop player movement if the game is over
+            if (isGameOver) return;
 
             const step = 5;
             if (keysPressed['ArrowUp'] && playerY > 0) playerY -= step;
@@ -134,7 +135,7 @@
 
         // Move the ball towards the player
         function moveBall() {
-            if (isGameOver) return; // Stop ball movement if the game is over
+            if (isGameOver) return;
 
             const dx = playerX - ballX;
             const dy = playerY - ballY;
@@ -164,12 +165,11 @@
 
         // End the game
         function endGame() {
-            isGameOver = true; // Prevent further movement
+            isGameOver = true;
 
-            cancelAnimationFrame(gameLoopId); // Stop the game loop
-            stopTimer(); // Stop the timer
+            cancelAnimationFrame(gameLoopId);
+            stopTimer();
 
-            // Display game-over screen
             const gameOverScreen = document.createElement('div');
             gameOverScreen.classList.add('game-over');
             gameOverScreen.innerHTML = `
@@ -177,6 +177,18 @@
                 <p>Restart Page To Try Again</p>
             `;
             gameArea.appendChild(gameOverScreen);
+        }
+
+        // Difficulty scaling
+        function increaseDifficulty() {
+            if (isGameOver) return;
+
+            ballSpeed += 0.5; // Increment ball speed
+            ballSize += 2; // Increment ball size
+            ball.style.width = `${ballSize}px`;
+            ball.style.height = `${ballSize}px`;
+
+            setTimeout(increaseDifficulty, 5000); // Increase difficulty every 5 seconds
         }
 
         // Game loop
@@ -192,6 +204,7 @@
         // Start the game
         startTimer();
         gameLoop();
+        increaseDifficulty(); // Begin difficulty scaling
     </script>
 </body>
 </html>
