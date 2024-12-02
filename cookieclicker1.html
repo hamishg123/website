@@ -245,13 +245,17 @@ rebirthButton.addEventListener("click", () => {
         rebirths++;
         rebirthBoost *= 1.25;
 
-        // Reset upgrade costs
+        // Reset upgrade costs to their original values
         cpcUpgrades.forEach((upgrade, i) => {
-            upgrade.cost = Math.pow(10, i + 2); // Reset to the original cost
+            upgrade.cost = Math.pow(10, i + 2);
         });
         cpsUpgrades.forEach((upgrade, i) => {
-            upgrade.cost = Math.pow(10, i + 2); // Reset to the original cost
+            upgrade.cost = Math.pow(10, i + 2);
         });
+
+        // Re-create upgrade buttons to reflect reset costs
+        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
+        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
 
         alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
         updateUI();
