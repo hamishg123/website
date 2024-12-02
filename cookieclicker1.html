@@ -244,15 +244,18 @@ rebirthButton.addEventListener("click", () => {
         cps = 0;
         rebirths++;
         rebirthBoost *= 1.25;
+
+        // Reset upgrade costs
+        cpcUpgrades.forEach((upgrade, i) => {
+            upgrade.cost = Math.pow(10, i + 2); // Reset to the original cost
+        });
+        cpsUpgrades.forEach((upgrade, i) => {
+            upgrade.cost = Math.pow(10, i + 2); // Reset to the original cost
+        });
+
         alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
         updateUI();
         saveProgress();
-    }
-});
-
-cpcUpgradesContainer.addEventListener("click", event => {
-    if (event.target.classList.contains("upgrade-button")) {
-        handleUpgradeClick("CPC", event.target.dataset.index);
     }
 });
 
