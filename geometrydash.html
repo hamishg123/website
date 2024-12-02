@@ -18,7 +18,7 @@
 
     canvas {
       display: block;
-      background: linear-gradient(to bottom, #1e3c72, #2a5298), 
+      background: linear-gradient(to bottom, #1e3c72, #2a5298),
                   radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 10%, transparent 70%);
       background-blend-mode: overlay;
       margin: auto;
@@ -78,7 +78,7 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let player, obstacles, gameSpeed, gravity, score, isGameOver, isPaused, level;
+    let player, obstacles, gameSpeed, gravity, score, isGameOver, isPaused, level, obstacleGap;
     const spikeHeight = 50; // Fixed spike height
 
     // Function to start the game
@@ -87,20 +87,29 @@
 
       // Set level difficulty
       level = selectedLevel;
-      if (level === "easy") gameSpeed = 4;
-      if (level === "medium") gameSpeed = 6;
-      if (level === "hard") gameSpeed = 8;
+      if (level === "easy") {
+        gameSpeed = 5;
+        obstacleGap = 300;
+      }
+      if (level === "medium") {
+        gameSpeed = 8;
+        obstacleGap = 200;
+      }
+      if (level === "hard") {
+        gameSpeed = 12;
+        obstacleGap = 150;
+      }
 
       // Initialize game variables
-      player = { 
-        x: 50, 
-        y: canvas.height - 80, 
-        width: 40, 
-        height: 40, 
-        color: "orange", 
-        velocityY: 0, 
-        jumpForce: -12, 
-        isJumping: false 
+      player = {
+        x: 50,
+        y: canvas.height - 80,
+        width: 40,
+        height: 40,
+        color: "orange",
+        velocityY: 0,
+        jumpForce: -12,
+        isJumping: false
       };
       obstacles = [];
       gravity = 0.6;
@@ -113,12 +122,13 @@
 
     // Generate spikes
     function generateObstacle() {
-      obstacles.push({ 
-        x: canvas.width, 
-        y: canvas.height - spikeHeight, 
-        width: 30, 
-        height: spikeHeight, 
-        color: "red" 
+      const gap = Math.random() * 100 + obstacleGap; // Random spacing
+      obstacles.push({
+        x: canvas.width + gap,
+        y: canvas.height - spikeHeight,
+        width: 30,
+        height: spikeHeight,
+        color: "red"
       });
     }
 
@@ -172,7 +182,7 @@
       }
 
       // Add new spikes periodically
-      if (Math.random() < 0.02) {
+      if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleGap) {
         generateObstacle();
       }
     }
