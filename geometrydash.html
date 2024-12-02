@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometry Dash</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      background: linear-gradient(to bottom, #87CEEB, #4CAF50);
+      margin: auto;
+      border: 2px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    // Game settings
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 800;
+    canvas.height = 400;
+
+    let player = { x: 50, y: 300, width: 30, height: 30, color: "orange", velocityY: 0, jumpForce: -12, isJumping: false };
+    let obstacles = [];
+    let gameSpeed = 5;
+    let gravity = 0.5;
+    let score = 0;
+    let isGameOver = false;
+
+    // Generate obstacles
+    function generateObstacle() {
+      let height = Math.random() * (200 - 50) + 50;
+      obstacles.push({ x: canvas.width, y: canvas.height - height, width: 20, height: height, color: "red" });
+    }
+
+    // Handle player jump
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && !player.isJumping) {
+        player.velocityY = player.jumpForce;
+        player.isJumping = true;
+      }
+    });
+
+    // Update game state
+    function update() {
+      if (isGameOver) return;
+
+      // Gravity effect
+      player.velocityY += gravity;
+      player.y += player.velocityY;
+
+      // Prevent falling below ground
+      if (player.y + player.height >= canvas.height) {
+        player.y = canvas.height - player.height;
+        player.isJumping = false;
+      }
+
+      // Update obstacles
+      for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].x -= gameSpeed;
+
+        // Collision detection
+        if (
+          player.x < obstacles[i].x + obstacles[i].width &&
+          player.x + player.width > obstacles[i].x &&
+          player.y < obstacles[i].y + obstacles[i].height &&
+          player.y + player.height > obstacles[i].y
+        ) {
+          isGameOver = true;
+        }
+
+        // Remove off-screen obstacles
+        if (obstacles[i].x + obstacles[i].width < 0) {
+          obstacles.splice(i, 1);
+          score++;
+        }
+      }
+
+      // Add new obstacles periodically
+      if (Math.random() < 0.02) {
+        generateObstacle();
+      }
+    }
+
+    // Draw game elements
+    function draw() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw player
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Draw obstacles
+      for (let obs of obstacles) {
+        ctx.fillStyle = obs.color;
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      }
+
+      // Draw score
+      ctx.fillStyle = "black";
+      ctx.font = "20px Arial";
+      ctx.fillText(`Score: ${score}`, 10, 30);
+
+      // Draw game over message
+      if (isGameOver) {
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.fillText("Game Over!", canvas.width / 2 - 100, canvas.height / 2);
+      }
+    }
+
+    // Game loop
+    function gameLoop() {
+      update();
+      draw();
+      if (!isGameOver) requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
