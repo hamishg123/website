@@ -107,8 +107,9 @@
         height: 40,
         color: "orange",
         velocityY: 0,
-        jumpForce: -12,
+        jumpForce: -14, // Increased jump speed
         isJumping: false,
+        rotation: 0, // Rotation angle in radians
       };
 
       obstacles = [];
@@ -172,20 +173,23 @@
 
       player.velocityY += gravity;
       player.y += player.velocityY;
+      player.rotation += Math.PI / 30; // Smooth rotation while jumping
 
       if (player.y + player.height >= canvas.height - spikeHeight) {
         player.y = canvas.height - spikeHeight - player.height;
         player.isJumping = false;
+        player.rotation = 0; // Reset rotation when on the ground
       }
 
       obstacles.forEach((obs, index) => {
         obs.x -= gameSpeed;
 
+        // Check collision using precise geometry
         if (
-          player.x < obs.x + obs.width &&
           player.x + player.width > obs.x &&
-          player.y < obs.y + obs.height &&
-          player.y + player.height > obs.y
+          player.x < obs.x + obs.width &&
+          player.y + player.height > obs.y - spikeHeight &&
+          player.y < obs.y
         ) {
           isGameOver = true;
         }
@@ -205,18 +209,15 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Draw player with rotation
+      ctx.save();
+      ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+      ctx.rotate(player.rotation);
       ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+      ctx.restore();
 
-      ctx.fillStyle = "black";
-      ctx.beginPath();
-      ctx.arc(player.x + 12, player.y + 12, 3, 0, Math.PI * 2);
-      ctx.arc(player.x + 28, player.y + 12, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(player.x + 20, player.y + 28, 8, 0, Math.PI, false);
-      ctx.stroke();
-
+      // Draw obstacles
       obstacles.forEach((obs) => {
         ctx.fillStyle = obs.color;
         ctx.beginPath();
@@ -227,6 +228,7 @@
         ctx.fill();
       });
 
+      // Draw score
       ctx.fillStyle = "white";
       ctx.font = "20px Arial";
       ctx.fillText(`Score: ${score}`, 10, 30);
