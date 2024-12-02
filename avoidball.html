@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-michealgo to chat .txt
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -55,6 +54,22 @@ michealgo to chat .txt
             color: #e74c3c;
             font-size: 2em;
             font-weight: bold;
+            text-align: center;
+        }
+
+        .game-over button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .game-over button:hover {
+            background-color: #357ab8;
         }
     </style>
 </head>
@@ -71,8 +86,9 @@ michealgo to chat .txt
 
         let playerX = 285, playerY = 285;
         let ballX = 100, ballY = 100;
-        let ballSpeedX = 2, ballSpeedY = 2;
+        const ballSpeed = 2;
         let keysPressed = {};
+        let gameLoopId;
 
         // Smooth player movement
         document.addEventListener('keydown', (e) => {
@@ -94,19 +110,14 @@ michealgo to chat .txt
             player.style.left = `${playerX}px`;
         }
 
-        // Move the ball
+        // Move the ball towards the player
         function moveBall() {
-            ballX += ballSpeedX;
-            ballY += ballSpeedY;
+            const dx = playerX - ballX;
+            const dy = playerY - ballY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Bounce the ball off walls
-            if (ballX <= 0 || ballX >= gameArea.offsetWidth - ball.offsetWidth) {
-                ballSpeedX *= -1;
-            }
-
-            if (ballY <= 0 || ballY >= gameArea.offsetHeight - ball.offsetHeight) {
-                ballSpeedY *= -1;
-            }
+            ballX += (dx / distance) * ballSpeed;
+            ballY += (dy / distance) * ballSpeed;
 
             ball.style.left = `${ballX}px`;
             ball.style.top = `${ballY}px`;
@@ -129,15 +140,33 @@ michealgo to chat .txt
 
         // End the game
         function endGame() {
-            const gameOverMessage = document.createElement('div');
-            gameOverMessage.classList.add('game-over');
-            gameOverMessage.textContent = 'Game Over!';
-            gameArea.appendChild(gameOverMessage);
             cancelAnimationFrame(gameLoopId); // Stop the game loop
+
+            // Display game-over screen
+            const gameOverScreen = document.createElement('div');
+            gameOverScreen.classList.add('game-over');
+            gameOverScreen.innerHTML = `
+                Game Over!<br>
+                <button onclick="restartGame()">Try Again</button>
+            `;
+            gameArea.appendChild(gameOverScreen);
+        }
+
+        // Restart the game
+        function restartGame() {
+            document.querySelector('.game-over').remove(); // Remove game-over screen
+            ballX = 100;
+            ballY = 100;
+            playerX = 285;
+            playerY = 285;
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+            player.style.left = `${playerX}px`;
+            player.style.top = `${playerY}px`;
+            gameLoop(); // Restart the game loop
         }
 
         // Game loop
-        let gameLoopId;
         function gameLoop() {
             movePlayer();
             moveBall();
