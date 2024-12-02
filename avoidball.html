@@ -37,6 +37,19 @@
             color: #4a90e2;
         }
 
+        .leaderboard {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1em;
+            color: #333;
+            background-color: #ffffffdd;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
         .player {
             position: absolute;
             width: 30px;
@@ -72,51 +85,17 @@
             font-size: 1em;
             color: #333;
         }
-
-        /* Leaderboard Styling */
-        #leaderboard {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #ffffff;
-            padding: 20px;
-            border: 2px solid #4a90e2;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 200px;
-            font-size: 1.2em;
-            color: #333;
-        }
-
-        #leaderboard h2 {
-            margin: 0 0 10px;
-            font-size: 1.5em;
-            color: #4a90e2;
-        }
-
-        #leaderboard ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #leaderboard li {
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
-        }
     </style>
 </head>
 <body>
     <div id="gameArea">
         <div class="timer" id="timer">Time: 0</div>
+        <div class="leaderboard" id="leaderboard">
+            <strong>Leaderboard:</strong>
+            <ol id="leaderboardList"></ol>
+        </div>
         <div class="player" id="player"></div>
         <div class="ball" id="ball"></div>
-    </div>
-
-    <div id="leaderboard">
-        <h2>Leaderboard</h2>
-        <ul id="leaderboardList">
-            <!-- Leaderboard entries will go here -->
-        </ul>
     </div>
 
     <script>
@@ -135,28 +114,6 @@
         let isGameOver = false;
         let timeElapsed = 0;
         let timerInterval;
-
-        // Load leaderboard from localStorage
-        let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
-
-        // Update leaderboard in the UI
-        function updateLeaderboard() {
-            leaderboardList.innerHTML = '';
-            leaderboard.slice(0, 10).forEach((score, index) => {
-                const li = document.createElement('li');
-                li.textContent = `${index + 1}. ${score} seconds`;
-                leaderboardList.appendChild(li);
-            });
-        }
-
-        // Add score to leaderboard
-        function addScoreToLeaderboard(score) {
-            leaderboard.push(score);
-            leaderboard.sort((a, b) => b - a); // Sort in descending order
-            leaderboard = leaderboard.slice(0, 10); // Keep only top 10 scores
-            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-            updateLeaderboard();
-        }
 
         // Timer functionality
         function startTimer() {
@@ -224,17 +181,30 @@
             }
         }
 
+        // Update the leaderboard
+        function updateLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+            leaderboard.push(timeElapsed);
+            leaderboard.sort((a, b) => b - a); // Sort descending
+            leaderboard = leaderboard.slice(0, 5); // Keep top 5
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+
+            leaderboardList.innerHTML = leaderboard.map(time => `<li>${time}s</li>`).join('');
+        }
+
+        // Load leaderboard on page load
+        function loadLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+            leaderboardList.innerHTML = leaderboard.map(time => `<li>${time}s</li>`).join('');
+        }
+
         // End the game
         function endGame() {
             isGameOver = true;
 
             cancelAnimationFrame(gameLoopId);
             stopTimer();
-
-            // Check if current time is a new top score
-            if (timeElapsed > 0) {
-                addScoreToLeaderboard(timeElapsed);
-            }
+            updateLeaderboard();
 
             const gameOverScreen = document.createElement('div');
             gameOverScreen.classList.add('game-over');
@@ -268,10 +238,10 @@
         }
 
         // Start the game
+        loadLeaderboard(); // Load leaderboard at the start
         startTimer();
         gameLoop();
         increaseDifficulty(); // Begin difficulty scaling
-        updateLeaderboard(); // Display current leaderboard
     </script>
 </body>
 </html>
