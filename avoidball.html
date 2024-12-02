@@ -3,100 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avoid the Ball</title>
+    <title>Avoid the Ball Game</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
             overflow: hidden;
         }
-        canvas {
-            border: 2px solid black;
+
+        #gameArea {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            background: #d3e4ff;
+            border: 5px solid #4a90e2;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .player {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ff5722;
+            border-radius: 5px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ffeb3b;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameArea">
+        <div class="player" id="player"></div>
+        <div class="ball" id="ball"></div>
+    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const gameArea = document.getElementById('gameArea');
+        const player = document.getElementById('player');
+        let ball = document.getElementById('ball');
 
-        // Game variables
-        const player = { x: 50, y: 50, size: 20, speed: 5 };
-        const ball = { x: 400, y: 300, size: 20, dx: 3, dy: 3 };
-        let isGameOver = false;
+        let playerX = 285, playerY = 285;
+        let ballX = 100, ballY = 100;
+        let ballSpeedX = 2, ballSpeedY = 2;
 
-        // Player controls
-        const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-
-        // Event listeners for key press
+        // Move the player
         document.addEventListener('keydown', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            const step = 10;
+            if (e.key === 'ArrowUp' && playerY > 0) playerY -= step;
+            if (e.key === 'ArrowDown' && playerY < gameArea.offsetHeight - player.offsetHeight) playerY += step;
+            if (e.key === 'ArrowLeft' && playerX > 0) playerX -= step;
+            if (e.key === 'ArrowRight' && playerX < gameArea.offsetWidth - player.offsetWidth) playerX += step;
+
+            player.style.top = `${playerY}px`;
+            player.style.left = `${playerX}px`;
         });
-        document.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-        });
 
-        function drawPlayer() {
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(player.x, player.y, player.size, player.size);
-        }
-
-        function drawBall() {
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function movePlayer() {
-            if (keys.ArrowUp && player.y > 0) player.y -= player.speed;
-            if (keys.ArrowDown && player.y < canvas.height - player.size) player.y += player.speed;
-            if (keys.ArrowLeft && player.x > 0) player.x -= player.speed;
-            if (keys.ArrowRight && player.x < canvas.width - player.size) player.x += player.speed;
-        }
-
+        // Move the ball
         function moveBall() {
-            ball.x += ball.dx;
-            ball.y += ball.dy;
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
 
-            // Ball collision with walls
-            if (ball.x - ball.size < 0 || ball.x + ball.size > canvas.width) ball.dx *= -1;
-            if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) ball.dy *= -1;
-        }
-
-        function checkCollision() {
-            const distX = Math.abs(ball.x - (player.x + player.size / 2));
-            const distY = Math.abs(ball.y - (player.y + player.size / 2));
-
-            if (distX < ball.size + player.size / 2 && distY < ball.size + player.size / 2) {
-                isGameOver = true;
+            // Bounce the ball off walls
+            if (ballX <= 0 || ballX >= gameArea.offsetWidth - ball.offsetWidth) {
+                ballSpeedX *= -1;
+                doubleBall();
             }
+
+            if (ballY <= 0 || ballY >= gameArea.offsetHeight - ball.offsetHeight) {
+                ballSpeedY *= -1;
+                doubleBall();
+            }
+
+            // Follow the player
+            const dx = playerX - ballX;
+            const dy = playerY - ballY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < 50) {
+                ballSpeedX = dx / 20;
+                ballSpeedY = dy / 20;
+            }
+
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
         }
 
+        // Double the ball's size
+        function doubleBall() {
+            const newBall = document.createElement('div');
+            newBall.classList.add('ball');
+            newBall.style.width = `${ball.offsetWidth * 2}px`;
+            newBall.style.height = `${ball.offsetHeight * 2}px`;
+            newBall.style.left = `${Math.random() * (gameArea.offsetWidth - ball.offsetWidth)}px`;
+            newBall.style.top = `${Math.random() * (gameArea.offsetHeight - ball.offsetHeight)}px`;
+            gameArea.appendChild(newBall);
+        }
+
+        // Game loop
         function gameLoop() {
-            if (isGameOver) {
-                ctx.fillStyle = 'black';
-                ctx.font = '30px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
-                return;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawPlayer();
-            drawBall();
-
-            movePlayer();
             moveBall();
-
-            checkCollision();
-
             requestAnimationFrame(gameLoop);
         }
 
@@ -104,3 +124,4 @@
     </script>
 </body>
 </html>
+
