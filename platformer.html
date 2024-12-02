@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gravity Shifter</title>
+    <title>Simple Platformer Game</title>
     <style>
         body {
             margin: 0;
@@ -55,7 +55,10 @@
     // Game constants
     const PLATFORM_WIDTH = 100;
     const PLATFORM_HEIGHT = 20;
-    const SPIKE_SIZE = 30;
+    const GRAVITY = 0.8;
+    const PLAYER_WIDTH = 50;
+    const PLAYER_HEIGHT = 50;
+    const JUMP_STRENGTH = 12;
 
     // Initialize canvas
     canvas.width = window.innerWidth;
@@ -64,29 +67,22 @@
     // Game state
     let player = {
         x: canvas.width / 2,
-        y: canvas.height / 2,
-        width: 50,
-        height: 50,
+        y: canvas.height - 150,
+        width: PLAYER_WIDTH,
+        height: PLAYER_HEIGHT,
         speed: 5,
-        gravity: 0.5,
-        vy: 0,
-        grounded: false,
-        flipped: false
+        velocityX: 0,
+        velocityY: 0,
+        grounded: false
     };
 
     let platforms = [
-        { x: 100, y: 400, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
-        { x: 300, y: 300, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
-        { x: 500, y: 200, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }
-    ];
-
-    let spikes = [
-        { x: 200, y: 380, width: SPIKE_SIZE, height: SPIKE_SIZE },
-        { x: 400, y: 280, width: SPIKE_SIZE, height: SPIKE_SIZE }
+        { x: 100, y: canvas.height - 100, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
+        { x: 300, y: canvas.height - 200, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
+        { x: 500, y: canvas.height - 300, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }
     ];
 
     let keys = {};
-    let score = 0;
     let gameOver = false;
 
     // Event listeners for key presses
@@ -101,33 +97,26 @@
 
     // Restart game
     document.getElementById("restartButton").addEventListener("click", () => {
-        player.y = canvas.height / 2;
-        player.vy = 0;
+        player.y = canvas.height - 150;
+        player.velocityY = 0;
+        player.velocityX = 0;
+        player.grounded = false;
         gameOver = false;
-        score = 0;
-        platforms.forEach(p => p.y = Math.random() * canvas.height);  // Reset platform positions
-        spikes.forEach(s => s.y = Math.random() * canvas.height);     // Reset spike positions
         document.getElementById("gameOverModal").style.display = "none";
         update();
     });
 
     // Check for collisions with platforms
     function checkPlatformCollision(player, platform) {
-        const gravityDirection = player.flipped ? -1 : 1;
-        const isMovingDown = player.vy * gravityDirection > 0;
-        const isAbovePlatform = player.y + player.height <= platform.y;
-        const isBelowPlatform = player.y >= platform.y + PLATFORM_HEIGHT;
-
-        const willOverlapPlatform = 
+        if (
             player.x + player.width > platform.x &&
             player.x < platform.x + platform.width &&
-            ((isAbovePlatform && (player.y + player.height + player.vy >= platform.y)) ||
-            (isBelowPlatform && (player.y + player.vy <= platform.y + platform.height)));
-
-        if (isMovingDown && willOverlapPlatform) {
-            player.vy = 0;
+            player.y + player.height <= platform.y &&
+            player.y + player.height + player.velocityY >= platform.y
+        ) {
+            player.velocityY = 0;
             player.grounded = true;
-            player.y = player.flipped ? platform.y + platform.height : platform.y - player.height;
+            player.y = platform.y - player.height;
             return true;
         }
         return false;
@@ -142,51 +131,30 @@
         if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
 
         // Apply gravity
-        const gravityDirection = player.flipped ? -1 : 1;
-        player.vy += player.gravity * gravityDirection;
-        player.y += player.vy;
+        player.velocityY += GRAVITY;
+        player.y += player.velocityY;
 
-        // Flip gravity
+        // Jump
         if (keys[" "] && player.grounded) {
-            player.flipped = !player.flipped;
-            player.vy = 0; // Reset velocity after flip
+            player.velocityY = -JUMP_STRENGTH; // Jump upwards
+            player.grounded = false;
         }
-
-        player.grounded = false;
 
         // Check platform collisions
+        player.grounded = false;
         for (const platform of platforms) {
-            if (checkPlatformCollision(player, platform)) {
-                score++; // Increment score when player lands on a platform
-            }
+            checkPlatformCollision(player, platform);
         }
 
-        // Spike collision
-        for (const spike of spikes) {
-            if (
-                player.x < spike.x + SPIKE_SIZE &&
-                player.x + player.width > spike.x &&
-                player.y < spike.y + SPIKE_SIZE &&
-                player.y + player.height > spike.y
-            ) {
-                endGame();
-            }
-        }
-
-        // Scroll platforms
-        if (!player.flipped && player.y < canvas.height / 3) {
-            const scroll = 2;
-            player.y += scroll;
-            platforms.forEach(platform => platform.y += scroll);
-            spikes.forEach(spike => spike.y += scroll);
-        }
-
-        // Game over if player falls out of bounds
-        if (player.y > canvas.height || player.y < -player.height) {
+        // Game over if player falls off the screen
+        if (player.y > canvas.height) {
             endGame();
         }
 
+        // Draw the scene
         draw();
+
+        // Call the update function for the next frame
         requestAnimationFrame(update);
     }
 
@@ -203,20 +171,9 @@
         for (const platform of platforms) {
             ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
         }
-
-        // Draw spikes
-        ctx.fillStyle = "#FF4500"; // Spike color (OrangeRed)
-        for (const spike of spikes) {
-            ctx.fillRect(spike.x, spike.y, spike.width, spike.height);
-        }
-
-        // Display score
-        ctx.fillStyle = "white";
-        ctx.font = "20px Arial";
-        ctx.fillText(`Score: ${score}`, 10, 30);
     }
 
-    // Start the game
+    // Start the game loop
     update();
     </script>
 </body>
