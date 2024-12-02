@@ -89,6 +89,7 @@
         const ballSpeed = 2;
         let keysPressed = {};
         let gameLoopId;
+        let isGameOver = false;
 
         // Smooth player movement
         document.addEventListener('keydown', (e) => {
@@ -100,6 +101,8 @@
         });
 
         function movePlayer() {
+            if (isGameOver) return; // Stop player movement if the game is over
+
             const step = 5;
             if (keysPressed['ArrowUp'] && playerY > 0) playerY -= step;
             if (keysPressed['ArrowDown'] && playerY < gameArea.offsetHeight - player.offsetHeight) playerY += step;
@@ -112,6 +115,8 @@
 
         // Move the ball towards the player
         function moveBall() {
+            if (isGameOver) return; // Stop ball movement if the game is over
+
             const dx = playerX - ballX;
             const dy = playerY - ballY;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -140,6 +145,8 @@
 
         // End the game
         function endGame() {
+            isGameOver = true; // Prevent further movement
+
             cancelAnimationFrame(gameLoopId); // Stop the game loop
 
             // Display game-over screen
@@ -147,23 +154,37 @@
             gameOverScreen.classList.add('game-over');
             gameOverScreen.innerHTML = `
                 Game Over!<br>
-                <button onclick="restartGame()">Try Again</button>
+                <button id="restartButton">Try Again</button>
             `;
             gameArea.appendChild(gameOverScreen);
+
+            // Add event listener to the restart button
+            document.getElementById('restartButton').addEventListener('click', restartGame);
         }
 
         // Restart the game
         function restartGame() {
-            document.querySelector('.game-over').remove(); // Remove game-over screen
-            ballX = 100;
-            ballY = 100;
+            // Reset positions
             playerX = 285;
             playerY = 285;
+            ballX = 100;
+            ballY = 100;
+
+            // Reset game state
+            isGameOver = false;
+
+            // Remove the game-over screen
+            const gameOverScreen = document.querySelector('.game-over');
+            if (gameOverScreen) gameOverScreen.remove();
+
+            // Update positions
             ball.style.left = `${ballX}px`;
             ball.style.top = `${ballY}px`;
             player.style.left = `${playerX}px`;
             player.style.top = `${playerY}px`;
-            gameLoop(); // Restart the game loop
+
+            // Restart the game loop
+            gameLoop();
         }
 
         // Game loop
