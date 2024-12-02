@@ -49,24 +49,85 @@
     </div>
 
     <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Game constants
+    const PLATFORM_WIDTH = 100;
+    const PLATFORM_HEIGHT = 20;
+    const SPIKE_SIZE = 30;
+
+    // Initialize canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Game state
+    let player = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        width: 50,
+        height: 50,
+        speed: 5,
+        gravity: 0.5,
+        vy: 0,
+        grounded: false,
+        flipped: false
+    };
+
+    let platforms = [
+        { x: 100, y: 400, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
+        { x: 300, y: 300, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT },
+        { x: 500, y: 200, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }
+    ];
+
+    let spikes = [
+        { x: 200, y: 380, width: SPIKE_SIZE, height: SPIKE_SIZE },
+        { x: 400, y: 280, width: SPIKE_SIZE, height: SPIKE_SIZE }
+    ];
+
+    let keys = {};
+    let score = 0;
+    let gameOver = false;
+
+    // Event listeners for key presses
+    window.addEventListener("keydown", (e) => keys[e.key] = true);
+    window.addEventListener("keyup", (e) => keys[e.key] = false);
+
+    // Game over function
+    function endGame() {
+        gameOver = true;
+        document.getElementById("gameOverModal").style.display = "block";
+    }
+
+    // Restart game
+    document.getElementById("restartButton").addEventListener("click", () => {
+        player.y = canvas.height / 2;
+        player.vy = 0;
+        gameOver = false;
+        score = 0;
+        platforms.forEach(p => p.y = Math.random() * canvas.height);  // Reset platform positions
+        spikes.forEach(s => s.y = Math.random() * canvas.height);     // Reset spike positions
+        document.getElementById("gameOverModal").style.display = "none";
+        update();
+    });
+
     // Check for collisions with platforms
     function checkPlatformCollision(player, platform) {
         const gravityDirection = player.flipped ? -1 : 1;
-
         const isMovingDown = player.vy * gravityDirection > 0;
         const isAbovePlatform = player.y + player.height <= platform.y;
         const isBelowPlatform = player.y >= platform.y + PLATFORM_HEIGHT;
+
         const willOverlapPlatform = 
             player.x + player.width > platform.x &&
-            player.x < platform.x + PLATFORM_WIDTH &&
+            player.x < platform.x + platform.width &&
             ((isAbovePlatform && (player.y + player.height + player.vy >= platform.y)) ||
-            (isBelowPlatform && (player.y + player.vy <= platform.y + PLATFORM_HEIGHT)));
+            (isBelowPlatform && (player.y + player.vy <= platform.y + platform.height)));
 
         if (isMovingDown && willOverlapPlatform) {
-            // Snap the player to the platform
             player.vy = 0;
             player.grounded = true;
-            player.y = player.flipped ? platform.y + PLATFORM_HEIGHT : platform.y - player.height;
+            player.y = player.flipped ? platform.y + platform.height : platform.y - player.height;
             return true;
         }
         return false;
@@ -124,9 +185,39 @@
         if (player.y > canvas.height || player.y < -player.height) {
             endGame();
         }
-    }
-</script>
 
-        
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    // Draw function
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+        // Draw player
+        ctx.fillStyle = "#FF6347"; // Player color (tomato)
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        // Draw platforms
+        ctx.fillStyle = "#6A5ACD"; // Platform color (SlateBlue)
+        for (const platform of platforms) {
+            ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        }
+
+        // Draw spikes
+        ctx.fillStyle = "#FF4500"; // Spike color (OrangeRed)
+        for (const spike of spikes) {
+            ctx.fillRect(spike.x, spike.y, spike.width, spike.height);
+        }
+
+        // Display score
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.fillText(`Score: ${score}`, 10, 30);
+    }
+
+    // Start the game
+    update();
+    </script>
 </body>
 </html>
