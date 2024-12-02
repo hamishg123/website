@@ -116,13 +116,16 @@
         </div>
     </div>
 
+    
     <script>
 let score = 0;
 let cpc = 1;
 let cps = 0;
 let rebirths = 0;
 let rebirthBoost = 1;
+let currentWorld = "Default"; // Track the current world
 const rebirthCost = 2e11; // 200B for rebirth
+const nextWorldCost = 1e12; // 1T to enter Fire World
 
 const scoreDisplay = document.getElementById("score");
 const cpsDisplay = document.getElementById("cps");
@@ -143,6 +146,7 @@ const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 function formatNumber(num) {
+    if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
     if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
     if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
     if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
@@ -153,6 +157,8 @@ function updateUI() {
     scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
     cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
     rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
+    rebirthButton.textContent =
+        rebirths >= 5 ? `Enter Fire World - Cost: ${formatNumber(nextWorldCost)}` : `Rebirth - Cost: ${formatNumber(rebirthCost)}`;
     updateUpgradeButtons();
 }
 
@@ -162,6 +168,7 @@ function saveProgress() {
     localStorage.setItem("cps", cps);
     localStorage.setItem("rebirths", rebirths);
     localStorage.setItem("rebirthBoost", rebirthBoost);
+    localStorage.setItem("currentWorld", currentWorld);
     localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
     localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
 }
@@ -172,6 +179,7 @@ function loadProgress() {
     cps = parseFloat(localStorage.getItem("cps")) || 0;
     rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
     rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+    currentWorld = localStorage.getItem("currentWorld") || "Default";
 
     const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
     const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
@@ -212,22 +220,14 @@ function updateUpgradeButtons() {
     });
 }
 
-function handleUpgradeClick(type, index) {
-    const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
-    const upgrade = upgrades[index];
-    if (score >= upgrade.cost) {
-        score -= upgrade.cost;
-        if (type === "CPC") cpc += upgrade.effect;
-        else cps += upgrade.effect;
-
-        upgrade.cost *= 1.5;
-        updateUI();
-        saveProgress();
-    }
-}
-
 rebirthButton.addEventListener("click", () => {
-    if (score >= rebirthCost) {
+    if (rebirths >= 5 && currentWorld === "Default" && score >= nextWorldCost) {
+        score -= nextWorldCost;
+        currentWorld = "Fire";
+        rebirthBoost *= 1.5; // Extra boost for entering Fire World
+        alert("Welcome to the Fire World!");
+        document.body.style.background = "linear-gradient(to bottom, red, orange)"; // Update theme
+    } else if (rebirths < 5 && score >= rebirthCost) {
         score = 0;
         cpc = 1;
         cps = 0;
@@ -243,34 +243,11 @@ rebirthButton.addEventListener("click", () => {
 
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        attachUpgradeListeners();
 
         alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-        updateUI();
-        saveProgress();
     }
-});
-
-function attachUpgradeListeners() {
-    cpcUpgradesContainer.addEventListener("click", event => {
-        if (event.target.classList.contains("upgrade-button")) {
-            handleUpgradeClick("CPC", event.target.dataset.index);
-        }
-    });
-
-    cpsUpgradesContainer.addEventListener("click", event => {
-        if (event.target.classList.contains("upgrade-button")) {
-            handleUpgradeClick("CPS", event.target.dataset.index);
-        }
-    });
-}
-
-clickButton.addEventListener("click", event => {
-    const earned = cpc * rebirthBoost;
-    score += earned;
     updateUI();
     saveProgress();
-    showCpcAnimation(event, earned);
 });
 
 setInterval(() => {
@@ -282,25 +259,9 @@ setInterval(() => {
 loadProgress();
 createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
 createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-attachUpgradeListeners();
 updateUI();
-
-function showCpcAnimation(event, cpcValue) {
-    const formattedValue = `+${formatNumber(cpcValue)}`;
-    const floatingText = document.createElement("span");
-    floatingText.textContent = formattedValue;
-    floatingText.className = "floating-text";
-
-    document.body.appendChild(floatingText);
-    const rect = clickButton.getBoundingClientRect();
-    floatingText.style.left = `${rect.left + rect.width / 2}px`;
-    floatingText.style.top = `${rect.top}px`;
-
-    floatingText.addEventListener("animationend", () => {
-        floatingText.remove();
-    });
-}
 </script>
+
 
 
 
