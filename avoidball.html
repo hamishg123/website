@@ -45,6 +45,16 @@
             background-color: #ffeb3b;
             border-radius: 50%;
         }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e74c3c;
+            font-size: 2em;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -56,23 +66,32 @@
     <script>
         const gameArea = document.getElementById('gameArea');
         const player = document.getElementById('player');
-        let ball = document.getElementById('ball');
+        const ball = document.getElementById('ball');
 
         let playerX = 285, playerY = 285;
         let ballX = 100, ballY = 100;
         let ballSpeedX = 2, ballSpeedY = 2;
+        let keysPressed = {};
 
-        // Move the player
+        // Smooth player movement
         document.addEventListener('keydown', (e) => {
-            const step = 10;
-            if (e.key === 'ArrowUp' && playerY > 0) playerY -= step;
-            if (e.key === 'ArrowDown' && playerY < gameArea.offsetHeight - player.offsetHeight) playerY += step;
-            if (e.key === 'ArrowLeft' && playerX > 0) playerX -= step;
-            if (e.key === 'ArrowRight' && playerX < gameArea.offsetWidth - player.offsetWidth) playerX += step;
+            keysPressed[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keysPressed[e.key] = false;
+        });
+
+        function movePlayer() {
+            const step = 5;
+            if (keysPressed['ArrowUp'] && playerY > 0) playerY -= step;
+            if (keysPressed['ArrowDown'] && playerY < gameArea.offsetHeight - player.offsetHeight) playerY += step;
+            if (keysPressed['ArrowLeft'] && playerX > 0) playerX -= step;
+            if (keysPressed['ArrowRight'] && playerX < gameArea.offsetWidth - player.offsetWidth) playerX += step;
 
             player.style.top = `${playerY}px`;
             player.style.left = `${playerX}px`;
-        });
+        }
 
         // Move the ball
         function moveBall() {
@@ -82,46 +101,50 @@
             // Bounce the ball off walls
             if (ballX <= 0 || ballX >= gameArea.offsetWidth - ball.offsetWidth) {
                 ballSpeedX *= -1;
-                doubleBall();
             }
 
             if (ballY <= 0 || ballY >= gameArea.offsetHeight - ball.offsetHeight) {
                 ballSpeedY *= -1;
-                doubleBall();
-            }
-
-            // Follow the player
-            const dx = playerX - ballX;
-            const dy = playerY - ballY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 50) {
-                ballSpeedX = dx / 20;
-                ballSpeedY = dy / 20;
             }
 
             ball.style.left = `${ballX}px`;
             ball.style.top = `${ballY}px`;
         }
 
-        // Double the ball's size
-        function doubleBall() {
-            const newBall = document.createElement('div');
-            newBall.classList.add('ball');
-            newBall.style.width = `${ball.offsetWidth * 2}px`;
-            newBall.style.height = `${ball.offsetHeight * 2}px`;
-            newBall.style.left = `${Math.random() * (gameArea.offsetWidth - ball.offsetWidth)}px`;
-            newBall.style.top = `${Math.random() * (gameArea.offsetHeight - ball.offsetHeight)}px`;
-            gameArea.appendChild(newBall);
+        // Check for collision
+        function checkCollision() {
+            const playerRect = player.getBoundingClientRect();
+            const ballRect = ball.getBoundingClientRect();
+
+            if (
+                playerRect.left < ballRect.right &&
+                playerRect.right > ballRect.left &&
+                playerRect.top < ballRect.bottom &&
+                playerRect.bottom > ballRect.top
+            ) {
+                endGame();
+            }
+        }
+
+        // End the game
+        function endGame() {
+            const gameOverMessage = document.createElement('div');
+            gameOverMessage.classList.add('game-over');
+            gameOverMessage.textContent = 'Game Over!';
+            gameArea.appendChild(gameOverMessage);
+            cancelAnimationFrame(gameLoopId); // Stop the game loop
         }
 
         // Game loop
+        let gameLoopId;
         function gameLoop() {
+            movePlayer();
             moveBall();
-            requestAnimationFrame(gameLoop);
+            checkCollision();
+            gameLoopId = requestAnimationFrame(gameLoop);
         }
 
         gameLoop();
     </script>
 </body>
 </html>
-
