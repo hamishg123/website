@@ -40,6 +40,7 @@
     let gravity = 0.5;
     let score = 0;
     let isGameOver = false;
+    let isPaused = false;
 
     // Generate obstacles
     function generateObstacle() {
@@ -49,15 +50,21 @@
 
     // Handle player jump
     document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && !player.isJumping) {
+      if ((e.code === "Space" || e.code === "ArrowUp") && !player.isJumping && !isPaused) {
         player.velocityY = player.jumpForce;
         player.isJumping = true;
+      }
+
+      // Toggle pause/unpause
+      if (e.code === "KeyP") {
+        isPaused = !isPaused;
+        if (!isPaused) gameLoop();
       }
     });
 
     // Update game state
     function update() {
-      if (isGameOver) return;
+      if (isPaused || isGameOver) return;
 
       // Gravity effect
       player.velocityY += gravity;
@@ -122,15 +129,24 @@
         ctx.font = "40px Arial";
         ctx.fillText("Game Over!", canvas.width / 2 - 100, canvas.height / 2);
       }
+
+      // Draw pause message
+      if (isPaused) {
+        ctx.fillStyle = "blue";
+        ctx.font = "40px Arial";
+        ctx.fillText("PAUSED", canvas.width / 2 - 75, canvas.height / 2);
+      }
     }
 
     // Game loop
     function gameLoop() {
+      if (isPaused || isGameOver) return;
       update();
       draw();
-      if (!isGameOver) requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop);
     }
 
+    // Start the game
     gameLoop();
   </script>
 </body>
