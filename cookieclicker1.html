@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicker Game</title>
     <style>
-        /* Same styles as before */
         .floating-text {
             position: absolute;
             color: #007bff;
@@ -191,12 +190,11 @@
                 });
             }
 
-            if (inFireWorld) {
-                enterFireWorld(); // Enter Fire World on load if it's saved
-            }
+            updateUI();
         }
 
         function enterFireWorld() {
+            // Reset only when entering Fire World
             score = 0;
             cpc = 1;
             cps = 0;
@@ -221,6 +219,7 @@
             attachUpgradeListeners();
 
             alert("Welcome to the Fire World! All progress reset, but it's fiery!");
+            saveProgress();
         }
 
         function createUpgradeButtons(upgrades, container, type) {
@@ -255,11 +254,7 @@
         }
 
         clickButton.addEventListener("click", () => {
-            if (!inFireWorld) {
-                score += cpc;
-            } else {
-                score += cpc; 
-            }
+            score += cpc;
 
             const floatingText = document.createElement("div");
             floatingText.classList.add("floating-text");
