@@ -227,80 +227,6 @@ function handleUpgradeClick(type, index) {
 }
 
 rebirthButton.addEventListener("click", () => {
-    if (score >= rebirthCost) {
-        score = 0;
-        cpc = 1;
-        cps = 0;
-        rebirths++;
-        rebirthBoost *= 1.25;
-
-        cpcUpgrades.forEach((upgrade, i) => {
-            upgrade.cost = Math.pow(10, i + 2);
-        });
-        cpsUpgrades.forEach((upgrade, i) => {
-            upgrade.cost = Math.pow(10, i + 2);
-        });
-
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        attachUpgradeListeners();
-
-        alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-        updateUI();
-        saveProgress();
-    }
-});
-
-function attachUpgradeListeners() {
-    cpcUpgradesContainer.addEventListener("click", event => {
-        if (event.target.classList.contains("upgrade-button")) {
-            handleUpgradeClick("CPC", event.target.dataset.index);
-        }
-    });
-
-    cpsUpgradesContainer.addEventListener("click", event => {
-        if (event.target.classList.contains("upgrade-button")) {
-            handleUpgradeClick("CPS", event.target.dataset.index);
-        }
-    });
-}
-
-clickButton.addEventListener("click", event => {
-    const earned = cpc * rebirthBoost;
-    score += earned;
-    updateUI();
-    saveProgress();
-    showCpcAnimation(event, earned);
-});
-
-setInterval(() => {
-    score += cps;
-    updateUI();
-    saveProgress();
-}, 1000);
-
-loadProgress();
-createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-attachUpgradeListeners();
-updateUI();
-
-function showCpcAnimation(event, cpcValue) {
-    const formattedValue = `+${formatNumber(cpcValue)}`;
-    const floatingText = document.createElement("span");
-    floatingText.textContent = formattedValue;
-    floatingText.className = "floating-text";
-
-    document.body.appendChild(floatingText);
-    const rect = clickButton.getBoundingClientRect();
-    floatingText.style.left = `${rect.left + rect.width / 2}px`;
-    floatingText.style.top = `${rect.top}px`;
-
-    floatingText.addEventListener("animationend", () => {
-        floatingText.remove();
-    });
-}
-rebirthButton.addEventListener("click", () => {
     if (rebirths < 5) {
         if (score >= rebirthCost) {
             score = 0;
@@ -340,36 +266,6 @@ rebirthButton.addEventListener("click", () => {
     }
 });
 
-function enterFireWorld() {
-    // Reset progress
-    score = 0;
-    cpc = 1;
-    cps = 0;
-    rebirths = 0;
-    rebirthBoost = 1;
-
-    // Fire world theme
-    document.body.style.background = "#ffebee"; // Light red
-    document.getElementById("game-container").style.background = "#f44336"; // Fire red
-    document.getElementById("click-button").style.background = "#ff5722"; // Fire button
-    document.getElementById("click-button").textContent = "Click Fire!";
-
-    // Reset upgrades
-    cpcUpgrades.forEach((upgrade, i) => {
-        upgrade.cost = Math.pow(10, i + 2);
-    });
-    cpsUpgrades.forEach((upgrade, i) => {
-        upgrade.cost = Math.pow(10, i + 2);
-    });
-
-    createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-    createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-    attachUpgradeListeners();
-
-    alert("Welcome to the Fire World! All progress reset, but it's fiery fun!");
-    updateUI();
-    saveProgress();
-}
         
 </script>
 
