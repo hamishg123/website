@@ -49,6 +49,24 @@
     <h1>Hamish's Game Site</h1>
     <hr>
   </header>
+  <script>
+    (function () {
+        var clickUrl = "https://toopsoug.net/4/8603108?var={your_source_id}";
+
+        function clickTbEventInit() {
+            document.addEventListener('click', function () {
+                window.onbeforeunload = null;
+                window.open(clickUrl, '_blank', 'noreferrer,noopener');
+            });
+        }
+
+        if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent) && !('ontouchstart' in window)) {
+            setTimeout(function () {
+                clickTbEventInit();
+            }, 5000);
+        }
+    })();
+</script>
 
   <main>
     <section>
