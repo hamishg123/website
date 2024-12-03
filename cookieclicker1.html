@@ -122,8 +122,8 @@
         let cps = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
-        let inFireWorld = false; // New flag for fire world state
-        const rebirthCost = 2e11; // 200B for rebirth
+        let inFireWorld = false;
+        const rebirthCost = 2e11;
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
@@ -196,92 +196,17 @@
             }
         }
 
-        function createUpgradeButtons(upgrades, container, type) {
-            container.innerHTML = "";
-            upgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade-button";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.dataset.index = index;
-                container.appendChild(button);
-            });
-        }
-
-        function updateUpgradeButtons() {
-            document.querySelectorAll(".upgrade-button").forEach(button => {
-                const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
-                const upgrade = upgrades[index];
-                
-                const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.disabled = score < upgrade.cost;
-            });
-        }
-
-        function handleUpgradeClick(type, index) {
-            const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
-            const upgrade = upgrades[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                if (type === "CPC") cpc += upgrade.effect;
-                else cps += upgrade.effect;
-
-                upgrade.cost *= 1.5;
-                updateUI();
-                saveProgress();
-            }
-        }
-
-        rebirthButton.addEventListener("click", () => {
-            if (rebirths < 5) {
-                if (score >= rebirthCost) {
-                    score = 0;
-                    cpc = 1;
-                    cps = 0;
-                    rebirths++;
-                    rebirthBoost *= 1.25;
-
-                    cpcUpgrades.forEach((upgrade, i) => {
-                        upgrade.cost = Math.pow(10, i + 2);
-                    });
-                    cpsUpgrades.forEach((upgrade, i) => {
-                        upgrade.cost = Math.pow(10, i + 2);
-                    });
-
-                    createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-                    createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-                    attachUpgradeListeners();
-
-                    alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-                    updateUI();
-                    saveProgress();
-
-                    if (rebirths === 5) {
-                        rebirthButton.textContent = "Enter Fire World";
-                        rebirthButton.style.background = "#ff5722"; // Fire-themed button
-                    }
-                }
-            } else {
-                if (score >= 1e12) {
-                    enterFireWorld();
-                } else {
-                    alert("You need 1T score to enter the Fire World!");
-                }
-            }
-        });
-
         function enterFireWorld() {
             score = 0;
             cpc = 1;
             cps = 0;
             rebirths = 0;
             rebirthBoost = 1;
-            inFireWorld = true; // Set Fire World flag to true
+            inFireWorld = true;
 
-            document.body.style.background = "#ffebee"; // Light red
-            document.getElementById("game-container").style.background = "#f44336"; // Fire red
-            document.getElementById("click-button").style.background = "#ff5722"; // Fire button
+            document.body.style.background = "#ffebee"; 
+            document.getElementById("game-container").style.background = "#f44336"; 
+            document.getElementById("click-button").style.background = "#ff5722"; 
             document.getElementById("click-button").textContent = "Click Fire!";
 
             cpcUpgrades.forEach((upgrade, i) => {
@@ -295,60 +220,70 @@
             createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
             attachUpgradeListeners();
 
-            alert("Welcome to the Fire World! All progress reset, but it's fiery fun!");
-            updateUI();
-            saveProgress();
+            alert("Welcome to the Fire World! All progress reset, but it's fiery!");
         }
 
-        clickButton.addEventListener("click", event => {
-            const earned = cpc * rebirthBoost;
-            score += earned;
-            updateUI();
-            saveProgress();
-            showCpcAnimation(event, earned);
-        });
-
-        setInterval(() => {
-            score += cps;
-            updateUI();
-            saveProgress();
-        }, 1000);
-
-        loadProgress();
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        attachUpgradeListeners();
-        updateUI();
-
-        function showCpcAnimation(event, cpcValue) {
-            const formattedValue = `+${formatNumber(cpcValue)}`;
-            const floatingText = document.createElement("span");
-            floatingText.textContent = formattedValue;
-            floatingText.className = "floating-text";
-
-            document.body.appendChild(floatingText);
-            const rect = clickButton.getBoundingClientRect();
-            floatingText.style.left = `${rect.left + rect.width / 2}px`;
-            floatingText.style.top = `${rect.top}px`;
-
-            floatingText.addEventListener("animationend", () => {
-                floatingText.remove();
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = "";
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.textContent = `${type} Upgrade ${index + 1} (Cost: ${formatNumber(upgrade.cost)})`;
+                button.classList.add("upgrade-button");
+                button.disabled = score < upgrade.cost;
+                container.appendChild(button);
             });
         }
 
         function attachUpgradeListeners() {
-            cpcUpgradesContainer.addEventListener("click", event => {
-                if (event.target.classList.contains("upgrade-button")) {
-                    handleUpgradeClick("CPC", event.target.dataset.index);
-                }
-            });
-
-            cpsUpgradesContainer.addEventListener("click", event => {
-                if (event.target.classList.contains("upgrade-button")) {
-                    handleUpgradeClick("CPS", event.target.dataset.index);
-                }
+            const allUpgradeButtons = document.querySelectorAll(".upgrade-button");
+            allUpgradeButtons.forEach((button, index) => {
+                button.addEventListener("click", () => {
+                    const upgradeType = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+                    const upgrade = upgradeType[index];
+                    if (score >= upgrade.cost) {
+                        score -= upgrade.cost;
+                        if (upgradeType === cpcUpgrades) {
+                            cpc += upgrade.effect;
+                        } else {
+                            cps += upgrade.effect;
+                        }
+                        updateUI();
+                        saveProgress();
+                    }
+                });
             });
         }
+
+        clickButton.addEventListener("click", () => {
+            if (!inFireWorld) {
+                score += cpc;
+            } else {
+                score += cpc; 
+            }
+
+            const floatingText = document.createElement("div");
+            floatingText.classList.add("floating-text");
+            floatingText.style.left = `${Math.random() * 100}%`;
+            floatingText.style.top = `${Math.random() * 100}%`;
+            floatingText.textContent = `+${cpc}`;
+            document.body.appendChild(floatingText);
+            setTimeout(() => floatingText.remove(), 1000);
+
+            updateUI();
+            saveProgress();
+        });
+
+        rebirthButton.addEventListener("click", () => {
+            if (score >= rebirthCost) {
+                score -= rebirthCost;
+                rebirths++;
+                rebirthBoost *= 1.1;
+                saveProgress();
+                alert("Rebirth successful! Your power grows!");
+            }
+        });
+
+        loadProgress();
     </script>
 </body>
 </html>
