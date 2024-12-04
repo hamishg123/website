@@ -50,8 +50,15 @@
     <hr>
   </header>
  <script>
-Notification.requestPermission()
-new Notification("thank you")
+  
+   Notification.requestPermission().then(perm => {
+   if (perm === "granted") {
+   new Notification("thank you")
+   }
+   })
+  wait(5000)
+   new Notification("test")
+
    
  </script>
   <main>
