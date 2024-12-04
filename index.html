@@ -45,13 +45,15 @@
 </head>
 <body>
   <header>
-    <button id="notification">turn on notification</button>
+    <button id="notification" onclick="ask()">turn on notification</button>
     <h1>Hamish's Game Site</h1>
     <hr>
   </header>
  <script>
-   
+   function ask() {
    Notification.requestpermission();
+ }
+   
  </script>
   <main>
     <section>
