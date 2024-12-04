@@ -51,7 +51,9 @@
   </header>
  <script>
    function ask() {
-   Notification.requestpermission();
+   Notification.requestpermission().then(perm => {
+     alert(perm);
+   })
  }
 new Notification("test")
    
