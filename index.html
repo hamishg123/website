@@ -50,12 +50,13 @@
     <hr>
   </header>
  <script>
-  
+  ask(){
    Notification.requestPermission().then(perm => {
      alert(perm);
+   new Notification("test")
    })
- 
-new Notification("test")
+  }
+
    
  </script>
   <main>
