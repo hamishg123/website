@@ -1,3 +1,10 @@
+.notification {
+color:white;
+background-color: #eb4034;
+border:solid balck 2px;
+border-radius: 5px;
+}
+
 /* General Reset */
 body, h1, h2, h3, p, ol, ul, a {
   margin: 0;
