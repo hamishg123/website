@@ -52,8 +52,9 @@
  <script>
   ask(){
    Notification.requestPermission().then(perm => {
-     alert(perm);
-   new Notification("test")
+   if (perm === "granted") {
+   new Notification("thank you")
+   }
    })
   }
 
