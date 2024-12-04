@@ -50,7 +50,8 @@
     <hr>
   </header>
  <script>
-  ask(){
+   const button = querySelector("button")
+  botton.addEventLisener("click", () => {
    Notification.requestPermission().then(perm => {
    if (perm === "granted") {
    new Notification("thank you")
