@@ -161,12 +161,12 @@
     </div>
 
     <script>
+        // Variables
         let score = 0;
         let cpc = 1;
         let cps = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
-        let inFireWorld = false;
         let level = 1;
         const rebirthCost = 2e11; // 200B for rebirth
         const fireWorldCost = 1e12; // 1T for Fire World
@@ -191,6 +191,7 @@
             cost: Math.pow(10, i + 2),
         }));
 
+        // Helper functions
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -246,9 +247,48 @@
 
                 upgrade.cost *= 1.5;
                 updateUI();
+                saveGame(); // Save game state
             }
         }
 
+        // Load game state from localStorage
+        function loadGame() {
+            const savedGame = localStorage.getItem('clickerGame');
+            if (savedGame) {
+                const gameData = JSON.parse(savedGame);
+                score = gameData.score || 0;
+                cpc = gameData.cpc || 1;
+                cps = gameData.cps || 0;
+                rebirths = gameData.rebirths || 0;
+                rebirthBoost = gameData.rebirthBoost || 1;
+                level = gameData.level || 1;
+                // Load upgrades (if any)
+                cpcUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = gameData.cpcUpgrades?.[i]?.cost || Math.pow(10, i + 2);
+                });
+                cpsUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = gameData.cpsUpgrades?.[i]?.cost || Math.pow(10, i + 2);
+                });
+            }
+            updateUI();
+        }
+
+        // Save game state to localStorage
+        function saveGame() {
+            const gameData = {
+                score,
+                cpc,
+                cps,
+                rebirths,
+                rebirthBoost,
+                level,
+                cpcUpgrades,
+                cpsUpgrades,
+            };
+            localStorage.setItem('clickerGame', JSON.stringify(gameData));
+        }
+
+        // Event Listeners
         rebirthButton.addEventListener("click", () => {
             if (score >= rebirthCost) {
                 score = 0;
@@ -267,6 +307,7 @@
                 createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
                 createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
                 updateUI();
+                saveGame(); // Save after rebirth
                 alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
             }
         });
@@ -284,6 +325,7 @@
                 document.body.classList.add("fire-world");
                 updateUI();
                 fireWorldContainer.style.display = "none";
+                saveGame(); // Save game after entering Fire World
             }
         });
 
@@ -292,12 +334,14 @@
             score += earned;
             updateUI();
             showCpcAnimation(event, earned);
+            saveGame(); // Save game after each click
         });
 
         setInterval(() => {
             if (level === 1) {
                 score += cps;
                 updateUI();
+                saveGame(); // Save game every second
             }
         }, 1000);
 
@@ -317,9 +361,11 @@
             });
         }
 
+        // Initial setup
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-        updateUI();
+
+        loadGame(); // Load saved game data on page load
     </script>
 </body>
 </html>
