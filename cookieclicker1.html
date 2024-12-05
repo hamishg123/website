@@ -158,6 +158,7 @@
     </div>
 
     <script>
+        // Initialize variables
         let score = 0;
         let cpc = 1;
         let cps = 0;
@@ -187,6 +188,7 @@
             cost: Math.pow(10, i + 2),
         }));
 
+        // Format numbers for display
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -194,6 +196,7 @@
             return Math.floor(num).toString();
         }
 
+        // Update the UI
         function updateUI() {
             scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
             cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
@@ -209,6 +212,7 @@
             updateUpgradeButtons();
         }
 
+        // Create upgrade buttons
         function createUpgradeButtons(upgrades, container, type) {
             container.innerHTML = "";
             upgrades.forEach((upgrade, index) => {
@@ -217,11 +221,11 @@
                 button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.dataset.index = index;
                 container.appendChild(button);
-
                 button.addEventListener("click", () => handleUpgradeClick(type, index));
             });
         }
 
+        // Update upgrade buttons to reflect correct data
         function updateUpgradeButtons() {
             document.querySelectorAll(".upgrade-button").forEach(button => {
                 const index = parseInt(button.dataset.index, 10);
@@ -234,6 +238,7 @@
             });
         }
 
+        // Handle upgrade purchase
         function handleUpgradeClick(type, index) {
             const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
             const upgrade = upgrades[index];
@@ -248,38 +253,41 @@
             }
         }
 
+        // Load game state from localStorage
         function loadGame() {
-            const savedGame = localStorage.getItem('clickerGame');
-            if (savedGame) {
-                const gameData = JSON.parse(savedGame);
-                score = gameData.score || 0;
-                cpc = gameData.cpc || 1;
-                cps = gameData.cps || 0;
-                rebirths = gameData.rebirths || 0;
-                rebirthBoost = gameData.rebirthBoost || 1;
-                level = gameData.level || 1;
-                cpcUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = gameData.cpcUpgrades?.[i]?.cost || Math.pow(10, i + 2);
-                });
-                cpsUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = gameData.cpsUpgrades?.[i]?.cost || Math.pow(10, i + 2);
-                });
-            }
+            score = parseFloat(localStorage.getItem('score')) || 0;
+            cpc = parseFloat(localStorage.getItem('cpc')) || 1;
+            cps = parseFloat(localStorage.getItem('cps')) || 0;
+            rebirths = parseInt(localStorage.getItem('rebirths')) || 0;
+            rebirthBoost = parseFloat(localStorage.getItem('rebirthBoost')) || 1;
+            level = parseInt(localStorage.getItem('level')) || 1;
+
+            cpcUpgrades.forEach((upgrade, i) => {
+                upgrade.cost = parseFloat(localStorage.getItem(`cpcUpgradeCost${i}`)) || Math.pow(10, i + 2);
+            });
+            cpsUpgrades.forEach((upgrade, i) => {
+                upgrade.cost = parseFloat(localStorage.getItem(`cpsUpgradeCost${i}`)) || Math.pow(10, i + 2);
+            });
+
             updateUI();
         }
 
+        // Save game state to localStorage
         function saveGame() {
-            const gameData = {
-                score,
-                cpc,
-                cps,
-                rebirths,
-                rebirthBoost,
-                level,
-                cpcUpgrades,
-                cpsUpgrades,
-            };
-            localStorage.setItem('clickerGame', JSON.stringify(gameData));
+            localStorage.setItem('score', score);
+            localStorage.setItem('cpc', cpc);
+            localStorage.setItem('cps', cps);
+            localStorage.setItem('rebirths', rebirths);
+            localStorage.setItem('rebirthBoost', rebirthBoost);
+            localStorage.setItem('level', level);
+
+            cpcUpgrades.forEach((upgrade, i) => {
+                localStorage.setItem(`cpcUpgradeCost${i}`, upgrade.cost);
+            });
+
+            cpsUpgrades.forEach((upgrade, i) => {
+                localStorage.setItem(`cpsUpgradeCost${i}`, upgrade.cost);
+            });
         }
 
         rebirthButton.addEventListener("click", () => {
