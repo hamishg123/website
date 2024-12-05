@@ -25,7 +25,6 @@
             }
         }
 
-        /* General styling */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -106,7 +105,6 @@
             align-items: center;
         }
 
-        /* Fire world styling */
         .fire-world {
             background: #ffebee;
             color: #fff;
@@ -154,22 +152,20 @@
             </div>
         </div>
 
-        <!-- Fire World Button -->
         <div id="fire-world-container" style="display: none;">
             <button id="fire-world-button" class="fire-button">Enter Fire World</button>
         </div>
     </div>
 
     <script>
-        // Variables
         let score = 0;
         let cpc = 1;
         let cps = 0;
         let rebirths = 0;
         let rebirthBoost = 1;
         let level = 1;
-        const rebirthCost = 2e11; // 200B for rebirth
-        const fireWorldCost = 1e12; // 1T for Fire World
+        const rebirthCost = 2e11;
+        const fireWorldCost = 1e12;
 
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
@@ -191,7 +187,6 @@
             cost: Math.pow(10, i + 2),
         }));
 
-        // Helper functions
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -222,6 +217,8 @@
                 button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.dataset.index = index;
                 container.appendChild(button);
+
+                button.addEventListener("click", () => handleUpgradeClick(type, index));
             });
         }
 
@@ -230,7 +227,7 @@
                 const index = parseInt(button.dataset.index, 10);
                 const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
                 const upgrade = upgrades[index];
-                
+
                 const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
                 button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.disabled = score < upgrade.cost;
@@ -251,7 +248,6 @@
             }
         }
 
-        // Load game state from localStorage
         function loadGame() {
             const savedGame = localStorage.getItem('clickerGame');
             if (savedGame) {
@@ -262,7 +258,6 @@
                 rebirths = gameData.rebirths || 0;
                 rebirthBoost = gameData.rebirthBoost || 1;
                 level = gameData.level || 1;
-                // Load upgrades (if any)
                 cpcUpgrades.forEach((upgrade, i) => {
                     upgrade.cost = gameData.cpcUpgrades?.[i]?.cost || Math.pow(10, i + 2);
                 });
@@ -273,7 +268,6 @@
             updateUI();
         }
 
-        // Save game state to localStorage
         function saveGame() {
             const gameData = {
                 score,
@@ -288,7 +282,6 @@
             localStorage.setItem('clickerGame', JSON.stringify(gameData));
         }
 
-        // Event Listeners
         rebirthButton.addEventListener("click", () => {
             if (score >= rebirthCost) {
                 score = 0;
@@ -307,7 +300,7 @@
                 createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
                 createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
                 updateUI();
-                saveGame(); // Save after rebirth
+                saveGame(); 
                 alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
             }
         });
@@ -325,7 +318,7 @@
                 document.body.classList.add("fire-world");
                 updateUI();
                 fireWorldContainer.style.display = "none";
-                saveGame(); // Save game after entering Fire World
+                saveGame();
             }
         });
 
@@ -334,14 +327,14 @@
             score += earned;
             updateUI();
             showCpcAnimation(event, earned);
-            saveGame(); // Save game after each click
+            saveGame(); 
         });
 
         setInterval(() => {
             if (level === 1) {
                 score += cps;
                 updateUI();
-                saveGame(); // Save game every second
+                saveGame();
             }
         }, 1000);
 
@@ -361,11 +354,9 @@
             });
         }
 
-        // Initial setup
         createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
         createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
-
-        loadGame(); // Load saved game data on page load
+        loadGame(); // Load saved game data
     </script>
 </body>
 </html>
