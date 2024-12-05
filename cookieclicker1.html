@@ -132,6 +132,21 @@
         #score.hide {
             display: none;
         }
+
+        /* Fire Theme Styles */
+        .fire-theme {
+            background-color: #ff4500;
+            color: white;
+        }
+
+        .fire-theme button {
+            background-color: #ff5722;
+            border: 2px solid #f44336;
+        }
+
+        .fire-theme h1, .fire-theme h2, .fire-theme h3 {
+            color: #ffdd57;
+        }
     </style>
 </head>
 <body>
@@ -158,7 +173,6 @@
     </div>
 
     <script>
-        // Initialize variables
         let score = 0;
         let cpc = 1;
         let cps = 0;
@@ -178,15 +192,16 @@
         const fireWorldButton = document.getElementById("fire-world-button");
         const fireWorldContainer = document.getElementById("fire-world-container");
 
-        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
-
-        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
+        const upgrades = {
+            cpcUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            })),
+            cpsUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            }))
+        };
 
         // Format numbers for display
         function formatNumber(num) {
@@ -205,9 +220,9 @@
                 fireWorldContainer.style.display = "block";
             }
             if (level === 2) {
-                scoreDisplay.classList.add("hide");
+                document.body.classList.add("fire-theme");
             } else {
-                scoreDisplay.classList.remove("hide");
+                document.body.classList.remove("fire-theme");
             }
             updateUpgradeButtons();
         }
@@ -229,67 +244,66 @@
         function updateUpgradeButtons() {
             document.querySelectorAll(".upgrade-button").forEach(button => {
                 const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
-                const upgrade = upgrades[index];
+                const type = button.parentElement.id === "cpc-upgrades" ? "cpcUpgrades" : "cpsUpgrades";
+                const upgrade = upgrades[type][index];
 
-                const type = button.parentElement.id === "cpc-upgrades" ? "CPC" : "CPS";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.textContent = `${type === "cpcUpgrades" ? "CPC" : "CPS"} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.disabled = score < upgrade.cost;
             });
         }
 
         // Handle upgrade purchase
         function handleUpgradeClick(type, index) {
-            const upgrades = type === "CPC" ? cpcUpgrades : cpsUpgrades;
-            const upgrade = upgrades[index];
+            const upgrade = upgrades[type][index];
             if (score >= upgrade.cost) {
                 score -= upgrade.cost;
-                if (type === "CPC") cpc += upgrade.effect;
+                if (type === "cpcUpgrades") cpc += upgrade.effect;
                 else cps += upgrade.effect;
 
                 upgrade.cost *= 1.5;
                 updateUI();
-                saveGame(); // Save game state
+                saveGame();
             }
         }
 
-        // Load game state from localStorage
+        // Load saved game data
         function loadGame() {
-            score = parseFloat(localStorage.getItem('score')) || 0;
-            cpc = parseFloat(localStorage.getItem('cpc')) || 1;
-            cps = parseFloat(localStorage.getItem('cps')) || 0;
-            rebirths = parseInt(localStorage.getItem('rebirths')) || 0;
-            rebirthBoost = parseFloat(localStorage.getItem('rebirthBoost')) || 1;
-            level = parseInt(localStorage.getItem('level')) || 1;
+            const savedGame = localStorage.getItem('clickerGame');
+            if (savedGame) {
+                const gameData = JSON.parse(savedGame);
+                score = gameData.score || 0;
+                cpc = gameData.cpc || 1;
+                cps = gameData.cps || 0;
+                rebirths = gameData.rebirths || 0;
+                rebirthBoost = gameData.rebirthBoost || 1;
+                level = gameData.level || 1;
 
-            cpcUpgrades.forEach((upgrade, i) => {
-                upgrade.cost = parseFloat(localStorage.getItem(`cpcUpgradeCost${i}`)) || Math.pow(10, i + 2);
-            });
-            cpsUpgrades.forEach((upgrade, i) => {
-                upgrade.cost = parseFloat(localStorage.getItem(`cpsUpgradeCost${i}`)) || Math.pow(10, i + 2);
-            });
-
+                upgrades.cpcUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = gameData.cpcUpgrades?.[i]?.cost || Math.pow(10, i + 2);
+                });
+                upgrades.cpsUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = gameData.cpsUpgrades?.[i]?.cost || Math.pow(10, i + 2);
+                });
+            }
             updateUI();
         }
 
-        // Save game state to localStorage
+        // Save game data to localStorage
         function saveGame() {
-            localStorage.setItem('score', score);
-            localStorage.setItem('cpc', cpc);
-            localStorage.setItem('cps', cps);
-            localStorage.setItem('rebirths', rebirths);
-            localStorage.setItem('rebirthBoost', rebirthBoost);
-            localStorage.setItem('level', level);
-
-            cpcUpgrades.forEach((upgrade, i) => {
-                localStorage.setItem(`cpcUpgradeCost${i}`, upgrade.cost);
-            });
-
-            cpsUpgrades.forEach((upgrade, i) => {
-                localStorage.setItem(`cpsUpgradeCost${i}`, upgrade.cost);
-            });
+            const gameData = {
+                score,
+                cpc,
+                cps,
+                rebirths,
+                rebirthBoost,
+                level,
+                cpcUpgrades: upgrades.cpcUpgrades,
+                cpsUpgrades: upgrades.cpsUpgrades
+            };
+            localStorage.setItem('clickerGame', JSON.stringify(gameData));
         }
 
+        // Rebirth button
         rebirthButton.addEventListener("click", () => {
             if (score >= rebirthCost) {
                 score = 0;
@@ -298,21 +312,22 @@
                 rebirths++;
                 rebirthBoost *= 1.25;
 
-                cpcUpgrades.forEach((upgrade, i) => {
+                upgrades.cpcUpgrades.forEach((upgrade, i) => {
                     upgrade.cost = Math.pow(10, i + 2);
                 });
-                cpsUpgrades.forEach((upgrade, i) => {
+                upgrades.cpsUpgrades.forEach((upgrade, i) => {
                     upgrade.cost = Math.pow(10, i + 2);
                 });
 
-                createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-                createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
+                createUpgradeButtons(upgrades.cpcUpgrades, cpcUpgradesContainer, "CPC");
+                createUpgradeButtons(upgrades.cpsUpgrades, cpsUpgradesContainer, "CPS");
                 updateUI();
                 saveGame(); 
                 alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
             }
         });
 
+        // Fire World button
         fireWorldButton.addEventListener("click", () => {
             if (score >= fireWorldCost) {
                 score = 0;
@@ -322,14 +337,13 @@
                 level = 2; // Enter Fire World
                 alert("You have entered the Fire World!");
 
-                // Fire World theme
-                document.body.classList.add("fire-world");
                 updateUI();
                 fireWorldContainer.style.display = "none";
                 saveGame();
             }
         });
 
+        // Click button logic
         clickButton.addEventListener("click", event => {
             const earned = cpc * rebirthBoost;
             score += earned;
@@ -338,6 +352,7 @@
             saveGame(); 
         });
 
+        // Auto-score increment
         setInterval(() => {
             if (level === 1) {
                 score += cps;
@@ -346,6 +361,7 @@
             }
         }, 1000);
 
+        // Animation for CPC increase
         function showCpcAnimation(event, cpcValue) {
             const formattedValue = `+${formatNumber(cpcValue)}`;
             const floatingText = document.createElement("span");
@@ -362,8 +378,8 @@
             });
         }
 
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "CPC");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "CPS");
+        createUpgradeButtons(upgrades.cpcUpgrades, cpcUpgradesContainer, "CPC");
+        createUpgradeButtons(upgrades.cpsUpgrades, cpsUpgradesContainer, "CPS");
         loadGame(); // Load saved game data
     </script>
 </body>
