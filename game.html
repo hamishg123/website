@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Platformer</title>
+  <style>
+    body { margin: 0; }
+    canvas { display: block; background-color: #87CEEB; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const BLOCK_SIZE = 40; // Size of each block
+    const SCREEN_WIDTH = canvas.width;
+    const SCREEN_HEIGHT = canvas.height;
+
+    // Colors
+    const BLOCK_COLOR = 'green';
+    const LAVA_COLOR = 'red';
+    const NEXT_LEVEL_COLOR = 'blue';
+    const PLAYER_COLOR = 'yellow';
+
+    // Sample level data (1 = block, 2 = lava, 3 = next level)
+    const hitbox = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+      0, 2, 2, 2, 0, 3, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ];
+
+    const rows = SCREEN_HEIGHT / BLOCK_SIZE;
+    const cols = SCREEN_WIDTH / BLOCK_SIZE;
+
+    let player = {
+      x: 100,
+      y: SCREEN_HEIGHT - BLOCK_SIZE * 2,
+      width: BLOCK_SIZE,
+      height: BLOCK_SIZE,
+      speed: 5,
+      velocityY: 0,
+      jumping: false
+    };
+
+    // Function to draw the level
+    function drawLevel() {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          let block = hitbox[row * cols + col];
+          let x = col * BLOCK_SIZE;
+          let y = row * BLOCK_SIZE;
+
+          // Draw blocks, lava, and next level
+          if (block === 1) {
+            ctx.fillStyle = BLOCK_COLOR;
+            ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+          } else if (block === 2) {
+            ctx.fillStyle = LAVA_COLOR;
+            ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+          } else if (block === 3) {
+            ctx.fillStyle = NEXT_LEVEL_COLOR;
+            ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+          }
+        }
+      }
+    }
+
+    // Function to draw the player
+    function drawPlayer() {
+      ctx.fillStyle = PLAYER_COLOR;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Function to move the player
+    function movePlayer() {
+      if (keys.ArrowRight) player.x += player.speed;
+      if (keys.ArrowLeft) player.x -= player.speed;
+
+      // Gravity
+      if (player.y + player.height < SCREEN_HEIGHT) {
+        player.velocityY += 0.8; // gravity strength
+      } else {
+        player.velocityY = 0;
+        player.jumping = false;
+      }
+      player.y += player.velocityY;
+
+      // Prevent going off screen
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > SCREEN_WIDTH) player.x = SCREEN_WIDTH - player.width;
+    }
+
+    // Keyboard input tracking
+    const keys = {};
+    window.addEventListener('keydown', (e) => { keys[e.key] = true; });
+    window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+    // Jumping mechanism
+    function jump() {
+      if (player.jumping) return;
+      player.velocityY = -15;
+      player.jumping = true;
+    }
+
+    // Check for collisions with blocks
+    function checkCollisions() {
+      const playerBottom = player.y + player.height;
+      const playerLeft = player.x;
+      const playerRight = player.x + player.width;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const block = hitbox[row * cols + col];
+          const blockX = col * BLOCK_SIZE;
+          const blockY = row * BLOCK_SIZE;
+
+          if (block === 1) { // Block collision
+            if (playerBottom > blockY && player.y < blockY + BLOCK_SIZE && playerRight > blockX && playerLeft < blockX + BLOCK_SIZE) {
+              // Stop falling and land on the block
+              if (player.velocityY > 0) {
+                player.y = blockY - player.height;
+                player.velocityY = 0;
+                player.jumping = false;
+              }
+            }
+          } else if (block === 2) { // Lava collision
+            if (playerBottom > blockY && player.y < blockY + BLOCK_SIZE && playerRight > blockX && playerLeft < blockX + BLOCK_SIZE) {
+              resetPlayer();
+            }
+          } else if (block === 3) { // Next level trigger
+            if (playerBottom > blockY && player.y < blockY + BLOCK_SIZE && playerRight > blockX && playerLeft < blockX + BLOCK_SIZE) {
+              alert('Next level!');
+              resetPlayer();
+            }
+          }
+        }
+      }
+    }
+
+    function resetPlayer() {
+      player.x = 100;
+      player.y = SCREEN_HEIGHT - BLOCK_SIZE * 2;
+      player.velocityY = 0;
+    }
+
+    // Main game loop
+    function gameLoop() {
+      ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Clear screen
+
+      drawLevel();
+      movePlayer();
+      checkCollisions();
+      drawPlayer();
+
+      requestAnimationFrame(gameLoop); // Call the next frame
+    }
+
+    // Start the game
+    gameLoop();
+    
+    // Handle jumping with spacebar
+    window.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'ArrowUp') {
+        jump();
+      }
+    });
+
+  </script>
+</body>
+</html>
