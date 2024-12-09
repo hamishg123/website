@@ -370,35 +370,57 @@
                 snowflake.remove();
             });
         }, 4000);
-        let isGiftActive = false;
-let cpcMultiplier = 1;  // Default CPC multiplier
+        let cpcMultiplier = 1;  // Default CPC multiplier
 let cpsMultiplier = 1;  // Default CPS multiplier
 let giftButton = document.getElementById("giftButton");
 
+// Get the last time the gift was used from local storage (if it exists)
+let lastGiftTime = localStorage.getItem("lastGiftTime");
+
+// Check if the gift can be used again
+function canUseGift() {
+    if (!lastGiftTime) {
+        return true; // If no last gift time exists, allow using the gift
+    }
+
+    let currentTime = Date.now(); // Get the current time in milliseconds
+    let timeElapsed = currentTime - lastGiftTime; // Calculate time elapsed since last use
+
+    // If more than 1 hour (3600000ms) has passed, allow using the gift
+    return timeElapsed >= 3600000;
+}
+
 function activateGift() {
-    if (!isGiftActive) {
-        isGiftActive = true;
-        
+    if (canUseGift()) {
         // Double the CPC and CPS for 1 minute
         cpcMultiplier = 2;
         cpsMultiplier = 2;
 
-        // Show a message or alert to the user
+        // Show a message to the user
         alert("You received a Christmas gift! Your CPC and CPS are doubled for 1 minute!");
 
-        // Disable the button after activation
+        // Disable the button after activation to prevent further clicks
         giftButton.disabled = true;
+
+        // Save the current time as the last gift time in local storage
+        localStorage.setItem("lastGiftTime", Date.now());
 
         // Reset the multipliers after 1 minute (60,000 milliseconds)
         setTimeout(() => {
             cpcMultiplier = 1;
             cpsMultiplier = 1;
-            isGiftActive = false;
-            giftButton.disabled = false; // Enable the button again if you want to reuse it later
+
+            // Re-enable the button after the effect ends
+            giftButton.disabled = false;
+
             alert("The Christmas gift effect has ended.");
         }, 60000); // 1 minute duration (60,000 milliseconds)
+    } else {
+        // Inform the user that they need to wait for 1 hour
+        alert("You can only use the Christmas gift once every hour. Please try again later.");
     }
 }
+
 
     </script>
 </body>
