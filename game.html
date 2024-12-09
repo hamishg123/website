@@ -5,20 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simple Platformer</title>
   <style>
-    body { margin: 0; }
+    body { margin: 0; overflow: hidden; }
     canvas { display: block; background-color: #87CEEB; }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    // Set canvas size to the full window size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
     const BLOCK_SIZE = 40; // Size of each block
-    const SCREEN_WIDTH = canvas.width;
-    const SCREEN_HEIGHT = canvas.height;
 
     // Colors
     const BLOCK_COLOR = 'green';
@@ -34,12 +36,12 @@
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ];
 
-    const rows = SCREEN_HEIGHT / BLOCK_SIZE;
-    const cols = SCREEN_WIDTH / BLOCK_SIZE;
+    const rows = Math.ceil(canvas.height / BLOCK_SIZE);
+    const cols = Math.ceil(canvas.width / BLOCK_SIZE);
 
     let player = {
       x: 100,
-      y: SCREEN_HEIGHT - BLOCK_SIZE * 2,
+      y: canvas.height - BLOCK_SIZE * 2,
       width: BLOCK_SIZE,
       height: BLOCK_SIZE,
       speed: 5,
@@ -82,7 +84,7 @@
       if (keys.ArrowLeft) player.x -= player.speed;
 
       // Gravity
-      if (player.y + player.height < SCREEN_HEIGHT) {
+      if (player.y + player.height < canvas.height) {
         player.velocityY += 0.8; // gravity strength
       } else {
         player.velocityY = 0;
@@ -92,7 +94,7 @@
 
       // Prevent going off screen
       if (player.x < 0) player.x = 0;
-      if (player.x + player.width > SCREEN_WIDTH) player.x = SCREEN_WIDTH - player.width;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
     }
 
     // Keyboard input tracking
@@ -144,13 +146,13 @@
 
     function resetPlayer() {
       player.x = 100;
-      player.y = SCREEN_HEIGHT - BLOCK_SIZE * 2;
+      player.y = canvas.height - BLOCK_SIZE * 2;
       player.velocityY = 0;
     }
 
     // Main game loop
     function gameLoop() {
-      ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Clear screen
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear screen
 
       drawLevel();
       movePlayer();
