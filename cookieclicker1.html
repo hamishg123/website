@@ -128,6 +128,27 @@
                 opacity: 0;
             }
         }
+        #giftButton {
+    background-color: #ff6347; /* Tomato color for the gift button */
+    color: white;
+    font-size: 18px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+#giftButton:hover {
+    background-color: #ff4500; /* Darker tomato color for hover effect */
+}
+
+#giftButton:disabled {
+    background-color: #d3d3d3; /* Gray out the button when disabled */
+    cursor: not-allowed; /* Change cursor to not-allowed when disabled */
+}
+
     </style>
 </head>
 <body>
@@ -138,6 +159,7 @@
         <button id="click-button" class="button">Click for Gifts!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="rebirth-button" class="button">Rebirth - 200B</button>
+        <button id="giftButton" onclick="activateGift()">🎁 Christmas Gift</button>
 
         <div class="upgrade-container">
             <div id="cpc-upgrades" class="upgrade-column">
@@ -348,6 +370,36 @@
                 snowflake.remove();
             });
         }, 4000);
+        let isGiftActive = false;
+let cpcMultiplier = 1;  // Default CPC multiplier
+let cpsMultiplier = 1;  // Default CPS multiplier
+let giftButton = document.getElementById("giftButton");
+
+function activateGift() {
+    if (!isGiftActive) {
+        isGiftActive = true;
+        
+        // Double the CPC and CPS for 1 minute
+        cpcMultiplier = 2;
+        cpsMultiplier = 2;
+
+        // Show a message or alert to the user
+        alert("You received a Christmas gift! Your CPC and CPS are doubled for 1 minute!");
+
+        // Disable the button after activation
+        giftButton.disabled = true;
+
+        // Reset the multipliers after 1 minute (60,000 milliseconds)
+        setTimeout(() => {
+            cpcMultiplier = 1;
+            cpsMultiplier = 1;
+            isGiftActive = false;
+            giftButton.disabled = false; // Enable the button again if you want to reuse it later
+            alert("The Christmas gift effect has ended.");
+        }, 60000); // 1 minute duration (60,000 milliseconds)
+    }
+}
+
     </script>
 </body>
 </html>
