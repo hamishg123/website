@@ -382,58 +382,75 @@
                 snowflake.remove();
             });
         }, 4000);
-        // Function to handle multiplier activation
-function activateMultiplier() {
-    const button = document.getElementById("multiplierButton");
-    const currentTime = new Date().getTime();
-    const multiplierDuration = 60 * 1000; // 1 minute in milliseconds
+        let multiplierActive = false;
 
-    // Save the multiplier state and expiration time to localStorage
-    localStorage.setItem("multiplierActive", "true");
-    localStorage.setItem("multiplierExpiration", currentTime + multiplierDuration);
+// Check cooldown on page load
+document.addEventListener("DOMContentLoaded", () => {
+    const multiplierButton = document.getElementById("multiplierButton");
+    const cooldownEnd = localStorage.getItem("cooldownEnd");
 
-    // Disable the button and update its text
-    button.disabled = true;
-    button.textContent = "Multiplier Active (5x)";
-    
-    // Set a timer to reset the multiplier after 1 minute
-    setTimeout(resetMultiplier, multiplierDuration);
-}
-
-// Function to reset the multiplier
-function resetMultiplier() {
-    const button = document.getElementById("multiplierButton");
-
-    // Clear multiplier state from localStorage
-    localStorage.removeItem("multiplierActive");
-    localStorage.removeItem("multiplierExpiration");
-
-    // Enable the button and reset its text
-    button.disabled = false;
-    button.textContent = "Activate Multiplier (5x for 1 minute)";
-}
-
-// Function to check multiplier state on page load
-function checkMultiplierState() {
-    const button = document.getElementById("multiplierButton");
-    const currentTime = new Date().getTime();
-    const expirationTime = localStorage.getItem("multiplierExpiration");
-
-    // If multiplier is active and not expired, update button state
-    if (localStorage.getItem("multiplierActive") === "true" && expirationTime > currentTime) {
-        button.disabled = true;
-        button.textContent = "Multiplier Active (5x)";
-
-        // Set a timer to reset the multiplier when it expires
-        setTimeout(resetMultiplier, expirationTime - currentTime);
-    } else {
-        // Reset multiplier state if expired
-        resetMultiplier();
+    if (cooldownEnd) {
+        const remainingTime = new Date(cooldownEnd) - new Date();
+        if (remainingTime > 0) {
+            multiplierButton.disabled = true;
+            setTimeout(() => {
+                multiplierButton.disabled = false;
+                localStorage.removeItem("cooldownEnd");
+            }, remainingTime);
+        }
     }
-}
+});
 
-// Check multiplier state when the page loads
-document.addEventListener("DOMContentLoaded", checkMultiplierState);
+function activateMultiplier() {
+    const multiplierButton = document.getElementById("multiplierButton");
+    const now = new Date();
+    const cooldownEnd = localStorage.getItem("cooldownEnd");
+
+    if (cooldownEnd && new Date(cooldownEnd) > now) {
+        alert("Cooldown active. Please wait before using the multiplier again.");
+        return;
+    }
+
+    if (multiplierActive) {
+        alert("Multiplier is already active!");
+        return;
+    }
+
+    // Activate the multiplier
+    multiplierActive = true;
+    let originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
+    let originalCps = cps; // Replace `cps` with your actual variable for clicks per second
+
+    // Apply the multiplier
+    cpc *= 5;
+    cps *= 5;
+
+    // Notify the user
+    alert("5x multiplier activated for 1 minute!");
+
+    // Disable the button during the cooldown
+    multiplierButton.disabled = true;
+
+    // Reset multiplier after 1 minute
+    setTimeout(() => {
+        cpc = originalCpc;
+        cps = originalCps;
+        multiplierActive = false;
+        alert("Multiplier effect has ended.");
+    }, 60000); // 60000ms = 1 minute
+
+    // Set cooldown and save the end time in localStorage
+    const cooldownDuration = 3600000; // 1 hour in milliseconds
+    const cooldownEndTime = new Date(now.getTime() + cooldownDuration).toISOString();
+    localStorage.setItem("cooldownEnd", cooldownEndTime);
+
+    // Reactivate the button after cooldown ends
+    setTimeout(() => {
+        multiplierButton.disabled = false;
+        localStorage.removeItem("cooldownEnd");
+        alert("Multiplier is ready to use again!");
+    }, cooldownDuration);
+}
 
     </script>
 </body>
