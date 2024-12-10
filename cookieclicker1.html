@@ -350,10 +350,30 @@
             });
         }, 4000);
         let multiplierActive = false;
-let cooldownActive = false;
+
+// Check cooldown on page load
+document.addEventListener("DOMContentLoaded", () => {
+    const multiplierButton = document.getElementById("multiplierButton");
+    const cooldownEnd = localStorage.getItem("cooldownEnd");
+
+    if (cooldownEnd) {
+        const remainingTime = new Date(cooldownEnd) - new Date();
+        if (remainingTime > 0) {
+            multiplierButton.disabled = true;
+            setTimeout(() => {
+                multiplierButton.disabled = false;
+                localStorage.removeItem("cooldownEnd");
+            }, remainingTime);
+        }
+    }
+});
 
 function activateMultiplier() {
-    if (cooldownActive) {
+    const multiplierButton = document.getElementById("multiplierButton");
+    const now = new Date();
+    const cooldownEnd = localStorage.getItem("cooldownEnd");
+
+    if (cooldownEnd && new Date(cooldownEnd) > now) {
         alert("Cooldown active. Please wait before using the multiplier again.");
         return;
     }
@@ -365,7 +385,6 @@ function activateMultiplier() {
 
     // Activate the multiplier
     multiplierActive = true;
-    cooldownActive = true;
     let originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
     let originalCps = cps; // Replace `cps` with your actual variable for clicks per second
 
@@ -377,10 +396,9 @@ function activateMultiplier() {
     alert("5x multiplier activated for 1 minute!");
 
     // Disable the button during the cooldown
-    const multiplierButton = document.getElementById("multiplierButton");
     multiplierButton.disabled = true;
 
-    // Reset after 1 minute
+    // Reset multiplier after 1 minute
     setTimeout(() => {
         cpc = originalCpc;
         cps = originalCps;
@@ -388,13 +406,19 @@ function activateMultiplier() {
         alert("Multiplier effect has ended.");
     }, 60000); // 60000ms = 1 minute
 
-    // Reactivate the button after 1 hour cooldown
+    // Set cooldown and save the end time in localStorage
+    const cooldownDuration = 3600000; // 1 hour in milliseconds
+    const cooldownEndTime = new Date(now.getTime() + cooldownDuration).toISOString();
+    localStorage.setItem("cooldownEnd", cooldownEndTime);
+
+    // Reactivate the button after cooldown ends
     setTimeout(() => {
-        cooldownActive = false;
         multiplierButton.disabled = false;
+        localStorage.removeItem("cooldownEnd");
         alert("Multiplier is ready to use again!");
-    }, 3600000); // 3600000ms = 1 hour
+    }, cooldownDuration);
 }
+
 
     </script>
 </body>
