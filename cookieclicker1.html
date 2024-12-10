@@ -128,6 +128,38 @@
                 opacity: 0;
             }
         }
+        /* Style for the multiplier button */
+#multiplierButton {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    border: none; /* No border */
+    padding: 15px 30px; /* Padding for size */
+    font-size: 16px; /* Text size */
+    border-radius: 8px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    box-shadow: 0 4px #3e8e41; /* Slight shadow for depth */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+}
+
+/* Button hover effect */
+#multiplierButton:hover {
+    background-color: #45a049; /* Slightly darker green */
+}
+
+/* Button active state */
+#multiplierButton:active {
+    background-color: #3e8e41; /* Even darker green */
+    box-shadow: 0 2px #2e6e31; /* Adjust shadow */
+    transform: translateY(2px); /* Slightly "pressed" look */
+}
+
+/* Button disabled state */
+#multiplierButton:disabled {
+    background-color: #888; /* Gray background */
+    cursor: not-allowed; /* Change cursor to not-allowed */
+    box-shadow: none; /* Remove shadow */
+}
+
     </style>
 </head>
 <body>
