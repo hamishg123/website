@@ -138,6 +138,7 @@
         <button id="click-button" class="button">Click for Gifts!</button>
         <h3 id="cps">CPS: 0</h3>
         <button id="rebirth-button" class="button">Rebirth - 200B</button>
+        <button id="multiplierButton" onclick="activateMultiplier()">Activate Multiplier (5x for 1 minute)</button>
 
         <div class="upgrade-container">
             <div id="cpc-upgrades" class="upgrade-column">
@@ -348,6 +349,53 @@
                 snowflake.remove();
             });
         }, 4000);
+        let multiplierActive = false;
+let cooldownActive = false;
+
+function activateMultiplier() {
+    if (cooldownActive) {
+        alert("Cooldown active. Please wait before using the multiplier again.");
+        return;
+    }
+
+    if (multiplierActive) {
+        alert("Multiplier is already active!");
+        return;
+    }
+
+    // Activate the multiplier
+    multiplierActive = true;
+    cooldownActive = true;
+    let originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
+    let originalCps = cps; // Replace `cps` with your actual variable for clicks per second
+
+    // Apply the multiplier
+    cpc *= 5;
+    cps *= 5;
+
+    // Notify the user
+    alert("5x multiplier activated for 1 minute!");
+
+    // Disable the button during the cooldown
+    const multiplierButton = document.getElementById("multiplierButton");
+    multiplierButton.disabled = true;
+
+    // Reset after 1 minute
+    setTimeout(() => {
+        cpc = originalCpc;
+        cps = originalCps;
+        multiplierActive = false;
+        alert("Multiplier effect has ended.");
+    }, 60000); // 60000ms = 1 minute
+
+    // Reactivate the button after 1 hour cooldown
+    setTimeout(() => {
+        cooldownActive = false;
+        multiplierButton.disabled = false;
+        alert("Multiplier is ready to use again!");
+    }, 3600000); // 3600000ms = 1 hour
+}
+
     </script>
 </body>
 </html>
