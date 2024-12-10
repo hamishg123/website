@@ -1,0 +1,94 @@
+<style>
+    /* General button styles */
+    button {
+        width: 80%; /* Make the buttons take up more space horizontally */
+        margin: 10px auto; /* Add some spacing between buttons */
+        padding: 15px; /* Add padding for a larger clickable area */
+        font-size: 18px; /* Larger font size for better readability */
+        font-weight: bold; /* Make the text bold */
+        color: #fff; /* White text color */
+        background: linear-gradient(90deg, #007BFF, #00C8FF); /* Gradient background */
+        border: none; /* Remove border */
+        border-radius: 10px; /* Add rounded corners */
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2); /* Add shadow for a raised effect */
+        cursor: pointer; /* Change cursor to pointer */
+        display: block; /* Ensure buttons are block-level elements */
+        text-align: center; /* Center-align text */
+        transition: all 0.3s ease; /* Smooth transition for hover effects */
+    }
+
+    /* Hover effect */
+    button:hover {
+        background: linear-gradient(90deg, #0056b3, #0097c4); /* Darker gradient on hover */
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
+        transform: scale(1.05); /* Slightly enlarge button on hover */
+    }
+
+    /* Active effect */
+    button:active {
+        background: linear-gradient(90deg, #003a7a, #00718a); /* Even darker gradient */
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2); /* Reduce shadow */
+        transform: scale(0.98); /* Slightly shrink button on click */
+    }
+
+    /* Center buttons on the screen */
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f4f4f4; /* Light background color */
+        margin: 0;
+    }
+
+    /* Style the input fields for consistency */
+    input {
+        width: 80%;
+        margin: 10px auto;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        display: block;
+    }
+</style>
+
+<input id="password" type="password" placeholder="Enter password">
+<input id="input" type="number" placeholder="Set CPC value">
+<input id="input1" type="number" placeholder="Set CPS value">
+<input id="rebirth" type="number" placeholder="Set Rebirth value">
+<button id="submit-button">Submit</button>
+<button id="set-rebirth-button">Set Rebirth</button>
+
+<script>
+    let sigma = "ifyoureadthisyourgay";
+    let password = document.getElementById("password");
+    let val = document.getElementById("input");
+    let val1 = document.getElementById("input1");
+    let rebirthInput = document.getElementById("rebirth");
+    let submitButton = document.getElementById("submit-button");
+    let setRebirthButton = document.getElementById("set-rebirth-button");
+
+    submitButton.addEventListener("click", function() {
+        if (password.value === sigma) {
+            let cpc = parseInt(val.value, 10); // Get the CPC value from the input
+            let cps = parseInt(val1.value, 10); // Get the CPS value from the input
+            localStorage.setItem("cpc", cpc); // Save CPC to localStorage
+            localStorage.setItem("cps", cps); // Save CPS to localStorage
+            alert("CPC and CPS values have been updated!");
+        } else {
+            alert("Incorrect password!");
+        }
+    });
+
+    setRebirthButton.addEventListener("click", function() {
+        if (password.value === sigma) {
+            let rebirth = parseInt(rebirthInput.value, 10); // Get the rebirth value from the input
+            localStorage.setItem("rebirth", rebirth); // Save rebirth to localStorage
+            alert("Rebirth value has been updated!");
+        } else {
+            alert("Incorrect password!");
+        }
+    });
+</script>
