@@ -383,20 +383,44 @@
             });
         }, 4000);
         let multiplierActive = false;
+let originalCpc = null; // Store original CPC value
+let originalCps = null; // Store original CPS value
 
-// Check cooldown on page load
+// Check cooldown and multiplier state on page load
 document.addEventListener("DOMContentLoaded", () => {
     const multiplierButton = document.getElementById("multiplierButton");
     const cooldownEnd = localStorage.getItem("cooldownEnd");
+    const multiplierEnd = localStorage.getItem("multiplierEnd");
+    const now = new Date();
+
+    // Reset CPC and CPS if the multiplier was active
+    if (localStorage.getItem("originalCpc") && localStorage.getItem("originalCps")) {
+        resetMultiplier();
+    }
+
+    if (multiplierEnd) {
+        const remainingMultiplierTime = new Date(multiplierEnd) - now;
+        if (remainingMultiplierTime > 0) {
+            multiplierActive = true;
+            multiplierButton.disabled = true;
+
+            // Reset multiplier when the effect ends
+            setTimeout(() => {
+                resetMultiplier();
+            }, remainingMultiplierTime);
+        } else {
+            resetMultiplier(); // Clear expired multiplier state
+        }
+    }
 
     if (cooldownEnd) {
-        const remainingTime = new Date(cooldownEnd) - new Date();
-        if (remainingTime > 0) {
+        const remainingCooldownTime = new Date(cooldownEnd) - now;
+        if (remainingCooldownTime > 0) {
             multiplierButton.disabled = true;
             setTimeout(() => {
                 multiplierButton.disabled = false;
                 localStorage.removeItem("cooldownEnd");
-            }, remainingTime);
+            }, remainingCooldownTime);
         }
     }
 });
@@ -416,10 +440,16 @@ function activateMultiplier() {
         return;
     }
 
+    // Store original CPC and CPS values
+    if (originalCpc === null || originalCps === null) {
+        originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
+        originalCps = cps; // Replace `cps` with your actual variable for clicks per second
+        localStorage.setItem("originalCpc", originalCpc);
+        localStorage.setItem("originalCps", originalCps);
+    }
+
     // Activate the multiplier
     multiplierActive = true;
-    let originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
-    let originalCps = cps; // Replace `cps` with your actual variable for clicks per second
 
     // Apply the multiplier
     cpc *= 5;
@@ -431,13 +461,15 @@ function activateMultiplier() {
     // Disable the button during the cooldown
     multiplierButton.disabled = true;
 
+    // Save multiplier end time in localStorage
+    const multiplierDuration = 60000; // 1 minute in milliseconds
+    const multiplierEndTime = new Date(now.getTime() + multiplierDuration).toISOString();
+    localStorage.setItem("multiplierEnd", multiplierEndTime);
+
     // Reset multiplier after 1 minute
     setTimeout(() => {
-        cpc = originalCpc;
-        cps = originalCps;
-        multiplierActive = false;
-        alert("Multiplier effect has ended.");
-    }, 60000); // 60000ms = 1 minute
+        resetMultiplier();
+    }, multiplierDuration);
 
     // Set cooldown and save the end time in localStorage
     const cooldownDuration = 3600000; // 1 hour in milliseconds
@@ -450,6 +482,24 @@ function activateMultiplier() {
         localStorage.removeItem("cooldownEnd");
         alert("Multiplier is ready to use again!");
     }, cooldownDuration);
+}
+
+function resetMultiplier() {
+    // Reset the multiplier state and CPC/CPS values
+    multiplierActive = false;
+    localStorage.removeItem("multiplierEnd");
+
+    const savedOriginalCpc = localStorage.getItem("originalCpc");
+    const savedOriginalCps = localStorage.getItem("originalCps");
+
+    if (savedOriginalCpc && savedOriginalCps) {
+        cpc = parseFloat(savedOriginalCpc); // Restore original CPC
+        cps = parseFloat(savedOriginalCps); // Restore original CPS
+        localStorage.removeItem("originalCpc");
+        localStorage.removeItem("originalCps");
+    }
+
+    alert("Multiplier effect has ended, and original values have been restored.");
 }
 
     </script>
