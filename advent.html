@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-gap: 10px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .door {
+            background-color: #4caf50;
+            color: white;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            height: 100px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .door.open {
+            background-color: #ffeb3b;
+            color: #000;
+            cursor: default;
+        }
+
+        .door span {
+            display: none;
+        }
+
+        .door.open span {
+            display: block;
+        }
+
+        .door p {
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <h1>Advent Calendar</h1>
+    <div class="calendar"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const calendar = document.querySelector('.calendar');
+            const today = new Date();
+
+            for (let i = 1; i <= 24; i++) {
+                const door = document.createElement('div');
+                door.classList.add('door');
+                door.innerHTML = `<p>${i}</p><span>🎁 Surprise for Day ${i}!</span>`;
+                door.dataset.day = i;
+
+                // Add click event
+                door.addEventListener('click', () => {
+                    const currentDay = today.getDate();
+                    const currentMonth = today.getMonth() + 1;
+
+                    if (currentMonth === 12 && i <= currentDay) {
+                        door.classList.add('open');
+                    } else {
+                        alert("You can't open this door yet!");
+                    }
+                });
+
+                calendar.appendChild(door);
+            }
+        });
+    </script>
+</body>
+</html>
