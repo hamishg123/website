@@ -50,6 +50,22 @@
             background-color: #eaa200;
         }
 
+        .upgradeButton {
+            background-color: #1dd1a1;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .upgradeButton:hover {
+            background-color: #10ac84;
+        }
+
         .info {
             margin: 10px 0;
         }
@@ -65,32 +81,69 @@
     <br>
     <button id="rebirthButton">Rebirth (Cost: 1000 Flames)</button>
 
+    <div id="upgrades">
+        <h2>Upgrades</h2>
+    </div>
+
     <script>
         // Load saved game state from local storage
         let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
         let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
+        let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
+
+        // Upgrade details
+        const upgradeList = [
+            { id: "multiplier", name: "Flame Multiplier", baseCost: 100, multiplier: 2 },
+            { id: "autoClick", name: "Auto Clicker", baseCost: 500, multiplier: 1 },
+            { id: "superFlame", name: "Super Flame", baseCost: 1000, multiplier: 10 }
+        ];
 
         // UI Elements
         const flameCountElement = document.getElementById("flameCount");
         const rebirthCountElement = document.getElementById("rebirthCount");
         const fireButton = document.getElementById("fireButton");
         const rebirthButton = document.getElementById("rebirthButton");
+        const upgradesElement = document.getElementById("upgrades");
+
+        // Initialize upgrades
+        function initializeUpgrades() {
+            upgradeList.forEach((upgrade) => {
+                upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost };
+
+                const button = document.createElement("button");
+                button.id = upgrade.id;
+                button.classList.add("upgradeButton");
+                button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
+
+                button.addEventListener("click", () => purchaseUpgrade(upgrade));
+
+                upgradesElement.appendChild(button);
+            });
+        }
 
         // Update the UI
         function updateUI() {
             flameCountElement.textContent = flameCount;
             rebirthCountElement.textContent = rebirthCount;
+
+            upgradeList.forEach((upgrade) => {
+                const button = document.getElementById(upgrade.id);
+                button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
+            });
         }
 
         // Save the game state to local storage
         function saveGame() {
             localStorage.setItem("flameCount", flameCount);
             localStorage.setItem("rebirthCount", rebirthCount);
+            localStorage.setItem("upgrades", JSON.stringify(upgrades));
         }
 
         // Collect flames when the fire button is clicked
         fireButton.addEventListener("click", () => {
-            const flameMultiplier = rebirthCount + 1; // Each rebirth increases flame gain
+            let flameMultiplier = rebirthCount + 1;
+            flameMultiplier += (upgrades["multiplier"]?.level || 0) * upgradeList.find(u => u.id === "multiplier").multiplier;
+
             flameCount += flameMultiplier;
             updateUI();
             saveGame();
@@ -108,7 +161,32 @@
             }
         });
 
-        // Initialize the UI with saved data
+        // Purchase upgrade
+        function purchaseUpgrade(upgrade) {
+            const upgradeState = upgrades[upgrade.id];
+
+            if (flameCount >= upgradeState.cost) {
+                flameCount -= upgradeState.cost;
+                upgradeState.level += 1;
+                upgradeState.cost = Math.floor(upgradeState.cost * 1.5);
+
+                updateUI();
+                saveGame();
+            } else {
+                alert(`You need more flames to purchase ${upgrade.name}!`);
+            }
+        }
+
+        // Auto clicker functionality
+        setInterval(() => {
+            const autoClickLevel = upgrades["autoClick"]?.level || 0;
+            flameCount += autoClickLevel;
+            updateUI();
+            saveGame();
+        }, 1000);
+
+        // Initialize game state
+        initializeUpgrades();
         updateUI();
     </script>
 </body>
