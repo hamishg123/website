@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Clicker Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #2c2c54;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 3rem;
+        }
+
+        #fireButton {
+            background-color: #ff6b6b;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #fireButton:hover {
+            background-color: #ff4747;
+        }
+
+        #rebirthButton {
+            background-color: #ffa502;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #rebirthButton:hover {
+            background-color: #eaa200;
+        }
+
+        .info {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Fire Clicker Game 🔥</h1>
+
+    <div class="info">Flames Collected: <span id="flameCount">0</span></div>
+    <div class="info">Rebirths: <span id="rebirthCount">0</span></div>
+
+    <button id="fireButton">Collect Flames</button>
+    <br>
+    <button id="rebirthButton">Rebirth (Cost: 1000 Flames)</button>
+
+    <script>
+        // Load saved game state from local storage
+        let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
+        let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
+
+        // UI Elements
+        const flameCountElement = document.getElementById("flameCount");
+        const rebirthCountElement = document.getElementById("rebirthCount");
+        const fireButton = document.getElementById("fireButton");
+        const rebirthButton = document.getElementById("rebirthButton");
+
+        // Update the UI
+        function updateUI() {
+            flameCountElement.textContent = flameCount;
+            rebirthCountElement.textContent = rebirthCount;
+        }
+
+        // Save the game state to local storage
+        function saveGame() {
+            localStorage.setItem("flameCount", flameCount);
+            localStorage.setItem("rebirthCount", rebirthCount);
+        }
+
+        // Collect flames when the fire button is clicked
+        fireButton.addEventListener("click", () => {
+            const flameMultiplier = rebirthCount + 1; // Each rebirth increases flame gain
+            flameCount += flameMultiplier;
+            updateUI();
+            saveGame();
+        });
+
+        // Rebirth to reset flames and gain a rebirth point
+        rebirthButton.addEventListener("click", () => {
+            if (flameCount >= 1000) {
+                flameCount = 0; // Reset flame count
+                rebirthCount += 1; // Increase rebirth count
+                updateUI();
+                saveGame();
+            } else {
+                alert("You need at least 1000 flames to rebirth!");
+            }
+        });
+
+        // Initialize the UI with saved data
+        updateUI();
+    </script>
+</body>
+</html>
