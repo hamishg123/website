@@ -184,116 +184,116 @@
     </div>
 
     <script>
-let score = 0;
-let cpc = 1;
-let cps = 0;
-let rebirths = 0;
-let rebirthBoost = 1;
-let level = parseInt(localStorage.getItem("level"), 10) || 1;
+    let score = 0;
+    let cpc = 1;
+    let cps = 0;
+    let rebirths = 0;
+    let rebirthBoost = 1;
+    let level = parseInt(localStorage.getItem("level"), 10) || 1;
 
-const rebirthCost = 2e11; // 200B for rebirth
-const scoreDisplay = document.getElementById("score");
-const cpsDisplay = document.getElementById("cps");
-const rebirthsDisplay = document.getElementById("rebirths");
-const clickButton = document.getElementById("click-button");
-const rebirthButton = document.getElementById("rebirth-button");
-const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
-const cpsUpgradesContainer = document.getElementById("cps-upgrades");
+    const rebirthCost = 2e11; // 200B for rebirth
+    const scoreDisplay = document.getElementById("score");
+    const cpsDisplay = document.getElementById("cps");
+    const rebirthsDisplay = document.getElementById("rebirths");
+    const clickButton = document.getElementById("click-button");
+    const rebirthButton = document.getElementById("rebirth-button");
+    const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+    const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-    effect: Math.pow(10, i + 1) / 10,
-    cost: Math.pow(10, i + 2),
-}));
+    const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
+        effect: Math.pow(10, i + 1) / 10,
+        cost: Math.pow(10, i + 2),
+    }));
 
-const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-    effect: Math.pow(10, i + 1) / 10,
-    cost: Math.pow(10, i + 2),
-}));
+    const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
+        effect: Math.pow(10, i + 1) / 10,
+        cost: Math.pow(10, i + 2),
+    }));
 
-function formatNumber(num) {
-    if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
-    if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
-    return Math.floor(num).toString();
-}
-
-function updateUI() {
-    scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
-    cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-    rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
-    updateUpgradeButtons();
-}
-
-function saveProgress() {
-    localStorage.setItem("score", score);
-    localStorage.setItem("cpc", cpc);
-    localStorage.setItem("cps", cps);
-    localStorage.setItem("rebirths", rebirths);
-    localStorage.setItem("rebirthBoost", rebirthBoost);
-    localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
-    localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
-    localStorage.setItem("level", level);
-}
-
-function loadProgress() {
-    score = parseFloat(localStorage.getItem("score")) || 0;
-    cpc = parseFloat(localStorage.getItem("cpc")) || 1;
-    cps = parseFloat(localStorage.getItem("cps")) || 0;
-    rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
-    rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
-
-    const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
-    const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
-
-    if (savedCpcCosts) {
-        cpcUpgrades.forEach((upgrade, i) => {
-            upgrade.cost = savedCpcCosts[i];
-        });
+    function formatNumber(num) {
+        if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
+        if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+        if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+        if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+        if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+        return Math.floor(num).toString();
     }
 
-    if (savedCpsCosts) {
-        cpsUpgrades.forEach((upgrade, i) => {
+    function updateUI() {
+        scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+        cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+        rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
+        updateUpgradeButtons();
+    }
+
+    function saveProgress() {
+        localStorage.setItem("score", score);
+        localStorage.setItem("cpc", cpc);
+        localStorage.setItem("cps", cps);
+        localStorage.setItem("rebirths", rebirths);
+        localStorage.setItem("rebirthBoost", rebirthBoost);
+        localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
+        localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+        localStorage.setItem("level", level);
+    }
+
+    function loadProgress() {
+        score = parseFloat(localStorage.getItem("score")) || 0;
+        cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+        cps = parseFloat(localStorage.getItem("cps")) || 0;
+        rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+        rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+
+        const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
+        const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
+
+        if (savedCpcCosts) {
+            cpcUpgrades.forEach((upgrade, i) => {
+                upgrade.cost = savedCpcCosts[i];
+            });
+        }
+
+        if (savedCpsCosts) {
+            cpsUpgrades.forEach((upgrade, i) => {
             upgrade.cost = savedCpsCosts[i];
-        });
+            });
+        }
+
+        if (level === 2) {
+            window.location.href = "fireclicker.html";
+        }
     }
 
-    if (level === 2) {
-        window.location.href = "fireclicker.html";
+    function checkHighScore() {
+        if (score >= 1e17 && level === 1) { // 100 quadrillion
+            level = 2;
+            saveProgress();
+            alert("Congratulations! You've unlocked the next level!");
+            window.location.href = "fireclicker.html";
+        }
     }
-}
 
-function checkHighScore() {
-    if (score >= 1e17 && level === 1) { // 100 quadrillion
-        level = 2;
+    // Insert the `checkHighScore` calls into click and interval logic
+    clickButton.addEventListener("click", event => {
+        const earned = cpc * rebirthBoost;
+        score += earned;
+        updateUI();
         saveProgress();
-        alert("Congratulations! You've unlocked the next level!");
-        window.location.href = "fireclicker.html";
-    }
-}
+        checkHighScore(); // Check for level transition
+    });
 
-// Insert the `checkHighScore` calls into click and interval logic
-clickButton.addEventListener("click", event => {
-    const earned = cpc * rebirthBoost;
-    score += earned;
+    setInterval(() => {
+        score += cps;
+        updateUI();
+        saveProgress();
+        checkHighScore(); // Check for level transition
+    }, 1000);
+
+    loadProgress();
+    createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Gift Power");
+    createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Santa's Helper");
+    attachUpgradeListeners();
     updateUI();
-    saveProgress();
-    checkHighScore(); // Check for level transition
-});
-
-setInterval(() => {
-    score += cps;
-    updateUI();
-    saveProgress();
-    checkHighScore(); // Check for level transition
-}, 1000);
-
-loadProgress();
-createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Gift Power");
-createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Santa's Helper");
-attachUpgradeListeners();
-updateUI();
 
     </script>
 </body>
