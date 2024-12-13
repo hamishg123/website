@@ -184,324 +184,116 @@
     </div>
 
     <script>
-        let score = 0;
-        let cpc = 1;
-        let cps = 0;
-        let rebirths = 0;
-        let rebirthBoost = 1;
-        const rebirthCost = 2e11; // 200B for rebirth
+let score = 0;
+let cpc = 1;
+let cps = 0;
+let rebirths = 0;
+let rebirthBoost = 1;
+let level = parseInt(localStorage.getItem("level"), 10) || 1;
 
-        const scoreDisplay = document.getElementById("score");
-        const cpsDisplay = document.getElementById("cps");
-        const rebirthsDisplay = document.getElementById("rebirths");
-        const clickButton = document.getElementById("click-button");
-        const rebirthButton = document.getElementById("rebirth-button");
-        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
-        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
+const rebirthCost = 2e11; // 200B for rebirth
+const scoreDisplay = document.getElementById("score");
+const cpsDisplay = document.getElementById("cps");
+const rebirthsDisplay = document.getElementById("rebirths");
+const clickButton = document.getElementById("click-button");
+const rebirthButton = document.getElementById("rebirth-button");
+const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
+const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
+    effect: Math.pow(10, i + 1) / 10,
+    cost: Math.pow(10, i + 2),
+}));
 
-        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
+const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
+    effect: Math.pow(10, i + 1) / 10,
+    cost: Math.pow(10, i + 2),
+}));
 
-        function formatNumber(num) {
-            if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
-            if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
-            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
-            return Math.floor(num).toString();
-        }
+function formatNumber(num) {
+    if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
+    if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+    if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+    return Math.floor(num).toString();
+}
 
-        function updateUI() {
-            scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
-            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
-            updateUpgradeButtons();
-        }
+function updateUI() {
+    scoreDisplay.textContent = `Score: ${formatNumber(score)}`;
+    cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+    rebirthsDisplay.textContent = `Rebirths: ${rebirths}`;
+    updateUpgradeButtons();
+}
 
-        function saveProgress() {
-            localStorage.setItem("score", score);
-            localStorage.setItem("cpc", cpc);
-            localStorage.setItem("cps", cps);
-            localStorage.setItem("rebirths", rebirths);
-            localStorage.setItem("rebirthBoost", rebirthBoost);
-            localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
-            localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
-        }
+function saveProgress() {
+    localStorage.setItem("score", score);
+    localStorage.setItem("cpc", cpc);
+    localStorage.setItem("cps", cps);
+    localStorage.setItem("rebirths", rebirths);
+    localStorage.setItem("rebirthBoost", rebirthBoost);
+    localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
+    localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+    localStorage.setItem("level", level);
+}
 
-        function loadProgress() {
-            score = parseFloat(localStorage.getItem("score")) || 0;
-            cpc = parseFloat(localStorage.getItem("cpc")) || 1;
-            cps = parseFloat(localStorage.getItem("cps")) || 0;
-            rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
-            rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
+function loadProgress() {
+    score = parseFloat(localStorage.getItem("score")) || 0;
+    cpc = parseFloat(localStorage.getItem("cpc")) || 1;
+    cps = parseFloat(localStorage.getItem("cps")) || 0;
+    rebirths = parseInt(localStorage.getItem("rebirths"), 10) || 0;
+    rebirthBoost = parseFloat(localStorage.getItem("rebirthBoost")) || 1;
 
-            const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
-            const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
+    const savedCpcCosts = JSON.parse(localStorage.getItem("cpcUpgradeCosts"));
+    const savedCpsCosts = JSON.parse(localStorage.getItem("cpsUpgradeCosts"));
 
-            if (savedCpcCosts) {
-                cpcUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = savedCpcCosts[i];
-                });
-            }
-
-            if (savedCpsCosts) {
-                cpsUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = savedCpsCosts[i];
-                });
-            }
-        }
-
-        function createUpgradeButtons(upgrades, container, type) {
-            container.innerHTML = "";
-            upgrades.forEach((upgrade, index) => {
-                const button = document.createElement("button");
-                button.className = "upgrade-button button";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.dataset.index = index;
-                container.appendChild(button);
-            });
-        }
-
-        function updateUpgradeButtons() {
-            document.querySelectorAll(".upgrade-button").forEach(button => {
-                const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
-                const upgrade = upgrades[index];
-                
-                const type = button.parentElement.id === "cpc-upgrades" ? "Gift Power" : "Santa's Helper";
-                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.disabled = score < upgrade.cost;
-            });
-        }
-
-        function handleUpgradeClick(type, index) {
-            const upgrades = type === "Gift Power" ? cpcUpgrades : cpsUpgrades;
-            const upgrade = upgrades[index];
-            if (score >= upgrade.cost) {
-                score -= upgrade.cost;
-                if (type === "Gift Power") cpc += upgrade.effect;
-                else cps += upgrade.effect;
-
-                upgrade.cost *= 1.5;
-                updateUI();
-                saveProgress();
-            }
-        }
-
-        rebirthButton.addEventListener("click", () => {
-            if (score >= rebirthCost) {
-                score = 0;
-                cpc = 1;
-                cps = 0;
-                rebirths++;
-                rebirthBoost *= 1.25;
-
-                cpcUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = Math.pow(10, i + 2);
-                });
-                cpsUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = Math.pow(10, i + 2);
-                });
-
-                createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Gift Power");
-                createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Santa's Helper");
-                attachUpgradeListeners();
-
-                alert(`Rebirth successful! Boost: x${rebirthBoost.toFixed(2)}`);
-                updateUI();
-                saveProgress();
-            }
+    if (savedCpcCosts) {
+        cpcUpgrades.forEach((upgrade, i) => {
+            upgrade.cost = savedCpcCosts[i];
         });
+    }
 
-        function attachUpgradeListeners() {
-            cpcUpgradesContainer.addEventListener("click", event => {
-                if (event.target.classList.contains("upgrade-button")) {
-                    handleUpgradeClick("Gift Power", event.target.dataset.index);
-                }
-            });
-
-            cpsUpgradesContainer.addEventListener("click", event => {
-                if (event.target.classList.contains("upgrade-button")) {
-                    handleUpgradeClick("Santa's Helper", event.target.dataset.index);
-                }
-            });
-        }
-
-        clickButton.addEventListener("click", event => {
-            const earned = cpc * rebirthBoost;
-            score += earned;
-            updateUI();
-            saveProgress();
-            showCpcAnimation(event, earned);
+    if (savedCpsCosts) {
+        cpsUpgrades.forEach((upgrade, i) => {
+            upgrade.cost = savedCpsCosts[i];
         });
-
-        setInterval(() => {
-            score += cps;
-            updateUI();
-            saveProgress();
-        }, 1000);
-
-        loadProgress();
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Gift Power");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Santa's Helper");
-        attachUpgradeListeners();
-        updateUI();
-
-        function showCpcAnimation(event, cpcValue) {
-            const formattedValue = `+${formatNumber(cpcValue)}`;
-            const floatingText = document.createElement("span");
-            floatingText.textContent = formattedValue;
-            floatingText.className = "floating-text";
-
-            document.body.appendChild(floatingText);
-            const rect = clickButton.getBoundingClientRect();
-            floatingText.style.left = `${rect.left + rect.width / 2}px`;
-            floatingText.style.top = `${rect.top}px`;
-
-            floatingText.addEventListener("animationend", () => {
-                floatingText.remove();
-            });
-        }
-
-        // Generate random snowflakes
-        setInterval(() => {
-            const snowflake = document.createElement('div');
-            snowflake.textContent = '❄️';
-            snowflake.classList.add('snowflake');
-            snowflake.style.left = `${Math.random() * 100}%`;
-            document.body.appendChild(snowflake);
-
-            // Remove snowflake after animation
-            snowflake.addEventListener('animationend', () => {
-                snowflake.remove();
-            });
-        }, 4000);
-        let multiplierActive = false;
-let originalCpc = null; // Store original CPC value
-let originalCps = null; // Store original CPS value
-
-// Check cooldown and multiplier state on page load
-document.addEventListener("DOMContentLoaded", () => {
-    const multiplierButton = document.getElementById("multiplierButton");
-    const cooldownEnd = localStorage.getItem("cooldownEnd");
-    const multiplierEnd = localStorage.getItem("multiplierEnd");
-    const now = new Date();
-
-    // Reset CPC and CPS if the multiplier was active
-    if (localStorage.getItem("originalCpc") && localStorage.getItem("originalCps")) {
-        resetMultiplier();
     }
 
-    if (multiplierEnd) {
-        const remainingMultiplierTime = new Date(multiplierEnd) - now;
-        if (remainingMultiplierTime > 0) {
-            multiplierActive = true;
-            multiplierButton.disabled = true;
-
-            // Reset multiplier when the effect ends
-            setTimeout(() => {
-                resetMultiplier();
-            }, remainingMultiplierTime);
-        } else {
-            resetMultiplier(); // Clear expired multiplier state
-        }
+    if (level === 2) {
+        window.location.href = "fireclicker.html";
     }
+}
 
-    if (cooldownEnd) {
-        const remainingCooldownTime = new Date(cooldownEnd) - now;
-        if (remainingCooldownTime > 0) {
-            multiplierButton.disabled = true;
-            setTimeout(() => {
-                multiplierButton.disabled = false;
-                localStorage.removeItem("cooldownEnd");
-            }, remainingCooldownTime);
-        }
+function checkHighScore() {
+    if (score >= 1e17 && level === 1) { // 100 quadrillion
+        level = 2;
+        saveProgress();
+        alert("Congratulations! You've unlocked the next level!");
+        window.location.href = "fireclicker.html";
     }
+}
+
+// Insert the `checkHighScore` calls into click and interval logic
+clickButton.addEventListener("click", event => {
+    const earned = cpc * rebirthBoost;
+    score += earned;
+    updateUI();
+    saveProgress();
+    checkHighScore(); // Check for level transition
 });
 
-function activateMultiplier() {
-    const multiplierButton = document.getElementById("multiplierButton");
-    const now = new Date();
-    const cooldownEnd = localStorage.getItem("cooldownEnd");
+setInterval(() => {
+    score += cps;
+    updateUI();
+    saveProgress();
+    checkHighScore(); // Check for level transition
+}, 1000);
 
-    if (cooldownEnd && new Date(cooldownEnd) > now) {
-        alert("Cooldown active. Please wait before using the multiplier again.");
-        return;
-    }
-
-    if (multiplierActive) {
-        alert("Multiplier is already active!");
-        return;
-    }
-
-    // Store original CPC and CPS values
-    if (originalCpc === null || originalCps === null) {
-        originalCpc = cpc; // Replace `cpc` with your actual variable for clicks per click
-        originalCps = cps; // Replace `cps` with your actual variable for clicks per second
-        localStorage.setItem("originalCpc", originalCpc);
-        localStorage.setItem("originalCps", originalCps);
-    }
-
-    // Activate the multiplier
-    multiplierActive = true;
-
-    // Apply the multiplier
-    cpc *= 5;
-    cps *= 5;
-
-    // Notify the user
-    alert("5x multiplier activated for 1 minute!");
-
-    // Disable the button during the cooldown
-    multiplierButton.disabled = true;
-
-    // Save multiplier end time in localStorage
-    const multiplierDuration = 60000; // 1 minute in milliseconds
-    const multiplierEndTime = new Date(now.getTime() + multiplierDuration).toISOString();
-    localStorage.setItem("multiplierEnd", multiplierEndTime);
-
-    // Reset multiplier after 1 minute
-    setTimeout(() => {
-        resetMultiplier();
-    }, multiplierDuration);
-
-    // Set cooldown and save the end time in localStorage
-    const cooldownDuration = 3600000; // 1 hour in milliseconds
-    const cooldownEndTime = new Date(now.getTime() + cooldownDuration).toISOString();
-    localStorage.setItem("cooldownEnd", cooldownEndTime);
-
-    // Reactivate the button after cooldown ends
-    setTimeout(() => {
-        multiplierButton.disabled = false;
-        localStorage.removeItem("cooldownEnd");
-        alert("Multiplier is ready to use again!");
-    }, cooldownDuration);
-}
-
-function resetMultiplier() {
-    // Reset the multiplier state and CPC/CPS values
-    multiplierActive = false;
-    localStorage.removeItem("multiplierEnd");
-
-    const savedOriginalCpc = localStorage.getItem("originalCpc");
-    const savedOriginalCps = localStorage.getItem("originalCps");
-
-    if (savedOriginalCpc && savedOriginalCps) {
-        cpc = parseFloat(savedOriginalCpc); // Restore original CPC
-        cps = parseFloat(savedOriginalCps); // Restore original CPS
-        localStorage.removeItem("originalCpc");
-        localStorage.removeItem("originalCps");
-    }
-
-    alert("Multiplier effect has ended, and original values have been restored.");
-}
+loadProgress();
+createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Gift Power");
+createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Santa's Helper");
+attachUpgradeListeners();
+updateUI();
 
     </script>
 </body>
