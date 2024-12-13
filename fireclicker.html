@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire Clicker Game</title>
+    <title>🔥 Fire Clicker Game 🔥</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #2c2c54;
+            background-color: #1e272e;
             color: #fff;
             margin: 0;
             padding: 20px;
@@ -22,16 +22,23 @@
         #fireButton {
             background-color: #ff6b6b;
             border: none;
-            border-radius: 10px;
-            padding: 20px;
-            font-size: 2rem;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            font-size: 1.2rem;
             color: white;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s ease, background-color 0.2s;
         }
 
         #fireButton:hover {
             background-color: #ff4747;
+            transform: scale(1.1);
+        }
+
+        #fireButton:active {
+            transform: scale(0.9);
         }
 
         #rebirthButton {
@@ -69,6 +76,25 @@
         .info {
             margin: 10px 0;
         }
+
+        .floatingFlame {
+            position: absolute;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffa502;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -77,7 +103,7 @@
     <div class="info">Flames Collected: <span id="flameCount">0</span></div>
     <div class="info">Rebirths: <span id="rebirthCount">0</span></div>
 
-    <button id="fireButton">Collect Flames</button>
+    <button id="fireButton">🔥</button>
     <br>
     <button id="rebirthButton">Rebirth (Cost: 1000 Flames)</button>
 
@@ -92,7 +118,7 @@
             window.location.href = "cookieclicker.html";
         }
 
-        // Load saved game state from local storage
+        // Game state variables
         let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
         let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
         let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
@@ -113,6 +139,7 @@
 
         // Initialize upgrades
         function initializeUpgrades() {
+            upgradesElement.innerHTML = ""; // Clear existing upgrades
             upgradeList.forEach((upgrade) => {
                 upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost };
 
@@ -145,17 +172,28 @@
             localStorage.setItem("upgrades", JSON.stringify(upgrades));
         }
 
-        // Collect flames when the fire button is clicked
-        fireButton.addEventListener("click", () => {
-            let flameMultiplier = rebirthCount + 1;
-            flameMultiplier += (upgrades["multiplier"]?.level || 0) * upgradeList.find(u => u.id === "multiplier").multiplier;
+        // Collect flames with animation
+        fireButton.addEventListener("click", (event) => {
+            const flameMultiplier = rebirthCount + 1 + (upgrades["multiplier"]?.level || 0) * 2;
+            const randomFlame = Math.floor(Math.random() * (flameMultiplier * 2)) + 1;
 
-            flameCount += flameMultiplier;
+            flameCount += randomFlame;
+
+            // Create floating flame animation
+            const floatingFlame = document.createElement("div");
+            floatingFlame.textContent = `+${randomFlame}`;
+            floatingFlame.classList.add("floatingFlame");
+            floatingFlame.style.left = `${event.clientX}px`;
+            floatingFlame.style.top = `${event.clientY}px`;
+
+            document.body.appendChild(floatingFlame);
+            setTimeout(() => floatingFlame.remove(), 1500);
+
             updateUI();
             saveGame();
         });
 
-        // Rebirth to reset flames and gain a rebirth point
+        // Rebirth functionality
         rebirthButton.addEventListener("click", () => {
             if (flameCount >= 1000) {
                 flameCount = 0; // Reset flame count
@@ -170,12 +208,10 @@
         // Purchase upgrade
         function purchaseUpgrade(upgrade) {
             const upgradeState = upgrades[upgrade.id];
-
             if (flameCount >= upgradeState.cost) {
                 flameCount -= upgradeState.cost;
                 upgradeState.level += 1;
                 upgradeState.cost = Math.floor(upgradeState.cost * 1.5);
-
                 updateUI();
                 saveGame();
             } else {
@@ -191,7 +227,7 @@
             saveGame();
         }, 1000);
 
-        // Initialize game state
+        // Initialize game
         initializeUpgrades();
         updateUI();
     </script>
