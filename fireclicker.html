@@ -86,6 +86,12 @@
     </div>
 
     <script>
+        // Redirect if level is not 2
+        const level = localStorage.getItem("level");
+        if (level !== "2") {
+            window.location.href = "cookieclicker.html";
+        }
+
         // Load saved game state from local storage
         let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
         let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
