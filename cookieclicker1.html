@@ -379,6 +379,59 @@ function showCpcAnimation(event, cpcValue) {
         floatingText.remove();
     });
 }
+let level = 1; // Initialize level to 1
+
+// Load the level from localStorage
+function loadProgress() {
+    // Existing load code
+    level = parseInt(localStorage.getItem("level"), 10) || 1; // Load the level
+}
+
+// Save the level to localStorage
+function saveProgress() {
+    // Existing save code
+    localStorage.setItem("level", level); // Save the level
+}
+
+// Function to check and update the level
+function checkLevelUp() {
+    if (score >= 1e10 && level === 1) { // Example condition for level 2
+        level = 2;
+        saveProgress();
+    }
+}
+
+// Modify existing functions to call checkLevelUp
+function handleUpgradeClick(type, index) {
+    const upgrades = type === "Gift Power" ? cpcUpgrades : cpsUpgrades;
+    const upgrade = upgrades[index];
+    if (score >= upgrade.cost) {
+        score -= upgrade.cost;
+        if (type === "Gift Power") cpc += upgrade.effect;
+        else cps += upgrade.effect;
+
+        upgrade.cost *= 1.5;
+        updateUI();
+        saveProgress();
+        checkLevelUp(); // Check for level-up after handling upgrades
+    }
+}
+
+clickButton.addEventListener("click", event => {
+    const earned = cpc * rebirthBoost;
+    score += earned;
+    updateUI();
+    saveProgress();
+    showCpcAnimation(event, earned);
+    checkLevelUp(); // Check for level-up after clicking
+});
+
+setInterval(() => {
+    score += cps;
+    updateUI();
+    saveProgress();
+    checkLevelUp(); // Check for level-up during CPS accumulation
+}, 1000);
 
 
     </script>
