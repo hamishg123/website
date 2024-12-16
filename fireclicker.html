@@ -3,89 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Fire Clicker Game 🔥</title>
+    <title>🦄 Unicorn Clicker Game 🦄</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #ff9ff3, #feca57);
+            color: black;
             text-align: center;
-            background: linear-gradient(to bottom, #1e272e, #2c3e50);
-            color: #fff;
+            padding: 50px 20px;
             margin: 0;
-            padding: 20px;
+            overflow: hidden;
         }
 
         h1 {
-            color: #ff6b6b;
-            font-size: 3rem;
-            text-shadow: 0 2px 10px rgba(255, 107, 107, 0.8);
+            font-size: 48px;
+            color: #6c5ce7;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        #fireButton {
-            background: radial-gradient(circle, #ff6b6b, #ff4747);
-            border: none;
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.6);
-            transition: transform 0.1s ease, background-color 0.2s;
+        h2, h3 {
+            font-size: 24px;
         }
 
-        #fireButton:hover {
-            background: radial-gradient(circle, #ff4747, #ff6b6b);
-            transform: scale(1.1);
-        }
-
-        #fireButton:active {
-            transform: scale(0.9);
-        }
-
-        #rebirthButton {
-            background: linear-gradient(to right, #ff7f50, #ffa502);
-            border: none;
+        .button {
+            padding: 15px 30px;
+            margin: 20px;
+            font-size: 20px;
             border-radius: 10px;
-            padding: 15px;
-            font-size: 1.2rem;
-            color: white;
             cursor: pointer;
-            margin-top: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        #rebirthButton:hover {
-            background: linear-gradient(to right, #e17055, #ff6f00);
-        }
-
-        .upgradeButton {
-            background: linear-gradient(to right, #1dd1a1, #10ac84);
             border: none;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        #click-button {
+            background-color: #6c5ce7;
             color: white;
-            cursor: pointer;
-            margin: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .upgradeButton:hover {
-            background: linear-gradient(to right, #10ac84, #1dd1a1);
+        #click-button:hover {
+            background-color: #5a4dbb;
         }
 
-        .info {
-            margin: 10px 0;
-            font-size: 1.2rem;
+        #rebirth-button {
+            background-color: #00cec9;
+            color: white;
         }
 
-        .floatingFlame {
+        #rebirth-button:hover {
+            background-color: #00a99c;
+        }
+
+        .upgrade-button {
+            background-color: #fd79a8;
+            color: white;
+        }
+
+        .upgrade-button:hover {
+            background-color: #e84393;
+        }
+
+        .floating-text {
             position: absolute;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffa502;
-            animation: floatUp 1.5s ease-out forwards;
+            color: #ff9ff3;
+            font-size: 20px;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
         @keyframes floatUp {
@@ -95,132 +78,215 @@
             }
             100% {
                 opacity: 0;
-                transform: translateY(-120px);
+                transform: translateY(-50px);
+            }
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 10px 15px rgba(0,0,0,0.1);
+            position: relative;
+            height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .upgrade-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .upgrade-column {
+            width: 45%;
+            padding: 10px;
+        }
+
+        .sparkle {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            opacity: 0.8;
+            font-size: 20px;
+            z-index: 9999;
+            animation: sparkleFall 5s infinite linear;
+        }
+
+        @keyframes sparkleFall {
+            to {
+                transform: translateY(100vh) translateX(-50%);
+                opacity: 0;
             }
         }
     </style>
 </head>
 <body>
-    <h1>🔥 Fire Clicker Game 🔥</h1>
+    <h1>🦄 Unicorn Clicker Game 🦄</h1>
+    <div class="game-container">
+        <h2 id="score">Magic Sparkles: 0</h2>
+        <h3 id="rebirths">Ascensions: 0</h3>
+        <button id="click-button" class="button">Click for Magic Sparkles!</button>
+        <h3 id="cps">CPS: 0</h3>
+        <button id="rebirth-button" class="button">Ascend to Unicorn Heaven - 200B Sparkles</button>
 
-    <div class="info">Flames Collected: <span id="flameCount">0</span></div>
-    <div class="info">Rebirths: <span id="rebirthCount">0</span></div>
-
-    <button id="fireButton">🔥</button>
-    <br>
-    <button id="rebirthButton">Rebirth (Cost: 1000 Flames)</button>
-
-    <div id="upgrades">
-        <h2>Upgrades</h2>
+        <div class="upgrade-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>Horn Power Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>Unicorn Herd</h3>
+            </div>
+        </div>
     </div>
 
     <script>
-        const level = localStorage.getItem("level");
-        if (level !== "2") {
-            window.location.href = "cookieclicker.html";
-        }
+        let score = 0;
+        let cpc = 1;
+        let cps = 0;
+        let rebirths = 0;
+        let rebirthBoost = 1;
+        const rebirthCost = 2e11; // 200B for ascension
 
-        let flameCount = 0;
-        let rebirthCount = 0;
-        let upgrades = {};
-        let fireCooldown = false;
+        const scoreDisplay = document.getElementById("score");
+        const cpsDisplay = document.getElementById("cps");
+        const rebirthsDisplay = document.getElementById("rebirths");
+        const clickButton = document.getElementById("click-button");
+        const rebirthButton = document.getElementById("rebirth-button");
+        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
 
-        const upgradeList = [
-            { id: "multiplier", name: "Flame Multiplier", baseCost: 100, multiplier: 2 },
-            { id: "autoClick", name: "Auto Clicker", baseCost: 500, multiplier: 1 },
-            { id: "superFlame", name: "Super Flame", baseCost: 1000, multiplier: 10 },
-            { id: "rebirthBoost", name: "Rebirth Boost", baseCost: 2000, multiplier: 5, oneTime: true }
-        ];
+        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
+            effect: Math.pow(10, i + 1) / 10,
+            cost: Math.pow(10, i + 2),
+        }));
 
-        const flameCountElement = document.getElementById("flameCount");
-        const rebirthCountElement = document.getElementById("rebirthCount");
-        const fireButton = document.getElementById("fireButton");
-        const rebirthButton = document.getElementById("rebirthButton");
-        const upgradesElement = document.getElementById("upgrades");
+        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
+            effect: Math.pow(10, i + 1) / 10,
+            cost: Math.pow(10, i + 2),
+        }));
 
-        function initializeUpgrades() {
-            upgradesElement.innerHTML = "";
-            upgradeList.forEach((upgrade) => {
-                upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost, oneTimePurchased: false };
-                const button = document.createElement("button");
-                button.id = upgrade.id;
-                button.classList.add("upgradeButton");
-                button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
-                button.addEventListener("click", () => purchaseUpgrade(upgrade));
-                upgradesElement.appendChild(button);
-            });
+        function formatNumber(num) {
+            if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
+            if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+            return Math.floor(num).toString();
         }
 
         function updateUI() {
-            flameCountElement.textContent = flameCount;
-            rebirthCountElement.textContent = rebirthCount;
-            upgradeList.forEach((upgrade) => {
-                const button = document.getElementById(upgrade.id);
-                if (upgrade.oneTime && upgrades[upgrade.id].oneTimePurchased) {
-                    button.disabled = true;
-                    button.textContent = `${upgrade.name} (Purchased)`;
-                } else {
-                    button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
-                }
+            scoreDisplay.textContent = `Magic Sparkles: ${formatNumber(score)}`;
+            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
+            rebirthsDisplay.textContent = `Ascensions: ${rebirths}`;
+            updateUpgradeButtons();
+        }
+
+        function saveProgress() {
+            localStorage.setItem("score", score);
+            localStorage.setItem("cpc", cpc);
+            localStorage.setItem("cps", cps);
+            localStorage.setItem("rebirths", rebirths);
+            localStorage.setItem("rebirthBoost", rebirthBoost);
+            localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
+            localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+        }
+
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = "";
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade-button button";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.dataset.index = index;
+                container.appendChild(button);
             });
         }
 
-        fireButton.addEventListener("click", (event) => {
-            if (fireCooldown) return;
-            const flameMultiplier = rebirthCount + 1 + (upgrades["multiplier"]?.level || 0) * 1.5;
-            const randomFlame = Math.floor(Math.random() * flameMultiplier) + 1;
-            flameCount += randomFlame;
+        function updateUpgradeButtons() {
+            document.querySelectorAll(".upgrade-button").forEach(button => {
+                const index = parseInt(button.dataset.index, 10);
+                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+                const upgrade = upgrades[index];
 
-            const floatingFlame = document.createElement("div");
-            floatingFlame.textContent = `+${randomFlame}`;
-            floatingFlame.classList.add("floatingFlame");
-            floatingFlame.style.left = `${event.clientX}px`;
-            floatingFlame.style.top = `${event.clientY}px`;
-
-            document.body.appendChild(floatingFlame);
-            setTimeout(() => floatingFlame.remove(), 1500);
-
-            fireCooldown = true;
-            setTimeout(() => (fireCooldown = false), 500); // 0.5s cooldown
-
-            updateUI();
-        });
+                const type = button.parentElement.id === "cpc-upgrades" ? "Horn Power" : "Unicorn Friend";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.disabled = score < upgrade.cost;
+            });
+        }
 
         rebirthButton.addEventListener("click", () => {
-            const rebirthCost = (rebirthCount + 1) * 1000;
-            if (flameCount >= rebirthCost) {
-                flameCount = 0;
-                rebirthCount += 1;
-                upgrades = {};
-                initializeUpgrades();
+            if (score >= rebirthCost) {
+                score = 0;
+                cpc = 1;
+                cps = 0;
+                rebirths++;
+                rebirthBoost *= 1.25;
+
+                cpcUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = Math.pow(10, i + 2);
+                });
+                cpsUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = Math.pow(10, i + 2);
+                });
+
+                createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+                createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
+
+                alert(`Ascension successful! Boost: x${rebirthBoost.toFixed(2)}`);
                 updateUI();
-            } else {
-                alert(`You need ${rebirthCost} flames to rebirth!`);
+                saveProgress();
             }
         });
 
-        function purchaseUpgrade(upgrade) {
-            const upgradeState = upgrades[upgrade.id];
-            if (upgrade.oneTime && upgradeState.oneTimePurchased) return;
+        clickButton.addEventListener("click", event => {
+            const earned = cpc * rebirthBoost;
+            score += earned;
+            updateUI();
+            saveProgress();
+            showFloatingText(event, earned);
+        });
 
-            if (flameCount >= upgradeState.cost) {
-                flameCount -= upgradeState.cost;
-                upgradeState.level += 1;
-                upgradeState.oneTimePurchased = upgrade.oneTime || false;
-                upgradeState.cost = upgrade.oneTime ? upgrade.baseCost : Math.floor(upgradeState.cost * 1.8);
-                updateUI();
-            } else {
-                alert(`You need more flames to purchase ${upgrade.name}!`);
-            }
+        setInterval(() => {
+            score += cps;
+            updateUI();
+            saveProgress();
+        }, 1000);
+
+        function showFloatingText(event, cpcValue) {
+            const formattedValue = `+${formatNumber(cpcValue)}`;
+            const floatingText = document.createElement("span");
+            floatingText.textContent = formattedValue;
+            floatingText.className = "floating-text";
+
+            document.body.appendChild(floatingText);
+            const rect = clickButton.getBoundingClientRect();
+            floatingText.style.left = `${rect.left + rect.width / 2}px`;
+            floatingText.style.top = `${rect.top}px`;
+
+            floatingText.addEventListener("animationend", () => {
+                floatingText.remove();
+            });
         }
 
         setInterval(() => {
-            const autoClickLevel = upgrades["autoClick"]?.level || 0;
-            flameCount += autoClickLevel;
-            updateUI();
-        }, 1000);
+            const sparkle = document.createElement('div');
+            sparkle.textContent = '✨';
+            sparkle.classList.add('sparkle');
+            sparkle.style.left = `${Math.random() * 100}%`;
+            document.body.appendChild(sparkle);
 
-        initializeUpgrades();
+            sparkle.addEventListener('animationend', () => {
+                sparkle.remove();
+            });
+        }, 3000);
+
+        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
         updateUI();
     </script>
 </body>
