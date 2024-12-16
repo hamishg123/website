@@ -303,24 +303,25 @@
         createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
         createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
         updateUI();
-        if (currentLevel === 2 && score >= 1e18) { // 100 quadrillion
-        // Set level to 2
+        if (currentLevel === 1) {
+        // Automatically redirect if already on Level 2
+        window.location.href = "cookieclicker.html";
+        }
+        if (currentLevel === 2 && score >= 1e18) { // 1000 quadrillion
+        // Set level to 3
         localStorage.setItem("level", 3);
 
         // Reset score and save progress
-        score = 0;
-        cpc = 1;
-        cps = 0;
+        gamestate.score = 0;
+        gamestate.cpc = 1;
+        gamestate.cps = 0;
         saveProgress();
 
         // Redirect to fireclicker.html
         alert("Congratulations! You've reached Level 3!");
         window.location.href = "fireclicker.html";
-    } else if (currentLevel === 1) {
-        // Automatically redirect if already on Level 2
-        window.location.href = "cookieclicker.html";
-    }
-}
+        } 
+        }
 
     </script>
 </body>
