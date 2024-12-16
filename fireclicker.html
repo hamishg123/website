@@ -145,13 +145,23 @@
     </div>
 
     <script>
-        let score = 0;
-        let cpc = 1;
-        let cps = 0;
-        let rebirths = 0;
-        let rebirthBoost = 1;
-        const rebirthCost = 2e11; // 200B for ascension
+        let gameState = {
+            score: 0,
+            cpc: 1,
+            cps: 0,
+            rebirths: 0,
+            rebirthBoost: 1,
+            cpcUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            })),
+            cpsUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            })),
+        };
 
+        const rebirthCost = 2e11;
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
         const rebirthsDisplay = document.getElementById("rebirths");
@@ -159,16 +169,6 @@
         const rebirthButton = document.getElementById("rebirth-button");
         const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
         const cpsUpgradesContainer = document.getElementById("cps-upgrades");
-
-        const cpcUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
-
-        const cpsUpgrades = Array.from({ length: 10 }, (_, i) => ({
-            effect: Math.pow(10, i + 1) / 10,
-            cost: Math.pow(10, i + 2),
-        }));
 
         function formatNumber(num) {
             if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
@@ -180,20 +180,21 @@
         }
 
         function updateUI() {
-            scoreDisplay.textContent = `Magic Sparkles: ${formatNumber(score)}`;
-            cpsDisplay.textContent = `CPS: ${formatNumber(cps)}`;
-            rebirthsDisplay.textContent = `Ascensions: ${rebirths}`;
+            scoreDisplay.textContent = `Magic Sparkles: ${formatNumber(gameState.score)}`;
+            cpsDisplay.textContent = `CPS: ${formatNumber(gameState.cps)}`;
+            rebirthsDisplay.textContent = `Ascensions: ${gameState.rebirths}`;
             updateUpgradeButtons();
         }
 
         function saveProgress() {
-            localStorage.setItem("score", score);
-            localStorage.setItem("cpc", cpc);
-            localStorage.setItem("cps", cps);
-            localStorage.setItem("rebirths", rebirths);
-            localStorage.setItem("rebirthBoost", rebirthBoost);
-            localStorage.setItem("cpcUpgradeCosts", JSON.stringify(cpcUpgrades.map(upgrade => upgrade.cost)));
-            localStorage.setItem("cpsUpgradeCosts", JSON.stringify(cpsUpgrades.map(upgrade => upgrade.cost)));
+            localStorage.setItem("gameState", JSON.stringify(gameState));
+        }
+
+        function loadProgress() {
+            const savedState = JSON.parse(localStorage.getItem("gameState"));
+            if (savedState) {
+                gameState = savedState;
+            }
         }
 
         function createUpgradeButtons(upgrades, container, type) {
@@ -203,6 +204,7 @@
                 button.className = "upgrade-button button";
                 button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
                 button.dataset.index = index;
+                button.addEventListener("click", () => handleUpgradeClick(type, index));
                 container.appendChild(button);
             });
         }
@@ -210,49 +212,61 @@
         function updateUpgradeButtons() {
             document.querySelectorAll(".upgrade-button").forEach(button => {
                 const index = parseInt(button.dataset.index, 10);
-                const upgrades = button.parentElement.id === "cpc-upgrades" ? cpcUpgrades : cpsUpgrades;
+                const upgrades = button.parentElement.id === "cpc-upgrades" ? gameState.cpcUpgrades : gameState.cpsUpgrades;
                 const upgrade = upgrades[index];
-
                 const type = button.parentElement.id === "cpc-upgrades" ? "Horn Power" : "Unicorn Friend";
                 button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
-                button.disabled = score < upgrade.cost;
+                button.disabled = gameState.score < upgrade.cost;
             });
         }
 
+        function handleUpgradeClick(type, index) {
+            const upgrades = type === "Horn Power" ? gameState.cpcUpgrades : gameState.cpsUpgrades;
+            const upgrade = upgrades[index];
+            if (gameState.score >= upgrade.cost) {
+                gameState.score -= upgrade.cost;
+                upgrade.cost *= 1.5;
+                if (type === "Horn Power") gameState.cpc += upgrade.effect;
+                else gameState.cps += upgrade.effect;
+                updateUI();
+                saveProgress();
+            }
+        }
+
         rebirthButton.addEventListener("click", () => {
-            if (score >= rebirthCost) {
-                score = 0;
-                cpc = 1;
-                cps = 0;
-                rebirths++;
-                rebirthBoost *= 1.25;
+            if (gameState.score >= rebirthCost) {
+                gameState.score = 0;
+                gameState.cpc = 1;
+                gameState.cps = 0;
+                gameState.rebirths++;
+                gameState.rebirthBoost *= 1.25;
 
-                cpcUpgrades.forEach((upgrade, i) => {
+                gameState.cpcUpgrades.forEach((upgrade, i) => {
                     upgrade.cost = Math.pow(10, i + 2);
                 });
-                cpsUpgrades.forEach((upgrade, i) => {
+                gameState.cpsUpgrades.forEach((upgrade, i) => {
                     upgrade.cost = Math.pow(10, i + 2);
                 });
 
-                createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Horn Power");
-                createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
+                createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+                createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
 
-                alert(`Ascension successful! Boost: x${rebirthBoost.toFixed(2)}`);
+                alert(`Ascension successful! Boost: x${gameState.rebirthBoost.toFixed(2)}`);
                 updateUI();
                 saveProgress();
             }
         });
 
         clickButton.addEventListener("click", event => {
-            const earned = cpc * rebirthBoost;
-            score += earned;
+            const earned = gameState.cpc * gameState.rebirthBoost;
+            gameState.score += earned;
             updateUI();
             saveProgress();
             showFloatingText(event, earned);
         });
 
         setInterval(() => {
-            score += cps;
+            gameState.score += gameState.cps;
             updateUI();
             saveProgress();
         }, 1000);
@@ -285,8 +299,9 @@
             });
         }, 3000);
 
-        createUpgradeButtons(cpcUpgrades, cpcUpgradesContainer, "Horn Power");
-        createUpgradeButtons(cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
+        loadProgress();
+        createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+        createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
         updateUI();
     </script>
 </body>
