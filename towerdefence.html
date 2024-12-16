@@ -67,6 +67,7 @@
         let enemiesDefeated = 0;
         let interval;
         let upgradeCost = 50;
+        let selectedTower = null;
 
         // Initialize the game
         document.getElementById('highscore').textContent = `High Score: ${highscore}`;
@@ -122,6 +123,12 @@
                 ctx.fill();
                 ctx.closePath();
             }
+
+            // Upgrade the tower
+            upgrade() {
+                this.damage += 5;
+                this.range += 10;
+            }
         }
 
         // Enemy class
@@ -154,6 +161,7 @@
             enemies = [];
             towers = [];
             level = 1;
+            selectedTower = null;
             document.getElementById('score').textContent = `Score: ${score}`;
             document.getElementById('level').textContent = `Level: ${level}`;
 
@@ -218,9 +226,18 @@
 
             // Only place towers if the player has enough score
             if (score >= upgradeCost) {
-                towers.push(new Tower(x, y, 10, 100));
-                score -= upgradeCost;
-                upgradeCost += 20; // Increase cost for next tower
+                // Check if there is already a tower selected for upgrading
+                if (selectedTower) {
+                    selectedTower.upgrade(); // Upgrade the tower
+                    score -= upgradeCost;
+                    upgradeCost += 20; // Increase cost for the next upgrade
+                    selectedTower = null; // Deselect tower after upgrade
+                } else {
+                    // Place a new tower
+                    towers.push(new Tower(x, y, 10, 100));
+                    score -= upgradeCost;
+                    upgradeCost += 20; // Increase cost for next tower
+                }
             }
         });
 
@@ -228,10 +245,8 @@
         function upgradeTower() {
             // Upgrade the first tower (this is just a placeholder for now)
             if (towers.length > 0) {
-                towers[0].damage += 5; // Increase damage
-                towers[0].range += 10; // Increase range
-                score -= upgradeCost;
-                upgradeCost += 30; // Increase cost for next upgrade
+                selectedTower = towers[0]; // Select the first tower
+                alert(`Selected Tower for Upgrade: ${selectedTower.x}, ${selectedTower.y}`);
             }
         }
 
