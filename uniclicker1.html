@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦄 Unicorn Clicker Game 🦄</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #ff9ff3, #feca57);
+            color: black;
+            text-align: center;
+            padding: 50px 20px;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #6c5ce7;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h2, h3 {
+            font-size: 24px;
+        }
+
+        .button {
+            padding: 15px 30px;
+            margin: 20px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        #click-button {
+            background-color: #6c5ce7;
+            color: white;
+        }
+
+        #click-button:hover {
+            background-color: #5a4dbb;
+        }
+
+        #rebirth-button {
+            background-color: #00cec9;
+            color: white;
+        }
+
+        #rebirth-button:hover {
+            background-color: #00a99c;
+        }
+
+        .upgrade-button {
+            background-color: #fd79a8;
+            color: white;
+        }
+
+        .upgrade-button:hover {
+            background-color: #e84393;
+        }
+
+        .floating-text {
+            position: absolute;
+            color: #ff9ff3;
+            font-size: 20px;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 10px 15px rgba(0,0,0,0.1);
+            position: relative;
+            height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .upgrade-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .upgrade-column {
+            width: 45%;
+            padding: 10px;
+        }
+
+        .sparkle {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            opacity: 0.8;
+            font-size: 20px;
+            z-index: 9999;
+            animation: sparkleFall 5s infinite linear;
+        }
+
+        @keyframes sparkleFall {
+            to {
+                transform: translateY(100vh) translateX(-50%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🦄 Unicorn Clicker Game 🦄</h1>
+    <div class="game-container">
+        <h2 id="score">Magic Sparkles: 0</h2>
+        <h3 id="rebirths">Ascensions: 0</h3>
+        <button id="click-button" class="button">Click for Magic Sparkles!</button>
+        <h3 id="cps">CPS: 0</h3>
+        <button id="rebirth-button" class="button">Ascend to Unicorn Heaven - 200B Sparkles</button>
+
+        <div class="upgrade-container">
+            <div id="cpc-upgrades" class="upgrade-column">
+                <h3>Horn Power Upgrades</h3>
+            </div>
+            <div id="cps-upgrades" class="upgrade-column">
+                <h3>Unicorn Herd</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            score: 0,
+            cpc: 1,
+            cps: 0,
+            rebirths: 0,
+            rebirthBoost: 1,
+            cpcUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            })),
+            cpsUpgrades: Array.from({ length: 10 }, (_, i) => ({
+                effect: Math.pow(10, i + 1) / 10,
+                cost: Math.pow(10, i + 2),
+            })),
+        };
+
+        const rebirthCost = 2e11;
+        const scoreDisplay = document.getElementById("score");
+        const cpsDisplay = document.getElementById("cps");
+        const rebirthsDisplay = document.getElementById("rebirths");
+        const clickButton = document.getElementById("click-button");
+        const rebirthButton = document.getElementById("rebirth-button");
+        const cpcUpgradesContainer = document.getElementById("cpc-upgrades");
+        const cpsUpgradesContainer = document.getElementById("cps-upgrades");
+
+        function formatNumber(num) {
+            if (num >= 1e15) return (num / 1e15).toFixed(1) + "QT";
+            if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + "k";
+            return Math.floor(num).toString();
+        }
+
+        function updateUI() {
+            scoreDisplay.textContent = `Magic Sparkles: ${formatNumber(gameState.score)}`;
+            cpsDisplay.textContent = `CPS: ${formatNumber(gameState.cps)}`;
+            rebirthsDisplay.textContent = `Ascensions: ${gameState.rebirths}`;
+            updateUpgradeButtons();
+        }
+
+        function saveProgress() {
+            localStorage.setItem("gameState", JSON.stringify(gameState));
+        }
+
+        function loadProgress() {
+            const savedState = JSON.parse(localStorage.getItem("gameState"));
+            if (savedState) {
+                gameState = savedState;
+            }
+        }
+
+        function createUpgradeButtons(upgrades, container, type) {
+            container.innerHTML = "";
+            upgrades.forEach((upgrade, index) => {
+                const button = document.createElement("button");
+                button.className = "upgrade-button button";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.dataset.index = index;
+                button.addEventListener("click", () => handleUpgradeClick(type, index));
+                container.appendChild(button);
+            });
+        }
+
+        function updateUpgradeButtons() {
+            document.querySelectorAll(".upgrade-button").forEach(button => {
+                const index = parseInt(button.dataset.index, 10);
+                const upgrades = button.parentElement.id === "cpc-upgrades" ? gameState.cpcUpgrades : gameState.cpsUpgrades;
+                const upgrade = upgrades[index];
+                const type = button.parentElement.id === "cpc-upgrades" ? "Horn Power" : "Unicorn Friend";
+                button.textContent = `${type} +${formatNumber(upgrade.effect)} - Cost: ${formatNumber(upgrade.cost)}`;
+                button.disabled = gameState.score < upgrade.cost;
+            });
+        }
+
+        function handleUpgradeClick(type, index) {
+            const upgrades = type === "Horn Power" ? gameState.cpcUpgrades : gameState.cpsUpgrades;
+            const upgrade = upgrades[index];
+            if (gameState.score >= upgrade.cost) {
+                gameState.score -= upgrade.cost;
+                upgrade.cost *= 1.5;
+                if (type === "Horn Power") gameState.cpc += upgrade.effect;
+                else gameState.cps += upgrade.effect;
+                updateUI();
+                saveProgress();
+            }
+        }
+
+        rebirthButton.addEventListener("click", () => {
+            if (gameState.score >= rebirthCost) {
+                gameState.score = 0;
+                gameState.cpc = 1;
+                gameState.cps = 0;
+                gameState.rebirths++;
+                gameState.rebirthBoost *= 1.25;
+
+                gameState.cpcUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = Math.pow(10, i + 2);
+                });
+                gameState.cpsUpgrades.forEach((upgrade, i) => {
+                    upgrade.cost = Math.pow(10, i + 2);
+                });
+
+                createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+                createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
+
+                alert(`Ascension successful! Boost: x${gameState.rebirthBoost.toFixed(2)}`);
+                updateUI();
+                saveProgress();
+            }
+        });
+
+        clickButton.addEventListener("click", event => {
+            const earned = gameState.cpc * gameState.rebirthBoost;
+            gameState.score += earned;
+            updateUI();
+            saveProgress();
+            showFloatingText(event, earned);
+        });
+
+        setInterval(() => {
+            gameState.score += gameState.cps;
+            updateUI();
+            saveProgress();
+        }, 1000);
+
+        function showFloatingText(event, cpcValue) {
+            const formattedValue = `+${formatNumber(cpcValue)}`;
+            const floatingText = document.createElement("span");
+            floatingText.textContent = formattedValue;
+            floatingText.className = "floating-text";
+
+            document.body.appendChild(floatingText);
+            const rect = clickButton.getBoundingClientRect();
+            floatingText.style.left = `${rect.left + rect.width / 2}px`;
+            floatingText.style.top = `${rect.top}px`;
+
+            floatingText.addEventListener("animationend", () => {
+                floatingText.remove();
+            });
+        }
+
+        setInterval(() => {
+            const sparkle = document.createElement('div');
+            sparkle.textContent = '✨';
+            sparkle.classList.add('sparkle');
+            sparkle.style.left = `${Math.random() * 100}%`;
+            document.body.appendChild(sparkle);
+
+            sparkle.addEventListener('animationend', () => {
+                sparkle.remove();
+            });
+        }, 3000);
+
+        loadProgress();
+        createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
+        createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
+        updateUI();
+        function checkLevelProgression() {
+    const currentLevel = parseInt(localStorage.getItem("level"), 10) || 1;
+
+    if (currentLevel === 2 && gameState.score >= 1e18) { // 1000 quadrillion
+        // Set level to 2
+        localStorage.setItem("level", 3);
+
+        // Reset score and save progress
+        gameState.score = 0;
+        gameState.cpc = 1;
+        gameState.cps = 0;
+        saveProgress();
+
+        // Redirect to fireclicker.html
+        alert("Congratulations! You've reached Level 3!");
+        window.location.href = "fireclicker.html";
+    } else if (currentLevel === 1) {
+        // Automatically redirect if already on Level 2
+        window.location.href = "cookieclicker.html";
+    }
+}
+
+// Check progression when the script is loaded
+document.addEventListener("DOMContentLoaded", checkLevelProgression);
+
+// Continuously check for level progression
+setInterval(checkLevelProgression, 1000);
+
+
+    </script>
+</body>
+</html>
