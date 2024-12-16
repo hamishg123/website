@@ -1,189 +1,248 @@
-// Game state variables
-let canvas = document.getElementById('gameCanvas');
-let ctx = canvas.getContext('2d');
-
-let score = 0;
-let level = 1;
-let highscore = localStorage.getItem('highscore') || 0;
-let towers = [];
-let enemies = [];
-let gameRunning = false;
-let enemiesDefeated = 0;
-let interval;
-let upgradeCost = 50;
-
-// Initialize the game
-document.getElementById('highscore').textContent = `High Score: ${highscore}`;
-
-document.getElementById('start-button').addEventListener('click', startGame);
-document.getElementById('upgrade-button').addEventListener('click', upgradeTower);
-
-// Tower class
-class Tower {
-    constructor(x, y, damage, range) {
-        this.x = x;
-        this.y = y;
-        this.damage = damage;
-        this.range = range;
-        this.target = null;
-        this.shooting = false;
-    }
-
-    // Check for enemies in range
-    checkForTargets(enemies) {
-        this.target = null;
-        for (let enemy of enemies) {
-            const distance = Math.sqrt(Math.pow(this.x - enemy.x, 2) + Math.pow(this.y - enemy.y, 2));
-            if (distance < this.range) {
-                this.target = enemy;
-                break;
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Tower Defense Game 🛡️</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
         }
-    }
+        canvas {
+            background: #fff;
+            border: 2px solid #000;
+            display: block;
+            margin: 0 auto;
+        }
+        #score, #level, #highscore {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        #game-controls {
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛡️ Tower Defense 🛡️</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-    // Shoot at the target
-    shoot() {
-        if (this.target) {
-            this.target.hp -= this.damage;
-            if (this.target.hp <= 0) {
-                enemiesDefeated++;
-                score += 10;
+    <div id="score">Score: 0</div>
+    <div id="level">Level: 1</div>
+    <div id="highscore">High Score: 0</div>
+
+    <div id="game-controls">
+        <button class="button" id="start-button">Start Level</button>
+        <button class="button" id="upgrade-button">Upgrade Tower</button>
+    </div>
+
+    <script>
+        // Game state variables
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let level = 1;
+        let highscore = localStorage.getItem('highscore') || 0;
+        let towers = [];
+        let enemies = [];
+        let gameRunning = false;
+        let enemiesDefeated = 0;
+        let interval;
+        let upgradeCost = 50;
+
+        // Initialize the game
+        document.getElementById('highscore').textContent = `High Score: ${highscore}`;
+
+        document.getElementById('start-button').addEventListener('click', startGame);
+        document.getElementById('upgrade-button').addEventListener('click', upgradeTower);
+
+        // Tower class
+        class Tower {
+            constructor(x, y, damage, range) {
+                this.x = x;
+                this.y = y;
+                this.damage = damage;
+                this.range = range;
                 this.target = null;
+                this.shooting = false;
+            }
+
+            // Check for enemies in range
+            checkForTargets(enemies) {
+                this.target = null;
+                for (let enemy of enemies) {
+                    const distance = Math.sqrt(Math.pow(this.x - enemy.x, 2) + Math.pow(this.y - enemy.y, 2));
+                    if (distance < this.range) {
+                        this.target = enemy;
+                        break;
+                    }
+                }
+            }
+
+            // Shoot at the target
+            shoot() {
+                if (this.target) {
+                    this.target.hp -= this.damage;
+                    if (this.target.hp <= 0) {
+                        enemiesDefeated++;
+                        score += 10;
+                        this.target = null;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.range, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'rgba(0, 0, 255, 0.3)';
+                ctx.stroke();
+                ctx.closePath();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = 'green';
+                ctx.fill();
+                ctx.closePath();
             }
         }
-    }
 
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.range, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(0, 0, 255, 0.3)';
-        ctx.stroke();
-        ctx.closePath();
+        // Enemy class
+        class Enemy {
+            constructor(x, y, speed, hp) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.hp = hp;
+            }
 
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
-        ctx.fillStyle = 'green';
-        ctx.fill();
-        ctx.closePath();
-    }
-}
+            move() {
+                this.x += this.speed;
+            }
 
-// Enemy class
-class Enemy {
-    constructor(x, y, speed, hp) {
-        this.x = x;
-        this.y = y;
-        this.speed = speed;
-        this.hp = hp;
-    }
-
-    move() {
-        this.x += this.speed;
-    }
-
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
-        ctx.fillStyle = 'red';
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-// Start the game
-function startGame() {
-    gameRunning = true;
-    score = 0;
-    enemiesDefeated = 0;
-    enemies = [];
-    towers = [];
-    level = 1;
-    document.getElementById('score').textContent = `Score: ${score}`;
-    document.getElementById('level').textContent = `Level: ${level}`;
-
-    // Start enemy wave generation
-    interval = setInterval(gameLoop, 1000 / 60);
-    generateEnemies(level);
-}
-
-// Game loop
-function gameLoop() {
-    if (!gameRunning) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Move and draw enemies
-    for (let enemy of enemies) {
-        enemy.move();
-        enemy.draw();
-    }
-
-    // Handle towers
-    for (let tower of towers) {
-        tower.checkForTargets(enemies);
-        tower.shoot();
-        tower.draw();
-    }
-
-    // Check for end of level
-    if (enemies.length === 0) {
-        level++;
-        document.getElementById('level').textContent = `Level: ${level}`;
-        generateEnemies(level);
-    }
-
-    // End the game if enemies reach the end
-    for (let enemy of enemies) {
-        if (enemy.x > canvas.width) {
-            gameOver();
-            break;
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                ctx.closePath();
+            }
         }
-    }
 
-    // Update score
-    document.getElementById('score').textContent = `Score: ${score}`;
-}
+        // Start the game
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            enemiesDefeated = 0;
+            enemies = [];
+            towers = [];
+            level = 1;
+            document.getElementById('score').textContent = `Score: ${score}`;
+            document.getElementById('level').textContent = `Level: ${level}`;
 
-// Generate enemies for a level
-function generateEnemies(level) {
-    let numEnemies = level * 5;  // More enemies for higher levels
-    for (let i = 0; i < numEnemies; i++) {
-        enemies.push(new Enemy(0, Math.random() * canvas.height, 1, 100));
-    }
-}
+            // Start enemy wave generation
+            interval = setInterval(gameLoop, 1000 / 60);
+            generateEnemies(level);
+        }
 
-// Tower placement (click on canvas to place towers)
-canvas.addEventListener('click', (e) => {
-    if (!gameRunning) return;
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning) return;
 
-    let x = e.offsetX;
-    let y = e.offsetY;
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Only place towers if the player has enough score
-    if (score >= upgradeCost) {
-        towers.push(new Tower(x, y, 10, 100));
-        score -= upgradeCost;
-        upgradeCost += 20; // Increase cost for next tower
-    }
-});
+            // Move and draw enemies
+            for (let enemy of enemies) {
+                enemy.move();
+                enemy.draw();
+            }
 
-// Upgrade towers
-function upgradeTower() {
-    // Upgrade the first tower (this is just a placeholder for now)
-    if (towers.length > 0) {
-        towers[0].damage += 5; // Increase damage
-        towers[0].range += 10; // Increase range
-        score -= upgradeCost;
-        upgradeCost += 30; // Increase cost for next upgrade
-    }
-}
+            // Handle towers
+            for (let tower of towers) {
+                tower.checkForTargets(enemies);
+                tower.shoot();
+                tower.draw();
+            }
 
-// Game over
-function gameOver() {
-    clearInterval(interval);
-    gameRunning = false;
-    document.getElementById('highscore').textContent = `High Score: ${Math.max(score, highscore)}`;
-    localStorage.setItem('highscore', Math.max(score, highscore));
-    alert("Game Over! Your final score is " + score);
-}
+            // Check for end of level
+            if (enemies.length === 0) {
+                level++;
+                document.getElementById('level').textContent = `Level: ${level}`;
+                generateEnemies(level);
+            }
+
+            // End the game if enemies reach the end
+            for (let enemy of enemies) {
+                if (enemy.x > canvas.width) {
+                    gameOver();
+                    break;
+                }
+            }
+
+            // Update score
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        // Generate enemies for a level
+        function generateEnemies(level) {
+            let numEnemies = level * 5;  // More enemies for higher levels
+            for (let i = 0; i < numEnemies; i++) {
+                enemies.push(new Enemy(0, Math.random() * canvas.height, 1, 100));
+            }
+        }
+
+        // Tower placement (click on canvas to place towers)
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+
+            let x = e.offsetX;
+            let y = e.offsetY;
+
+            // Only place towers if the player has enough score
+            if (score >= upgradeCost) {
+                towers.push(new Tower(x, y, 10, 100));
+                score -= upgradeCost;
+                upgradeCost += 20; // Increase cost for next tower
+            }
+        });
+
+        // Upgrade towers
+        function upgradeTower() {
+            // Upgrade the first tower (this is just a placeholder for now)
+            if (towers.length > 0) {
+                towers[0].damage += 5; // Increase damage
+                towers[0].range += 10; // Increase range
+                score -= upgradeCost;
+                upgradeCost += 30; // Increase cost for next upgrade
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            clearInterval(interval);
+            gameRunning = false;
+            document.getElementById('highscore').textContent = `High Score: ${Math.max(score, highscore)}`;
+            localStorage.setItem('highscore', Math.max(score, highscore));
+            alert("Game Over! Your final score is " + score);
+        }
+    </script>
+</body>
+</html>
