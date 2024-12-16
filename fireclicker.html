@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #1e272e;
+            background: linear-gradient(to bottom, #1e272e, #2c3e50);
             color: #fff;
             margin: 0;
             padding: 20px;
@@ -17,23 +17,25 @@
         h1 {
             color: #ff6b6b;
             font-size: 3rem;
+            text-shadow: 0 2px 10px rgba(255, 107, 107, 0.8);
         }
 
         #fireButton {
-            background-color: #ff6b6b;
+            background: radial-gradient(circle, #ff6b6b, #ff4747);
             border: none;
             border-radius: 50%;
             width: 120px;
             height: 120px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
+            font-weight: bold;
             color: white;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.6);
             transition: transform 0.1s ease, background-color 0.2s;
         }
 
         #fireButton:hover {
-            background-color: #ff4747;
+            background: radial-gradient(circle, #ff4747, #ff6b6b);
             transform: scale(1.1);
         }
 
@@ -42,23 +44,23 @@
         }
 
         #rebirthButton {
-            background-color: #ffa502;
+            background: linear-gradient(to right, #ff7f50, #ffa502);
             border: none;
             border-radius: 10px;
             padding: 15px;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: white;
             cursor: pointer;
             margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         #rebirthButton:hover {
-            background-color: #eaa200;
+            background: linear-gradient(to right, #e17055, #ff6f00);
         }
 
         .upgradeButton {
-            background-color: #1dd1a1;
+            background: linear-gradient(to right, #1dd1a1, #10ac84);
             border: none;
             border-radius: 10px;
             padding: 10px;
@@ -66,20 +68,21 @@
             color: white;
             cursor: pointer;
             margin: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .upgradeButton:hover {
-            background-color: #10ac84;
+            background: linear-gradient(to right, #10ac84, #1dd1a1);
         }
 
         .info {
             margin: 10px 0;
+            font-size: 1.2rem;
         }
 
         .floatingFlame {
             position: absolute;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #ffa502;
             animation: floatUp 1.5s ease-out forwards;
@@ -92,7 +95,7 @@
             }
             100% {
                 opacity: 0;
-                transform: translateY(-100px);
+                transform: translateY(-120px);
             }
         }
     </style>
@@ -112,74 +115,62 @@
     </div>
 
     <script>
-        // Redirect if level is not 2
         const level = localStorage.getItem("level");
         if (level !== "2") {
             window.location.href = "cookieclicker.html";
         }
 
-        // Game state variables
         let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
         let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
         let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
+        let fireCooldown = false;
 
-        // Upgrade details
         const upgradeList = [
             { id: "multiplier", name: "Flame Multiplier", baseCost: 100, multiplier: 2 },
             { id: "autoClick", name: "Auto Clicker", baseCost: 500, multiplier: 1 },
             { id: "superFlame", name: "Super Flame", baseCost: 1000, multiplier: 10 }
         ];
 
-        // UI Elements
         const flameCountElement = document.getElementById("flameCount");
         const rebirthCountElement = document.getElementById("rebirthCount");
         const fireButton = document.getElementById("fireButton");
         const rebirthButton = document.getElementById("rebirthButton");
         const upgradesElement = document.getElementById("upgrades");
 
-        // Initialize upgrades
         function initializeUpgrades() {
-            upgradesElement.innerHTML = ""; // Clear existing upgrades
+            upgradesElement.innerHTML = "";
             upgradeList.forEach((upgrade) => {
                 upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost };
-
                 const button = document.createElement("button");
                 button.id = upgrade.id;
                 button.classList.add("upgradeButton");
                 button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
-
                 button.addEventListener("click", () => purchaseUpgrade(upgrade));
-
                 upgradesElement.appendChild(button);
             });
         }
 
-        // Update the UI
         function updateUI() {
             flameCountElement.textContent = flameCount;
             rebirthCountElement.textContent = rebirthCount;
-
             upgradeList.forEach((upgrade) => {
                 const button = document.getElementById(upgrade.id);
                 button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
             });
         }
 
-        // Save the game state to local storage
         function saveGame() {
             localStorage.setItem("flameCount", flameCount);
             localStorage.setItem("rebirthCount", rebirthCount);
             localStorage.setItem("upgrades", JSON.stringify(upgrades));
         }
 
-        // Collect flames with animation
         fireButton.addEventListener("click", (event) => {
-            const flameMultiplier = rebirthCount + 1 + (upgrades["multiplier"]?.level || 0) * 2;
-            const randomFlame = Math.floor(Math.random() * (flameMultiplier * 2)) + 1;
-
+            if (fireCooldown) return;
+            const flameMultiplier = rebirthCount + 1 + (upgrades["multiplier"]?.level || 0) * 1.5;
+            const randomFlame = Math.floor(Math.random() * flameMultiplier) + 1;
             flameCount += randomFlame;
 
-            // Create floating flame animation
             const floatingFlame = document.createElement("div");
             floatingFlame.textContent = `+${randomFlame}`;
             floatingFlame.classList.add("floatingFlame");
@@ -189,29 +180,31 @@
             document.body.appendChild(floatingFlame);
             setTimeout(() => floatingFlame.remove(), 1500);
 
+            fireCooldown = true;
+            setTimeout(() => (fireCooldown = false), 500); // 0.5s cooldown
+
             updateUI();
             saveGame();
         });
 
-        // Rebirth functionality
         rebirthButton.addEventListener("click", () => {
-            if (flameCount >= 1000) {
-                flameCount = 0; // Reset flame count
-                rebirthCount += 1; // Increase rebirth count
+            const rebirthCost = (rebirthCount + 1) * 1000;
+            if (flameCount >= rebirthCost) {
+                flameCount = 0;
+                rebirthCount += 1;
                 updateUI();
                 saveGame();
             } else {
-                alert("You need at least 1000 flames to rebirth!");
+                alert(`You need ${rebirthCost} flames to rebirth!`);
             }
         });
 
-        // Purchase upgrade
         function purchaseUpgrade(upgrade) {
             const upgradeState = upgrades[upgrade.id];
             if (flameCount >= upgradeState.cost) {
                 flameCount -= upgradeState.cost;
                 upgradeState.level += 1;
-                upgradeState.cost = Math.floor(upgradeState.cost * 1.5);
+                upgradeState.cost = Math.floor(upgradeState.cost * 1.8);
                 updateUI();
                 saveGame();
             } else {
@@ -219,7 +212,6 @@
             }
         }
 
-        // Auto clicker functionality
         setInterval(() => {
             const autoClickLevel = upgrades["autoClick"]?.level || 0;
             flameCount += autoClickLevel;
@@ -227,7 +219,6 @@
             saveGame();
         }, 1000);
 
-        // Initialize game
         initializeUpgrades();
         updateUI();
     </script>
