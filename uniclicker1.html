@@ -123,6 +123,22 @@
                 opacity: 0;
             }
         }
+
+        /* New Animation: Shooting Stars */
+        @keyframes shootingStar {
+            0% { left: -10%; top: 10%; }
+            100% { left: 110%; top: 90%; }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+            animation: shootingStar 2s infinite linear;
+            opacity: 0.7;
+        }
+
     </style>
 </head>
 <body>
@@ -299,39 +315,20 @@
             });
         }, 3000);
 
+        setInterval(() => {
+            const shootingStar = document.createElement('div');
+            shootingStar.classList.add('shooting-star');
+            document.body.appendChild(shootingStar);
+
+            shootingStar.addEventListener('animationend', () => {
+                shootingStar.remove();
+            });
+        }, 5000);
+
         loadProgress();
         createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
         createUpgradeButtons(gameState.cpsUpgrades, cpsUpgradesContainer, "Unicorn Friend");
         updateUI();
-        function checkLevelProgression() {
-    const currentLevel = parseInt(localStorage.getItem("level"), 10) || 1;
-
-    if (currentLevel === 2 && gameState.score >= 1e18) { // 1000 quadrillion
-        // Set level to 2
-        localStorage.setItem("level", 3);
-
-        // Reset score and save progress
-        gameState.score = 0;
-        gameState.cpc = 1;
-        gameState.cps = 0;
-        saveProgress();
-
-        // Redirect to fireclicker.html
-        alert("Congratulations! You've reached Level 3!");
-        window.location.href = "fireclicker.html";
-    } else if (currentLevel === 1) {
-        // Automatically redirect if already on Level 2
-        window.location.href = "cookieclicker.html";
-    }
-}
-
-// Check progression when the script is loaded
-document.addEventListener("DOMContentLoaded", checkLevelProgression);
-
-// Continuously check for level progression
-setInterval(checkLevelProgression, 1000);
-
-
     </script>
 </body>
 </html>
