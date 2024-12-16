@@ -123,22 +123,6 @@
                 opacity: 0;
             }
         }
-
-        /* New Animation: Shooting Stars */
-        @keyframes shootingStar {
-            0% { left: -10%; top: 10%; }
-            100% { left: 110%; top: 90%; }
-        }
-
-        .shooting-star {
-            position: absolute;
-            width: 50px;
-            height: 2px;
-            background: linear-gradient(45deg, #feca57, #ff9ff3);
-            animation: shootingStar 2s infinite linear;
-            opacity: 0.7;
-        }
-
     </style>
 </head>
 <body>
@@ -168,16 +152,16 @@
             rebirths: 0,
             rebirthBoost: 1,
             cpcUpgrades: Array.from({ length: 10 }, (_, i) => ({
-                effect: Math.pow(10, i + 1) / 10,
-                cost: Math.pow(10, i + 2),
+                effect: Math.pow(10, i + 1) / 5,  // Lower effect to slow progress
+                cost: Math.pow(10, i + 3),  // Increase cost exponentially
             })),
             cpsUpgrades: Array.from({ length: 10 }, (_, i) => ({
-                effect: Math.pow(10, i + 1) / 10,
-                cost: Math.pow(10, i + 2),
+                effect: Math.pow(10, i + 1) / 5,  // Lower effect to slow progress
+                cost: Math.pow(10, i + 3),  // Increase cost exponentially
             })),
         };
 
-        const rebirthCost = 2e11;
+        const rebirthCost = 1e12;  // Higher rebirth cost for more challenge
         const scoreDisplay = document.getElementById("score");
         const cpsDisplay = document.getElementById("cps");
         const rebirthsDisplay = document.getElementById("rebirths");
@@ -241,7 +225,7 @@
             const upgrade = upgrades[index];
             if (gameState.score >= upgrade.cost) {
                 gameState.score -= upgrade.cost;
-                upgrade.cost *= 1.5;
+                upgrade.cost *= 1.75;  // Increase cost scaling for challenge
                 if (type === "Horn Power") gameState.cpc += upgrade.effect;
                 else gameState.cps += upgrade.effect;
                 updateUI();
@@ -255,13 +239,13 @@
                 gameState.cpc = 1;
                 gameState.cps = 0;
                 gameState.rebirths++;
-                gameState.rebirthBoost *= 1.25;
+                gameState.rebirthBoost *= 1.5;  // Increase rebirth boost for added difficulty
 
                 gameState.cpcUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = Math.pow(10, i + 2);
+                    upgrade.cost = Math.pow(10, i + 3);  // Adjust rebirth scaling
                 });
                 gameState.cpsUpgrades.forEach((upgrade, i) => {
-                    upgrade.cost = Math.pow(10, i + 2);
+                    upgrade.cost = Math.pow(10, i + 3);  // Adjust rebirth scaling
                 });
 
                 createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
@@ -314,16 +298,6 @@
                 sparkle.remove();
             });
         }, 3000);
-
-        setInterval(() => {
-            const shootingStar = document.createElement('div');
-            shootingStar.classList.add('shooting-star');
-            document.body.appendChild(shootingStar);
-
-            shootingStar.addEventListener('animationend', () => {
-                shootingStar.remove();
-            });
-        }, 5000);
 
         loadProgress();
         createUpgradeButtons(gameState.cpcUpgrades, cpcUpgradesContainer, "Horn Power");
