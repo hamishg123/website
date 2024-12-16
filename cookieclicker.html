@@ -210,7 +210,7 @@
         }));
 
         function formatNumber(num) {
-            if (num >= 1e15) return (num / 1e12).toFixed(1) + "QT";
+            if (num >= 1e15) return (num / 1e15).toFixed(1) + "QT";
             if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -502,6 +502,34 @@ function resetMultiplier() {
 
     alert("Multiplier effect has ended, and original values have been restored.");
 }
+// Function to check for level progression
+function checkLevelProgression() {
+    const currentLevel = parseInt(localStorage.getItem("level"), 10) || 1;
+
+    if (currentLevel === 1 && score >= 1e17) { // 100 quadrillion
+        // Set level to 2
+        localStorage.setItem("level", 2);
+
+        // Reset score and save progress
+        score = 0;
+        cpc = 1;
+        cps = 0;
+        saveProgress();
+
+        // Redirect to fireclicker.html
+        alert("Congratulations! You've reached Level 2!");
+        window.location.href = "uniclicker.html";
+    } else if (currentLevel === 2) {
+        // Automatically redirect if already on Level 2
+        window.location.href = "uniclicker.html";
+    }
+}
+
+// Check progression when the script is loaded
+document.addEventListener("DOMContentLoaded", checkLevelProgression);
+
+// Continuously check for level progression
+setInterval(checkLevelProgression, 1000);
 
     </script>
 </body>
