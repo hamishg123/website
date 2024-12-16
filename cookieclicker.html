@@ -506,22 +506,11 @@ function resetMultiplier() {
 function checkLevelProgression() {
     const currentLevel = parseInt(localStorage.getItem("level"), 10) || 1;
 
-    if (currentLevel === 1 && score >= 1e17) { // 100 quadrillion
-        // Set level to 2
-        localStorage.setItem("level", 2);
-
-        // Reset score and save progress
-        score = 0;
-        cpc = 1;
-        cps = 0;
-        saveProgress();
-
-        // Redirect to fireclicker.html
-        alert("Congratulations! You've reached Level 2!");
-        window.location.href = "uniclicker.html";
+    if (currentLevel === 1 ) { // 100 quadrillion
+        window.location.href = "cookieclicker.html";
     } else if (currentLevel === 2) {
         // Automatically redirect if already on Level 2
-        window.location.href = "uniclicker.html";
+        
     }
 }
 
