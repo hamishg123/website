@@ -120,15 +120,16 @@
             window.location.href = "cookieclicker.html";
         }
 
-        let flameCount = parseInt(localStorage.getItem("flameCount")) || 0;
-        let rebirthCount = parseInt(localStorage.getItem("rebirthCount")) || 0;
-        let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
+        let flameCount = 0;
+        let rebirthCount = 0;
+        let upgrades = {};
         let fireCooldown = false;
 
         const upgradeList = [
             { id: "multiplier", name: "Flame Multiplier", baseCost: 100, multiplier: 2 },
             { id: "autoClick", name: "Auto Clicker", baseCost: 500, multiplier: 1 },
-            { id: "superFlame", name: "Super Flame", baseCost: 1000, multiplier: 10 }
+            { id: "superFlame", name: "Super Flame", baseCost: 1000, multiplier: 10 },
+            { id: "rebirthBoost", name: "Rebirth Boost", baseCost: 2000, multiplier: 5, oneTime: true }
         ];
 
         const flameCountElement = document.getElementById("flameCount");
@@ -140,7 +141,7 @@
         function initializeUpgrades() {
             upgradesElement.innerHTML = "";
             upgradeList.forEach((upgrade) => {
-                upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost };
+                upgrades[upgrade.id] = upgrades[upgrade.id] || { level: 0, cost: upgrade.baseCost, oneTimePurchased: false };
                 const button = document.createElement("button");
                 button.id = upgrade.id;
                 button.classList.add("upgradeButton");
@@ -155,14 +156,13 @@
             rebirthCountElement.textContent = rebirthCount;
             upgradeList.forEach((upgrade) => {
                 const button = document.getElementById(upgrade.id);
-                button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
+                if (upgrade.oneTime && upgrades[upgrade.id].oneTimePurchased) {
+                    button.disabled = true;
+                    button.textContent = `${upgrade.name} (Purchased)`;
+                } else {
+                    button.textContent = `${upgrade.name} (Cost: ${upgrades[upgrade.id].cost})`;
+                }
             });
-        }
-
-        function saveGame() {
-            localStorage.setItem("flameCount", flameCount);
-            localStorage.setItem("rebirthCount", rebirthCount);
-            localStorage.setItem("upgrades", JSON.stringify(upgrades));
         }
 
         fireButton.addEventListener("click", (event) => {
@@ -184,7 +184,6 @@
             setTimeout(() => (fireCooldown = false), 500); // 0.5s cooldown
 
             updateUI();
-            saveGame();
         });
 
         rebirthButton.addEventListener("click", () => {
@@ -192,8 +191,9 @@
             if (flameCount >= rebirthCost) {
                 flameCount = 0;
                 rebirthCount += 1;
+                upgrades = {};
+                initializeUpgrades();
                 updateUI();
-                saveGame();
             } else {
                 alert(`You need ${rebirthCost} flames to rebirth!`);
             }
@@ -201,12 +201,14 @@
 
         function purchaseUpgrade(upgrade) {
             const upgradeState = upgrades[upgrade.id];
+            if (upgrade.oneTime && upgradeState.oneTimePurchased) return;
+
             if (flameCount >= upgradeState.cost) {
                 flameCount -= upgradeState.cost;
                 upgradeState.level += 1;
-                upgradeState.cost = Math.floor(upgradeState.cost * 1.8);
+                upgradeState.oneTimePurchased = upgrade.oneTime || false;
+                upgradeState.cost = upgrade.oneTime ? upgrade.baseCost : Math.floor(upgradeState.cost * 1.8);
                 updateUI();
-                saveGame();
             } else {
                 alert(`You need more flames to purchase ${upgrade.name}!`);
             }
@@ -216,7 +218,6 @@
             const autoClickLevel = upgrades["autoClick"]?.level || 0;
             flameCount += autoClickLevel;
             updateUI();
-            saveGame();
         }, 1000);
 
         initializeUpgrades();
