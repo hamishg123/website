@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛡️ Tower Defense Game 🛡️</title>
+    <title>🛡️ Tower Defense 🛡️</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,7 +54,6 @@
     </div>
 
     <script>
-        // Game state variables
         let canvas = document.getElementById('gameCanvas');
         let ctx = canvas.getContext('2d');
 
@@ -69,13 +68,11 @@
         let upgradeCost = 50;
         let selectedTower = null;
 
-        // Initialize the game
         document.getElementById('highscore').textContent = `High Score: ${highscore}`;
 
         document.getElementById('start-button').addEventListener('click', startGame);
         document.getElementById('upgrade-button').addEventListener('click', upgradeTower);
 
-        // Tower class
         class Tower {
             constructor(x, y, damage, range) {
                 this.x = x;
@@ -86,7 +83,6 @@
                 this.shooting = false;
             }
 
-            // Check for enemies in range
             checkForTargets(enemies) {
                 this.target = null;
                 for (let enemy of enemies) {
@@ -98,7 +94,6 @@
                 }
             }
 
-            // Shoot at the target
             shoot() {
                 if (this.target) {
                     this.target.hp -= this.damage;
@@ -124,14 +119,12 @@
                 ctx.closePath();
             }
 
-            // Upgrade the tower
             upgrade() {
                 this.damage += 5;
                 this.range += 10;
             }
         }
 
-        // Enemy class
         class Enemy {
             constructor(x, y, speed, hp) {
                 this.x = x;
@@ -153,7 +146,6 @@
             }
         }
 
-        // Start the game
         function startGame() {
             gameRunning = true;
             score = 0;
@@ -164,40 +156,32 @@
             selectedTower = null;
             document.getElementById('score').textContent = `Score: ${score}`;
             document.getElementById('level').textContent = `Level: ${level}`;
-
-            // Start enemy wave generation
             interval = setInterval(gameLoop, 1000 / 60);
             generateEnemies(level);
         }
 
-        // Game loop
         function gameLoop() {
             if (!gameRunning) return;
 
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Move and draw enemies
             for (let enemy of enemies) {
                 enemy.move();
                 enemy.draw();
             }
 
-            // Handle towers
             for (let tower of towers) {
                 tower.checkForTargets(enemies);
                 tower.shoot();
                 tower.draw();
             }
 
-            // Check for end of level
             if (enemies.length === 0) {
                 level++;
                 document.getElementById('level').textContent = `Level: ${level}`;
                 generateEnemies(level);
             }
 
-            // End the game if enemies reach the end
             for (let enemy of enemies) {
                 if (enemy.x > canvas.width) {
                     gameOver();
@@ -205,52 +189,43 @@
                 }
             }
 
-            // Update score
             document.getElementById('score').textContent = `Score: ${score}`;
         }
 
-        // Generate enemies for a level
         function generateEnemies(level) {
-            let numEnemies = level * 5;  // More enemies for higher levels
+            let numEnemies = level * 5;
             for (let i = 0; i < numEnemies; i++) {
                 enemies.push(new Enemy(0, Math.random() * canvas.height, 1, 100));
             }
         }
 
-        // Tower placement (click on canvas to place towers)
         canvas.addEventListener('click', (e) => {
             if (!gameRunning) return;
 
             let x = e.offsetX;
             let y = e.offsetY;
 
-            // Only place towers if the player has enough score
             if (score >= upgradeCost) {
-                // Check if there is already a tower selected for upgrading
                 if (selectedTower) {
-                    selectedTower.upgrade(); // Upgrade the tower
+                    selectedTower.upgrade();
                     score -= upgradeCost;
-                    upgradeCost += 20; // Increase cost for the next upgrade
-                    selectedTower = null; // Deselect tower after upgrade
+                    upgradeCost += 20;
+                    selectedTower = null;
                 } else {
-                    // Place a new tower
                     towers.push(new Tower(x, y, 10, 100));
                     score -= upgradeCost;
-                    upgradeCost += 20; // Increase cost for next tower
+                    upgradeCost += 20;
                 }
             }
         });
 
-        // Upgrade towers
         function upgradeTower() {
-            // Upgrade the first tower (this is just a placeholder for now)
             if (towers.length > 0) {
-                selectedTower = towers[0]; // Select the first tower
+                selectedTower = towers[0];
                 alert(`Selected Tower for Upgrade: ${selectedTower.x}, ${selectedTower.y}`);
             }
         }
 
-        // Game over
         function gameOver() {
             clearInterval(interval);
             gameRunning = false;
