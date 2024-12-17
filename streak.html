@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streak Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f9f9f9;
+            padding: 50px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        .streak {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .reset-button {
+            background-color: #f44336;
+        }
+        .reset-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Streak Tracker</h1>
+    <div class="streak">
+        Streak: <span id="streakCount">0</span> day(s)
+    </div>
+    <button id="logButton" class="button">Log Today</button>
+    <button id="resetButton" class="button reset-button">Reset Streak</button>
+
+    <script>
+        // Get the current streak data from localStorage
+        let streak = localStorage.getItem('streak') ? parseInt(localStorage.getItem('streak')) : 0;
+        let lastLoggedDate = localStorage.getItem('lastLoggedDate') ? localStorage.getItem('lastLoggedDate') : null;
+
+        // Display the current streak
+        const streakCountElement = document.getElementById('streakCount');
+        streakCountElement.textContent = streak;
+
+        // Log today's progress
+        const logButton = document.getElementById('logButton');
+        logButton.addEventListener('click', function() {
+            const today = new Date().toLocaleDateString();
+
+            if (lastLoggedDate !== today) {
+                // New day, increment the streak
+                streak++;
+                localStorage.setItem('streak', streak);
+                localStorage.setItem('lastLoggedDate', today);
+                streakCountElement.textContent = streak;
+            } else {
+                alert("You already logged today! Keep it up!");
+            }
+        });
+
+        // Reset the streak
+        const resetButton = document.getElementById('resetButton');
+        resetButton.addEventListener('click', function() {
+            streak = 0;
+            localStorage.setItem('streak', streak);
+            localStorage.removeItem('lastLoggedDate');
+            streakCountElement.textContent = streak;
+        });
+
+    </script>
+</body>
+</html>
