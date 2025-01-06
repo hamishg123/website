@@ -382,7 +382,7 @@
             snowflake.addEventListener('animationend', () => {
                 snowflake.remove();
             });
-        }, 4000);
+        }, 40);
         let multiplierActive = false;
 let originalCpc = null; // Store original CPC value
 let originalCps = null; // Store original CPS value
@@ -463,7 +463,7 @@ function activateMultiplier() {
     multiplierButton.disabled = true;
 
     // Save multiplier end time in localStorage
-    const multiplierDuration = 60000; // 1 minute in milliseconds
+    const multiplierDuration = 6; // 1 minute in milliseconds
     const multiplierEndTime = new Date(now.getTime() + multiplierDuration).toISOString();
     localStorage.setItem("multiplierEnd", multiplierEndTime);
 
