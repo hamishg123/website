@@ -24,6 +24,38 @@
   <p id="timer">Timer: 0.00 seconds</p>
   <audio id="audio" src="audio.mp3"></audio>
 
-  <script src="game.js"></script>
+  <script>const audio = document.getElementById("audio");
+const startButton = document.getElementById("startButton");
+const confirmButton = document.getElementById("confirmButton");
+const timerDisplay = document.getElementById("timer");
+
+let timer = 0;
+let interval;
+
+// Start the game
+startButton.addEventListener("click", () => {
+  audio.play(); // Play the audio
+  timer = 0;
+  timerDisplay.textContent = "Timer: 0.00 seconds";
+  confirmButton.disabled = false;
+  startButton.disabled = true;
+
+  // Start the timer
+  interval = setInterval(() => {
+    timer += 0.1;
+    timerDisplay.textContent = `Timer: ${timer.toFixed(2)} seconds`;
+  }, 100); // Update every 0.1 seconds
+});
+
+// Stop the timer when "Confirm" is clicked
+confirmButton.addEventListener("click", () => {
+  clearInterval(interval); // Stop the timer
+  audio.pause(); // Pause the audio
+  audio.currentTime = 0; // Reset audio position
+  confirmButton.disabled = true;
+  startButton.disabled = false;
+
+  alert(`You stopped the timer at ${timer.toFixed(2)} seconds!`);
+});</script>
 </body>
 </html>
