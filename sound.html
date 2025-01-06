@@ -13,49 +13,69 @@
     button {
       padding: 10px 20px;
       font-size: 16px;
+      margin: 5px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
     }
   </style>
 </head>
 <body>
   <h1>Volume Game</h1>
-  <p>Click "Start" to play the audio. Lower your volume at 50% or more, then click "stop" to stop the timer!</p>
+  <p>Click "Start" to play the audio. Lower your volume at 50% or more, then click "Stop" to stop the timer!</p>
   <button id="startButton">Start</button>
-  <button id="confirmButton" disabled>stop</button>
+  <button id="confirmButton" disabled>Stop</button>
   <p id="timer">Timer: 0.00 seconds</p>
   <audio id="audio" src="audio.mp3"></audio>
 
-  <script>const audio = document.getElementById("audio");
-const startButton = document.getElementById("startButton");
-const confirmButton = document.getElementById("confirmButton");
-const timerDisplay = document.getElementById("timer");
+  <h2>Leaderboard</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Time (seconds)</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard">
+      <!-- Leaderboard scores will be dynamically inserted here -->
+    </tbody>
+  </table>
 
-let timer = 0;
-let interval;
+  <script>
+    const audio = document.getElementById("audio");
+    const startButton = document.getElementById("startButton");
+    const confirmButton = document.getElementById("confirmButton");
+    const timerDisplay = document.getElementById("timer");
+    const leaderboardTable = document.getElementById("leaderboard");
 
-// Start the game
-startButton.addEventListener("click", () => {
-  audio.play(); // Play the audio
-  timer = 0;
-  timerDisplay.textContent = "Timer: 0.00 seconds";
-  confirmButton.disabled = false;
-  startButton.disabled = true;
+    let timer = 0;
+    let interval;
 
-  // Start the timer
-  interval = setInterval(() => {
-    timer += 0.1;
-    timerDisplay.textContent = `Timer: ${timer.toFixed(2)} seconds`;
-  }, 100); // Update every 0.1 seconds
-});
+    // Load leaderboard from local storage
+    function loadLeaderboard() {
+      const scores = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      leaderboardTable.innerHTML = scores
+        .sort((a, b) => a - b) // Sort scores in ascending order
+        .map((score, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${score.toFixed(2)}</td>
+          </tr>
+        `)
+        .join("");
+    }
 
-// Stop the timer when "Confirm" is clicked
-confirmButton.addEventListener("click", () => {
-  clearInterval(interval); // Stop the timer
-  audio.pause(); // Pause the audio
-  audio.currentTime = 0; // Reset audio position
-  confirmButton.disabled = true;
-  startButton.disabled = false;
-
-  alert(`You stopped the timer at ${timer.toFixed(2)} seconds!`);
-});</script>
-</body>
-</html>
+    // Save a new score to the leaderboard
+    function saveScore(score) {
+      const scores = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      scores.push(score);
+      localStor
