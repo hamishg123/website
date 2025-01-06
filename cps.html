@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPS Clicker Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      text-align: center;
+      padding: 20px;
+    }
+    #testArea {
+      margin-top: 50px;
+    }
+    #clickButton {
+      padding: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      transition: background-color 0.3s;
+    }
+    #clickButton:hover {
+      background-color: #45a049;
+    }
+    #result {
+      font-size: 32px;
+      margin-top: 30px;
+      display: none;
+    }
+    #timer {
+      font-size: 36px;
+      color: #ff5722;
+    }
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #008CBA;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 30px;
+      display: inline-block;
+    }
+    #startBtn:hover {
+      background-color: #007B9F;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>CPS Clicker Test</h1>
+  <p>Click the button as fast as you can for 5 seconds!</p>
+  
+  <div id="testArea">
+    <button id="startBtn">Start Test</button>
+    <div id="timer">Time left: 5s</div>
+    <button id="clickButton" style="display: none;">Click Me!</button>
+  </div>
+
+  <div id="result">
+    <p>Your CPS: <span id="cpsScore"></span></p>
+    <button id="startBtn" onclick="startTest()">Restart Test</button>
+  </div>
+
+  <script>
+    let startBtn = document.getElementById("startBtn");
+    let clickButton = document.getElementById("clickButton");
+    let timerDisplay = document.getElementById("timer");
+    let resultDisplay = document.getElementById("result");
+    let cpsScore = document.getElementById("cpsScore");
+    let timeLeft = 5;
+    let clicks = 0;
+    let testRunning = false;
+    let countdownInterval;
+    let clickInterval;
+
+    startBtn.addEventListener("click", startTest);
+
+    function startTest() {
+      // Reset variables
+      timeLeft = 5;
+      clicks = 0;
+      testRunning = true;
+      resultDisplay.style.display = "none";
+      timerDisplay.style.display = "block";
+      clickButton.style.display = "inline-block";
+      startBtn.style.display = "none";
+
+      // Update timer and start countdown
+      countdownInterval = setInterval(updateTimer, 1000);
+
+      // Add event listener for click button
+      clickButton.addEventListener("click", countClicks);
+    }
+
+    function updateTimer() {
+      timerDisplay.textContent = `Time left: ${timeLeft}s`;
+      timeLeft--;
+
+      if (timeLeft < 0) {
+        clearInterval(countdownInterval);
+        endTest();
+      }
+    }
+
+    function countClicks() {
+      if (testRunning) {
+        clicks++;
+      }
+    }
+
+    function endTest() {
+      testRunning = false;
+      clickButton.style.display = "none";
+      cpsScore.textContent = (clicks / 5).toFixed(2); // CPS = total clicks / 5 seconds
+      resultDisplay.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
