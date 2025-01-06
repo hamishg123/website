@@ -78,4 +78,39 @@
     function saveScore(score) {
       const scores = JSON.parse(localStorage.getItem("leaderboard")) || [];
       scores.push(score);
-      localStor
+      localStorage.setItem("leaderboard", JSON.stringify(scores));
+      loadLeaderboard();
+    }
+
+    // Start the game
+    startButton.addEventListener("click", () => {
+      audio.play().catch(error => console.error("Audio playback error:", error)); // Play the audio
+      timer = 0;
+      timerDisplay.textContent = "Timer: 0.00 seconds";
+      confirmButton.disabled = false;
+      startButton.disabled = true;
+
+      // Start the timer
+      interval = setInterval(() => {
+        timer += 0.1;
+        timerDisplay.textContent = `Timer: ${timer.toFixed(2)} seconds`;
+      }, 100); // Update every 0.1 seconds
+    });
+
+    // Stop the timer when "Stop" is clicked
+    confirmButton.addEventListener("click", () => {
+      clearInterval(interval); // Stop the timer
+      audio.pause(); // Pause the audio
+      audio.currentTime = 0; // Reset audio position
+      confirmButton.disabled = true;
+      startButton.disabled = false;
+
+      alert(`You stopped the timer at ${timer.toFixed(2)} seconds!`);
+      saveScore(timer); // Save the score to the leaderboard
+    });
+
+    // Initialize leaderboard on page load
+    loadLeaderboard();
+  </script>
+</body>
+</html>
