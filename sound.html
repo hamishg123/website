@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volume Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Volume Game</h1>
+  <p>Click "Start" to play the audio. Lower your volume below 50%, then click "Confirm" to stop the timer!</p>
+  <button id="startButton">Start</button>
+  <button id="confirmButton" disabled>Confirm</button>
+  <p id="timer">Timer: 0.00 seconds</p>
+  <audio id="audio" src="audio.mp3"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>
