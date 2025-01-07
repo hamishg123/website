@@ -14,7 +14,7 @@
       margin: 0;
       background-color: #333;
       color: #fff;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: 'Arial', sans-serif;
     }
     canvas {
       border: 1px solid #fff;
@@ -22,6 +22,16 @@
     }
     #scoreboard {
       margin: 10px;
+      font-size: 18px;
+    }
+    #pauseMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 50px;
+      color: red;
+      display: none;
     }
   </style>
 </head>
@@ -29,15 +39,16 @@
   <div id="scoreboard">
     <p>Score: <span id="score">0</span></p>
     <p>Highscore: <span id="highscore">0</span></p>
-    <button id="pause">Pause</button>
   </div>
   <canvas id="tetris" width="240" height="400"></canvas>
+  <div id="pauseMessage">PAUSE</div>
+
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     const scoreElement = document.getElementById('score');
     const highscoreElement = document.getElementById('highscore');
-    const pauseButton = document.getElementById('pause');
+    const pauseMessage = document.getElementById('pauseMessage');
 
     context.scale(20, 20);
 
@@ -280,7 +291,11 @@
 
     let lastTime = 0;
     function update(time = 0) {
-      if (isPaused) return;
+      if (isPaused) {
+        pauseMessage.style.display = 'block';
+        return;
+      }
+      pauseMessage.style.display = 'none';
 
       const deltaTime = time - lastTime;
 
@@ -317,13 +332,15 @@
         if (!isPaused) {
           update();
         }
-      }
-    });
-
-    pauseButton.addEventListener('click', () => {
-      isPaused = !isPaused;
-      if (!isPaused) {
-        update();
+      } else if (event.key === ' ') {
+        while (!collide(arena, player)) {
+          player.pos.y++;
+        }
+        player.pos.y--;
+        merge(arena, player);
+        playerReset();
+        arenaSweep();
+        updateScore();
       }
     });
 
