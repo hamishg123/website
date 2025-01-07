@@ -62,7 +62,7 @@
 
     // Load leaderboard from local storage
     function loadLeaderboard() {
-      const scores = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      const scores = JSON.parse(localStorage.getItem("leaderboard1")) || [];
       leaderboardTable.innerHTML = scores
         .sort((a, b) => a - b) // Sort scores in ascending order
         .map((score, index) => `
@@ -76,9 +76,9 @@
 
     // Save a new score to the leaderboard
     function saveScore(score) {
-      const scores = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      const scores = JSON.parse(localStorage.getItem("leaderboard1")) || [];
       scores.push(score);
-      localStorage.setItem("leaderboard", JSON.stringify(scores));
+      localStorage.setItem("leaderboard1", JSON.stringify(scores));
       loadLeaderboard();
     }
 
