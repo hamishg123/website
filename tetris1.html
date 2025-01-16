@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enhanced Tetris Game</title>
+  <title>Tetris Game</title>
   <style>
     body {
       display: flex;
@@ -16,17 +16,17 @@
       color: #fff;
       font-family: 'Arial', sans-serif;
     }
-    .game-container {
-      display: flex;
-      gap: 20px;
-      position: relative;
-    }
     canvas {
       border: 1px solid #fff;
       background-color: #000;
     }
-    #scoreboard {
-      margin-bottom: 20px;
+    #info {
+      display: flex;
+      justify-content: space-between;
+      width: 80%;
+    }
+    #scoreboard, #nextPieceContainer {
+      margin: 10px;
       font-size: 18px;
     }
     #pauseMessage {
@@ -37,60 +37,43 @@
       font-size: 50px;
       color: red;
       display: none;
-      pointer-events: none;
-    }
-    #gameOver {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 30px;
-      color: yellow;
-      text-align: center;
-      display: none;
-    }
-    #gameOver button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <div id="scoreboard">
-    <p>Score: <span id="score">0</span></p>
-    <p>Level: <span id="level">1</span></p>
-    <p>Highscore: <span id="highscore">0</span></p>
-  </div>
-  <div class="game-container">
-    <canvas id="tetris" width="240" height="400"></canvas>
-    <canvas id="next" width="100" height="100"></canvas>
-    <div id="pauseMessage">PAUSED</div>
-    <div id="gameOver">
-      <p>Game Over!</p>
-      <p>Final Score: <span id="finalScore">0</span></p>
-      <button onclick="restartGame()">Restart</button>
+  <div id="info">
+    <div id="scoreboard">
+      <p>Score: <span id="score">0</span></p>
+      <p>Highscore: <span id="highscore">0</span></p>
+      <p>Level: <span id="level">1</span></p>
+    </div>
+    <div id="nextPieceContainer">
+      <p>Next Piece:</p>
+      <canvas id="nextPiece" width="80" height="80"></canvas>
     </div>
   </div>
+  <canvas id="tetris" width="240" height="400"></canvas>
+  <div id="pauseMessage">PAUSE</div>
 
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
-    const nextCanvas = document.getElementById('next');
-    const nextContext = nextCanvas.getContext('2d');
+    const nextPieceCanvas = document.getElementById('nextPiece');
+    const nextPieceContext = nextPieceCanvas.getContext('2d');
     const scoreElement = document.getElementById('score');
-    const levelElement = document.getElementById('level');
     const highscoreElement = document.getElementById('highscore');
+    const levelElement = document.getElementById('level');
     const pauseMessage = document.getElementById('pauseMessage');
-    const gameOverMessage = document.getElementById('gameOver');
-    const finalScoreElement = document.getElementById('finalScore');
 
     context.scale(20, 20);
-    nextContext.scale(20, 20);
+    nextPieceContext.scale(20, 20);
 
     let isPaused = false;
-    let isGameOver = false;
-
+    let dropCounter = 0;
+    let dropInterval = 1000;
+    let lastTime = 0;
+    let level = 1;
+    
     const colors = [
       null,
       '#FF0D72',
@@ -159,34 +142,56 @@
       }
     }
 
-    function drawMatrix(matrix, offset, isGhost = false) {
+    function drawMatrix(matrix, offset, ctx = context) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
-            context.fillStyle = isGhost ? 'rgba(255, 255, 255, 0.3)' : colors[value];
-            context.fillRect(x + offset.x, y + offset.y, 1, 1);
+            ctx.fillStyle = colors[value];
+            ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
           }
         });
       });
     }
 
-    function drawNextPiece() {
-      nextContext.fillStyle = '#000';
-      nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-      drawMatrix(nextPiece, { x: 1, y: 1 }, false, nextContext);
-    }
-
     function draw() {
       context.fillStyle = '#000';
       context.fillRect(0, 0, canvas.width, canvas.height);
+
       drawMatrix(arena, { x: 0, y: 0 });
       drawMatrix(player.matrix, player.pos);
-      drawNextPiece();
+    }
+
+    function merge(arena, player) {
+      player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+            arena[y + player.pos.y][x + player.pos.x] = value;
+          }
+        });
+      });
+    }
+
+    function playerReset() {
+      if (!nextPiece) {
+        nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
+      }
+      player.matrix = nextPiece;
+      nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
+      drawMatrix(nextPiece, { x: 0, y: 0 }, nextPieceContext);
+      player.pos.y = 0;
+      player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+      if (collide(arena, player)) {
+        arena.forEach(row => row.fill(0));
+        player.score = 0;
+        level = 1;
+        updateScore();
+        dropInterval = 1000;
+      }
     }
 
     function updateScore() {
       scoreElement.textContent = player.score;
-      levelElement.textContent = player.level;
+      levelElement.textContent = level;
       if (player.score > highscore) {
         highscore = player.score;
         localStorage.setItem('highscore', highscore);
@@ -194,27 +199,11 @@
       }
     }
 
-    function restartGame() {
-      isGameOver = false;
-      gameOverMessage.style.display = 'none';
-      arena.forEach(row => row.fill(0));
-      playerReset();
-      player.score = 0;
-      player.level = 1;
-      updateScore();
-      update();
-    }
-
-    // Other functions (arenaSweep, playerReset, playerMove, etc.) remain as in the original.
-
-    // Initialize the game
     const arena = createMatrix(12, 20);
-    const player = {
-      pos: { x: 0, y: 0 },
-      matrix: null,
-      score: 0,
-      level: 1,
-    };
+    const player = { pos: { x: 0, y: 0 }, matrix: null, score: 0 };
+    const pieces = 'ILJOTSZ';
+    let nextPiece;
+
     playerReset();
     updateScore();
     update();
