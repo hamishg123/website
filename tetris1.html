@@ -33,8 +33,13 @@
       color: red;
       display: none;
     }
-    #nextBlock {
-      margin-top: 10px;
+    #nextPieceContainer {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #nextPiece {
+      border: 1px solid #fff;
+      background-color: #000;
     }
   </style>
 </head>
@@ -44,13 +49,16 @@
     <p>Highscore: <span id="highscore">0</span></p>
   </div>
   <canvas id="tetris" width="240" height="400"></canvas>
-  <canvas id="nextBlock" width="80" height="80"></canvas>
+  <div id="nextPieceContainer">
+    <p>Next Piece:</p>
+    <canvas id="nextPiece" width="80" height="80"></canvas>
+  </div>
   <div id="pauseMessage">PAUSE</div>
 
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
-    const nextCanvas = document.getElementById('nextBlock');
+    const nextCanvas = document.getElementById('nextPiece');
     const nextContext = nextCanvas.getContext('2d');
     const scoreElement = document.getElementById('score');
     const highscoreElement = document.getElementById('highscore');
@@ -129,88 +137,66 @@
       }
     }
 
-    function getRandomPiece() {
-      const pieces = 'ILJOTSZ';
-      const weights = [0.25, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15]; // I block is more likely
-      const randomValue = Math.random();
-      let sum = 0;
-      for (let i = 0; i < pieces.length; i++) {
-        sum += weights[i];
-        if (randomValue < sum) {
-          return pieces[i];
-        }
+    function drawGrid() {
+      context.strokeStyle = '#555';
+      for (let x = 0; x < canvas.width / 20; x++) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, canvas.height / 20);
+        context.stroke();
       }
-      return 'T'; // Default fallback
+      for (let y = 0; y < canvas.height / 20; y++) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(canvas.width / 20, y);
+        context.stroke();
+      }
     }
 
-    function drawMatrix(matrix, offset, context) {
+    function drawMatrix(matrix, offset, isGhost = false) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
-            context.fillStyle = colors[value];
+            context.fillStyle = isGhost ? 'rgba(255, 255, 255, 0.3)' : colors[value];
             context.fillRect(x + offset.x, y + offset.y, 1, 1);
+            context.strokeStyle = '#000';
+            context.strokeRect(x + offset.x, y + offset.y, 1, 1);
           }
         });
       });
     }
 
     function drawNextPiece() {
+      nextContext.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
       nextContext.fillStyle = '#000';
       nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-      drawMatrix(nextPiece.matrix, { x: 0, y: 0 }, nextContext);
-    }
 
-    let dropCounter = 0;
-    let dropInterval = 1000;
-
-    let lastTime = 0;
-    function update(time = 0) {
-      if (isPaused) {
-        pauseMessage.style.display = 'block';
-        return;
+      if (nextPiece) {
+        nextPiece.forEach((row, y) => {
+          row.forEach((value, x) => {
+            if (value !== 0) {
+              nextContext.fillStyle = colors[value];
+              nextContext.fillRect(x, y, 1, 1);
+              nextContext.strokeStyle = '#000';
+              nextContext.strokeRect(x, y, 1, 1);
+            }
+          });
+        });
       }
-      pauseMessage.style.display = 'none';
-
-      const deltaTime = time - lastTime;
-
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) {
-        playerDrop();
-      }
-
-      lastTime = time;
-
-      draw();
-      requestAnimationFrame(update);
-    }
-
-    function draw() {
-      context.fillStyle = '#000';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-
-      drawMatrix(arena, { x: 0, y: 0 }, context);
-      drawMatrix(player.matrix, player.pos, context);
-      drawNextPiece();
-    }
-
-    function playerDrop() {
-      player.pos.y++;
-      if (collide(arena, player)) {
-        player.pos.y--;
-        merge(arena, player);
-        playerReset();
-        arenaSweep();
-        updateScore();
-      }
-      dropCounter = 0;
     }
 
     function playerReset() {
-      player.matrix = nextPiece.matrix;
+      const pieces = 'ILJOTSZ';
+      if (!nextPiece) {
+        nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
+      }
+      player.matrix = nextPiece;
       player.pos.y = 0;
       player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-      nextPiece.matrix = createPiece(getRandomPiece());
+
+      nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
       drawNextPiece();
+
       if (collide(arena, player)) {
         arena.forEach(row => row.fill(0));
         player.score = 0;
@@ -218,114 +204,9 @@
       }
     }
 
-    function updateScore() {
-      scoreElement.textContent = player.score;
-      if (player.score > highscore) {
-        highscore = player.score;
-        localStorage.setItem('highscore', highscore);
-        highscoreElement.textContent = highscore;
-      }
-    }
-
-    function collide(arena, player) {
-      const [m, o] = [player.matrix, player.pos];
-      for (let y = 0; y < m.length; ++y) {
-        for (let x = 0; x < m[y].length; ++x) {
-          if (m[y][x] !== 0 &&
-             (arena[y + o.y] &&
-              arena[y + o.y][x + o.x]) !== 0) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    function merge(arena, player) {
-      player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-            arena[y + player.pos.y][x + player.pos.x] = value;
-          }
-        });
-      });
-    }
-
-    function arenaSweep() {
-      let rowCount = 1;
-      outer: for (let y = arena.length - 1; y > 0; --y) {
-        for (let x = 0; x < arena[y].length; ++x) {
-          if (arena[y][x] === 0) {
-            continue outer;
-          }
-        }
-
-        const row = arena.splice(y, 1)[0].fill(0);
-        arena.unshift(row);
-        ++y;
-
-        player.score += rowCount * 100;
-        rowCount *= 2;
-      }
-    }
-
     const arena = createMatrix(12, 20);
-
-    const player = {
-      pos: { x: 0, y: 0 },
-      matrix: null,
-      score: 0,
-    };
-
-    const nextPiece = {
-      matrix: createPiece(getRandomPiece()),
-    };
-
-    document.addEventListener('keydown', event => {
-      if (event.key === 'ArrowLeft') {
-        player.pos.x--;
-        if (collide(arena, player)) {
-          player.pos.x++;
-        }
-      } else if (event.key === 'ArrowRight') {
-        player.pos.x++;
-        if (collide(arena, player)) {
-          player.pos.x--;
-        }
-      } else if (event.key === 'ArrowDown') {
-        playerDrop();
-      } else if (event.key === 'ArrowUp') {
-        rotate(player.matrix, 1);
-        if (collide(arena, player)) {
-          rotate(player.matrix, -1);
-        }
-      } else if (event.key === 'p') {
-        isPaused = !isPaused;
-        if (!isPaused) {
-          update();
-        }
-      }
-    });
-
-    function rotate(matrix, dir) {
-      for (let y = 0; y < matrix.length; ++y) {
-        for (let x = 0; x < y; ++x) {
-          [
-            matrix[x][y],
-            matrix[y][x]
-          ] = [
-            matrix[y][x],
-            matrix[x][y]
-          ];
-        }
-      }
-
-      if (dir > 0) {
-        matrix.forEach(row => row.reverse());
-      } else {
-        matrix.reverse();
-      }
-    }
+    const player = { pos: { x: 0, y: 0 }, matrix: null, score: 0 };
+    let nextPiece = null;
 
     playerReset();
     updateScore();
@@ -333,4 +214,3 @@
   </script>
 </body>
 </html>
-
