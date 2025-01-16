@@ -15,16 +15,19 @@
       background-color: #333;
       color: #fff;
       font-family: 'Arial', sans-serif;
-      overflow: hidden;
+    }
+    .game-container {
+      display: flex;
+      gap: 20px;
+      position: relative;
     }
     canvas {
       border: 1px solid #fff;
       background-color: #000;
     }
     #scoreboard {
-      margin: 10px;
+      margin-bottom: 20px;
       font-size: 18px;
-      text-align: center;
     }
     #pauseMessage {
       position: absolute;
@@ -34,25 +37,22 @@
       font-size: 50px;
       color: red;
       display: none;
+      pointer-events: none;
     }
-    #gameOverScreen {
+    #gameOver {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      font-size: 30px;
+      color: yellow;
       text-align: center;
-      color: white;
       display: none;
     }
-    #gameOverScreen button {
+    #gameOver button {
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
-      cursor: pointer;
-    }
-    #nextPieces {
-      font-size: 18px;
-      margin: 10px;
     }
   </style>
 </head>
@@ -62,30 +62,28 @@
     <p>Level: <span id="level">1</span></p>
     <p>Highscore: <span id="highscore">0</span></p>
   </div>
-  <canvas id="tetris" width="240" height="400"></canvas>
-  <div id="nextPieces">
-    <p>Next Pieces:</p>
-    <canvas id="nextCanvas" width="60" height="180"></canvas>
+  <div class="game-container">
+    <canvas id="tetris" width="240" height="400"></canvas>
+    <canvas id="next" width="100" height="100"></canvas>
+    <div id="pauseMessage">PAUSED</div>
+    <div id="gameOver">
+      <p>Game Over!</p>
+      <p>Final Score: <span id="finalScore">0</span></p>
+      <button onclick="restartGame()">Restart</button>
+    </div>
   </div>
-  <div id="pauseMessage">PAUSE</div>
-  <div id="gameOverScreen">
-    <h1>Game Over</h1>
-    <p>Your Score: <span id="finalScore">0</span></p>
-    <button id="restartButton">Restart</button>
-  </div>
-  
+
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
-    const scoreElement = document.getElementById('score');
-    const highscoreElement = document.getElementById('highscore');
-    const levelElement = document.getElementById('level');
-    const pauseMessage = document.getElementById('pauseMessage');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const finalScore = document.getElementById('finalScore');
-    const restartButton = document.getElementById('restartButton');
-    const nextCanvas = document.getElementById('nextCanvas');
+    const nextCanvas = document.getElementById('next');
     const nextContext = nextCanvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const levelElement = document.getElementById('level');
+    const highscoreElement = document.getElementById('highscore');
+    const pauseMessage = document.getElementById('pauseMessage');
+    const gameOverMessage = document.getElementById('gameOver');
+    const finalScoreElement = document.getElementById('finalScore');
 
     context.scale(20, 20);
     nextContext.scale(20, 20);
@@ -106,19 +104,6 @@
 
     let highscore = localStorage.getItem('highscore') || 0;
     highscoreElement.textContent = highscore;
-
-    let dropInterval = 1000;
-    let level = 1;
-
-    const arena = createMatrix(12, 20);
-
-    const player = {
-      pos: { x: 0, y: 0 },
-      matrix: null,
-      score: 0,
-    };
-
-    const nextPiecesQueue = [];
 
     function createMatrix(width, height) {
       const matrix = [];
@@ -185,9 +170,23 @@
       });
     }
 
+    function drawNextPiece() {
+      nextContext.fillStyle = '#000';
+      nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+      drawMatrix(nextPiece, { x: 1, y: 1 }, false, nextContext);
+    }
+
+    function draw() {
+      context.fillStyle = '#000';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawMatrix(arena, { x: 0, y: 0 });
+      drawMatrix(player.matrix, player.pos);
+      drawNextPiece();
+    }
+
     function updateScore() {
       scoreElement.textContent = player.score;
-      levelElement.textContent = level;
+      levelElement.textContent = player.level;
       if (player.score > highscore) {
         highscore = player.score;
         localStorage.setItem('highscore', highscore);
@@ -195,30 +194,30 @@
       }
     }
 
-    function resetGame() {
-      player.score = 0;
-      level = 1;
-      dropInterval = 1000;
-      updateScore();
+    function restartGame() {
+      isGameOver = false;
+      gameOverMessage.style.display = 'none';
       arena.forEach(row => row.fill(0));
       playerReset();
-      nextPiecesQueue.length = 0;
-      isGameOver = false;
-      gameOverScreen.style.display = 'none';
+      player.score = 0;
+      player.level = 1;
+      updateScore();
       update();
     }
 
-    restartButton.addEventListener('click', resetGame);
+    // Other functions (arenaSweep, playerReset, playerMove, etc.) remain as in the original.
 
-    function gameOver() {
-      isGameOver = true;
-      finalScore.textContent = player.score;
-      gameOverScreen.style.display = 'block';
-    }
-
-    // Additional logic here for levels, power-ups, next pieces, and sound.
-
-    resetGame();
+    // Initialize the game
+    const arena = createMatrix(12, 20);
+    const player = {
+      pos: { x: 0, y: 0 },
+      matrix: null,
+      score: 0,
+      level: 1,
+    };
+    playerReset();
+    updateScore();
+    update();
   </script>
 </body>
 </html>
