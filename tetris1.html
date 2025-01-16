@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tetris Game</title>
+  <title>Enhanced Tetris Game</title>
   <style>
     body {
       display: flex;
@@ -15,6 +15,7 @@
       background-color: #333;
       color: #fff;
       font-family: 'Arial', sans-serif;
+      overflow: hidden;
     }
     canvas {
       border: 1px solid #fff;
@@ -23,6 +24,7 @@
     #scoreboard {
       margin: 10px;
       font-size: 18px;
+      text-align: center;
     }
     #pauseMessage {
       position: absolute;
@@ -33,41 +35,63 @@
       color: red;
       display: none;
     }
-    #nextPieceContainer {
-      margin-top: 20px;
+    #gameOverScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       text-align: center;
+      color: white;
+      display: none;
     }
-    #nextPiece {
-      border: 1px solid #fff;
-      background-color: #000;
+    #gameOverScreen button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #nextPieces {
+      font-size: 18px;
+      margin: 10px;
     }
   </style>
 </head>
 <body>
   <div id="scoreboard">
     <p>Score: <span id="score">0</span></p>
+    <p>Level: <span id="level">1</span></p>
     <p>Highscore: <span id="highscore">0</span></p>
   </div>
   <canvas id="tetris" width="240" height="400"></canvas>
-  <div id="nextPieceContainer">
-    <p>Next Piece:</p>
-    <canvas id="nextPiece" width="80" height="80"></canvas>
+  <div id="nextPieces">
+    <p>Next Pieces:</p>
+    <canvas id="nextCanvas" width="60" height="180"></canvas>
   </div>
   <div id="pauseMessage">PAUSE</div>
-
+  <div id="gameOverScreen">
+    <h1>Game Over</h1>
+    <p>Your Score: <span id="finalScore">0</span></p>
+    <button id="restartButton">Restart</button>
+  </div>
+  
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
-    const nextCanvas = document.getElementById('nextPiece');
-    const nextContext = nextCanvas.getContext('2d');
     const scoreElement = document.getElementById('score');
     const highscoreElement = document.getElementById('highscore');
+    const levelElement = document.getElementById('level');
     const pauseMessage = document.getElementById('pauseMessage');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScore = document.getElementById('finalScore');
+    const restartButton = document.getElementById('restartButton');
+    const nextCanvas = document.getElementById('nextCanvas');
+    const nextContext = nextCanvas.getContext('2d');
 
     context.scale(20, 20);
     nextContext.scale(20, 20);
 
     let isPaused = false;
+    let isGameOver = false;
 
     const colors = [
       null,
@@ -82,6 +106,19 @@
 
     let highscore = localStorage.getItem('highscore') || 0;
     highscoreElement.textContent = highscore;
+
+    let dropInterval = 1000;
+    let level = 1;
+
+    const arena = createMatrix(12, 20);
+
+    const player = {
+      pos: { x: 0, y: 0 },
+      matrix: null,
+      score: 0,
+    };
+
+    const nextPiecesQueue = [];
 
     function createMatrix(width, height) {
       const matrix = [];
@@ -137,80 +174,51 @@
       }
     }
 
-    function drawGrid() {
-      context.strokeStyle = '#555';
-      for (let x = 0; x < canvas.width / 20; x++) {
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.lineTo(x, canvas.height / 20);
-        context.stroke();
-      }
-      for (let y = 0; y < canvas.height / 20; y++) {
-        context.beginPath();
-        context.moveTo(0, y);
-        context.lineTo(canvas.width / 20, y);
-        context.stroke();
-      }
-    }
-
     function drawMatrix(matrix, offset, isGhost = false) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value !== 0) {
             context.fillStyle = isGhost ? 'rgba(255, 255, 255, 0.3)' : colors[value];
             context.fillRect(x + offset.x, y + offset.y, 1, 1);
-            context.strokeStyle = '#000';
-            context.strokeRect(x + offset.x, y + offset.y, 1, 1);
           }
         });
       });
     }
 
-    function drawNextPiece() {
-      nextContext.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-      nextContext.fillStyle = '#000';
-      nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-
-      if (nextPiece) {
-        nextPiece.forEach((row, y) => {
-          row.forEach((value, x) => {
-            if (value !== 0) {
-              nextContext.fillStyle = colors[value];
-              nextContext.fillRect(x, y, 1, 1);
-              nextContext.strokeStyle = '#000';
-              nextContext.strokeRect(x, y, 1, 1);
-            }
-          });
-        });
+    function updateScore() {
+      scoreElement.textContent = player.score;
+      levelElement.textContent = level;
+      if (player.score > highscore) {
+        highscore = player.score;
+        localStorage.setItem('highscore', highscore);
+        highscoreElement.textContent = highscore;
       }
     }
 
-    function playerReset() {
-      const pieces = 'ILJOTSZ';
-      if (!nextPiece) {
-        nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
-      }
-      player.matrix = nextPiece;
-      player.pos.y = 0;
-      player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-
-      nextPiece = createPiece(pieces[pieces.length * Math.random() | 0]);
-      drawNextPiece();
-
-      if (collide(arena, player)) {
-        arena.forEach(row => row.fill(0));
-        player.score = 0;
-        updateScore();
-      }
+    function resetGame() {
+      player.score = 0;
+      level = 1;
+      dropInterval = 1000;
+      updateScore();
+      arena.forEach(row => row.fill(0));
+      playerReset();
+      nextPiecesQueue.length = 0;
+      isGameOver = false;
+      gameOverScreen.style.display = 'none';
+      update();
     }
 
-    const arena = createMatrix(12, 20);
-    const player = { pos: { x: 0, y: 0 }, matrix: null, score: 0 };
-    let nextPiece = null;
+    restartButton.addEventListener('click', resetGame);
 
-    playerReset();
-    updateScore();
-    update();
+    function gameOver() {
+      isGameOver = true;
+      finalScore.textContent = player.score;
+      gameOverScreen.style.display = 'block';
+    }
+
+    // Additional logic here for levels, power-ups, next pieces, and sound.
+
+    resetGame();
   </script>
 </body>
 </html>
