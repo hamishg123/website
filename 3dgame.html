@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voxel World with Gravity, Block Placement, and Hitboxes</title>
+    <title>Basic Voxel World - Minecraft Style</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -12,205 +12,53 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Set up basic scene, camera, and renderer
+        // Setup basic scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Setup for player control and gravity
-        let isJumping = false;
-        let velocity = new THREE.Vector3();
-        const gravity = -0.1;
-        const jumpStrength = 2;
-
-        // Player controls
-        let moveSpeed = 0.1;
-        let cameraSpeed = 0.05;
-        let lookSpeed = 0.002;
-        let isMouseLocked = false;
-
-        let mouseX = 0, mouseY = 0;
-
-        // Camera should be 2 blocks tall
-        camera.position.set(0, 2, 5); // Set camera height to 2 blocks
-
-        // Store blocks in localStorage
-        const blockDataKey = "blocks"; // Key for localStorage
-
-        // Block creation (with shading)
+        // Function to create a simple cube (block)
         function createBlock(x, y, z, color) {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+            const material = new THREE.MeshBasicMaterial({ color: color });
             const block = new THREE.Mesh(geometry, material);
             block.position.set(x, y, z);
             scene.add(block);
-            return { x, y, z, block }; // Return position data for storage
         }
 
-        // Remove a block
-        function removeBlock(x, y, z) {
-            scene.children.forEach(child => {
-                if (child.position.x === x && child.position.y === y && child.position.z === z) {
-                    scene.remove(child);
-                }
-            });
-        }
-
-        // Function to create the world from localStorage
-        function loadWorld() {
-            const savedBlocks = JSON.parse(localStorage.getItem(blockDataKey));
-            if (savedBlocks) {
-                savedBlocks.forEach(block => {
-                    createBlock(block.x, block.y, block.z, block.color);
-                });
-            } else {
-                // If no saved world, create a default world
-                createWorld();
-            }
-        }
-
-        // Create a basic default world with some blocks
+        // Create a simple world of blocks
         function createWorld() {
-            const defaultBlocks = [
-                { x: -5, y: 0, z: -5, color: 0x00ff00 },
-                { x: 0, y: 0, z: 0, color: 0x00ff00 },
-                { x: 5, y: 0, z: 5, color: 0x00ff00 },
-                { x: -5, y: 1, z: -5, color: 0x00ff00 },
-                { x: 0, y: 1, z: 0, color: 0x00ff00 },
-                { x: 5, y: 1, z: 5, color: 0x00ff00 }
-            ];
-            defaultBlocks.forEach(block => createBlock(block.x, block.y, block.z, block.color));
-        }
-
-        // Block hitbox detection using raycasting
-        function detectHitbox() {
-            const direction = new THREE.Vector3();
-            camera.getWorldDirection(direction);
-            const raycaster = new THREE.Raycaster(camera.position, direction);
-            const intersects = raycaster.intersectObjects(scene.children, true);
-
-            if (intersects.length > 0) {
-                const point = intersects[0].point;
-                const blockX = Math.floor(point.x);
-                const blockY = Math.floor(point.y);
-                const blockZ = Math.floor(point.z);
-
-                return { x: blockX, y: blockY, z: blockZ };
-            }
-            return null;
-        }
-
-        // Update mouse position for camera look
-        document.addEventListener('mousemove', (event) => {
-            if (isMouseLocked) {
-                mouseX = (event.movementX / window.innerWidth) * 2;
-                mouseY = (event.movementY / window.innerHeight) * 2;
-            }
-        });
-
-        // Handle camera look (mouse look)
-        function updateCameraLook() {
-            camera.rotation.y -= mouseX * lookSpeed;
-            camera.rotation.x -= mouseY * lookSpeed;
-            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x)); // Limit vertical look
-        }
-
-        // Movement (WASD)
-        document.addEventListener('keydown', (event) => {
-            if (event.key === "w") velocity.z = -moveSpeed;
-            if (event.key === "s") velocity.z = moveSpeed;
-            if (event.key === "a") velocity.x = -moveSpeed;
-            if (event.key === "d") velocity.x = moveSpeed;
-            if (event.key === " " && !isJumping) jump();
-        });
-
-        document.addEventListener('keyup', (event) => {
-            if (event.key === "w" || event.key === "s") velocity.z = 0;
-            if (event.key === "a" || event.key === "d") velocity.x = 0;
-        });
-
-        // Jump function
-        function jump() {
-            if (camera.position.y <= 2) {  // Prevent jump if already in air
-                isJumping = true;
-                velocity.y = jumpStrength;
-            }
-        }
-
-        // Apply gravity
-        function applyGravity() {
-            velocity.y += gravity;
-            camera.position.y += velocity.y;
-
-            if (camera.position.y <= 2) {  // Ground level at 2 blocks
-                camera.position.y = 2;
-                velocity.y = 0;
-                isJumping = false;
-            }
-        }
-
-        // Detect block placement on click (left-click to place, right-click to remove)
-        document.addEventListener('mousedown', (event) => {
-            const hitbox = detectHitbox();
-            if (hitbox) {
-                const { x, y, z } = hitbox;
-
-                if (event.button === 0) { // Left-click to place block
-                    const blockData = createBlock(x + 1, y, z, 0x00ff00);  // Place block to the right of the hit block
-                    saveWorld();
-                } else if (event.button === 2) { // Right-click to remove block
-                    removeBlock(x, y, z);
-                    saveWorld();
+            for (let x = -5; x < 5; x++) {
+                for (let y = 0; y < 2; y++) {
+                    for (let z = -5; z < 5; z++) {
+                        createBlock(x, y, z, 0x00ff00); // Green blocks
+                    }
                 }
             }
-        });
-
-        // Lock mouse for FPS-style control
-        document.addEventListener('click', () => {
-            if (!isMouseLocked) {
-                document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
-                document.body.requestPointerLock();
-                isMouseLocked = true;
-            }
-        });
-
-        // Save the world to localStorage
-        function saveWorld() {
-            const blocks = [];
-            scene.children.forEach(child => {
-                if (child instanceof THREE.Mesh) {
-                    const block = {
-                        x: Math.floor(child.position.x),
-                        y: Math.floor(child.position.y),
-                        z: Math.floor(child.position.z),
-                        color: child.material.color.getHex()
-                    };
-                    blocks.push(block);
-                }
-            });
-
-            localStorage.setItem(blockDataKey, JSON.stringify(blocks));
         }
 
-        // Initialize world and animation loop
-        loadWorld();
+        // Add some basic movement
+        let movementSpeed = 0.1;
+        let cameraSpeed = 1;
 
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "w") camera.position.z -= cameraSpeed;
+            if (event.key === "s") camera.position.z += cameraSpeed;
+            if (event.key === "a") camera.position.x -= cameraSpeed;
+            if (event.key === "d") camera.position.x += cameraSpeed;
+        });
+
+        // Camera position and controls
+        camera.position.z = 10;
+        camera.position.y = 5;
+        camera.rotation.x = -0.3;
+
+        // Create the world and start animation loop
+        createWorld();
         function animate() {
             requestAnimationFrame(animate);
-
-            // Update mouse look
-            updateCameraLook();
-
-            // Apply gravity and handle movement
-            applyGravity();
-
-            // Update player position
-            camera.position.x += velocity.x;
-            camera.position.z += velocity.z;
-
-            // Render the scene
             renderer.render(scene, camera);
         }
 
