@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Voxel World - Minecraft Style</title>
+    <title>Voxel World with Gravity and Block Placement</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -12,14 +12,20 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Setup basic scene, camera, and renderer
+        // Set up basic scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Function to create a simple cube (block)
+        // Setup for player control and gravity
+        let isJumping = false;
+        let velocity = new THREE.Vector3();
+        const gravity = -0.1;
+        const jumpStrength = 2;
+
+        // Create a simple cube (block)
         function createBlock(x, y, z, color) {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const material = new THREE.MeshBasicMaterial({ color: color });
@@ -28,7 +34,7 @@
             scene.add(block);
         }
 
-        // Create a simple world of blocks
+        // Create a world of blocks
         function createWorld() {
             for (let x = -5; x < 5; x++) {
                 for (let y = 0; y < 2; y++) {
@@ -39,26 +45,86 @@
             }
         }
 
-        // Add some basic movement
-        let movementSpeed = 0.1;
-        let cameraSpeed = 1;
+        // Player controls (WASD movement)
+        let moveSpeed = 0.1;
+        let cameraSpeed = 0.05;
+        let lookSpeed = 0.002;
+        let mouseX = 0, mouseY = 0;
 
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "w") camera.position.z -= cameraSpeed;
-            if (event.key === "s") camera.position.z += cameraSpeed;
-            if (event.key === "a") camera.position.x -= cameraSpeed;
-            if (event.key === "d") camera.position.x += cameraSpeed;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
         });
 
-        // Camera position and controls
-        camera.position.z = 10;
-        camera.position.y = 5;
-        camera.rotation.x = -0.3;
+        // Mouse lock for FPS-style camera look
+        function updateCameraLook() {
+            camera.rotation.y += mouseX * lookSpeed;
+            camera.rotation.x += mouseY * lookSpeed;
+        }
 
-        // Create the world and start animation loop
+        // Simple jump
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "w") camera.position.z -= moveSpeed;
+            if (event.key === "s") camera.position.z += moveSpeed;
+            if (event.key === "a") camera.position.x -= moveSpeed;
+            if (event.key === "d") camera.position.x += moveSpeed;
+            if (event.key === " " && !isJumping) jump();
+        });
+
+        // Jumping function
+        function jump() {
+            if (camera.position.y <= 1) {
+                isJumping = true;
+                velocity.y = jumpStrength;
+            }
+        }
+
+        // Collision detection and gravity effect
+        function applyGravity() {
+            velocity.y += gravity;
+            camera.position.y += velocity.y;
+
+            // Prevent the player from falling through the world
+            if (camera.position.y <= 1) {
+                camera.position.y = 1;
+                velocity.y = 0;
+                isJumping = false;
+            }
+        }
+
+        // Detect block placement on click
+        document.addEventListener('mousedown', (event) => {
+            const direction = new THREE.Vector3();
+            camera.getWorldDirection(direction);
+            const raycaster = new THREE.Raycaster(camera.position, direction);
+            const intersects = raycaster.intersectObject(scene, true);
+
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                const blockX = Math.floor(point.x);
+                const blockY = Math.floor(point.y);
+                const blockZ = Math.floor(point.z);
+
+                // Add a block at the intersection point
+                createBlock(blockX + 1, blockY, blockZ, 0x00ff00);
+            }
+        });
+
+        // Camera position and world creation
+        camera.position.set(0, 1, 5);
         createWorld();
+
+        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+
+            // Update camera rotation based on mouse movement
+            updateCameraLook();
+
+            // Apply gravity and handle player movement
+            applyGravity();
+
+            // Render the scene
             renderer.render(scene, camera);
         }
 
