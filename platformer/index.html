@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Platform Game with Obstacles</title>
+    <title>3D Platform Game with Sky</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -51,6 +51,15 @@
         const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
         scene.add(ambientLight);
 
+        // Add a sky (gradient background)
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            side: THREE.BackSide,
+            color: 0x87ceeb, // Sky blue
+        });
+        const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
         // Platforms and Obstacles
         const platforms = [];
         const obstacles = [];
@@ -77,16 +86,18 @@
         }
 
         // Create platforms and obstacles
-        createPlatform(0, 0, 0, 10, 1, 10);       // Ground platform
-        createPlatform(6, 5, -5, 4, 1, 4);        // Small platform
-        createPlatform(-6, 10, -10, 6, 1, 6);     // Medium platform
-        createPlatform(0, 15, -15, 8, 1, 8);      // Large platform
-        createPlatform(10, 20, -20, 12, 1, 12);   // Extra large platform (checkpoint)
+        createPlatform(0, 0, 0, 10, 1, 10);         // Ground platform
+        createPlatform(2, 4, -8, 5, 1, 5);         // Small platform
+        createPlatform(-3, 8, -15, 6, 1, 6);       // Medium platform
+        createPlatform(1, 12, -20, 6, 1, 6);       // Medium platform
+        createPlatform(4, 16, -25, 8, 1, 8);       // Large platform
+        createPlatform(-2, 20, -30, 10, 1, 10);    // Extra large platform (checkpoint)
 
         // Obstacles (spikes)
-        createObstacle(2, 1, -3, 0.5);  // Spike on ground platform
-        createObstacle(4, 6, -7, 0.5);  // Spike on small platform
-        createObstacle(-4, 11, -12, 0.5); // Spike on medium platform
+        createObstacle(2, 1, -3, 0.5);             // Spike on ground platform
+        createObstacle(0, 5, -9, 0.5);             // Spike on first small platform
+        createObstacle(-2, 9, -16, 0.5);           // Spike on medium platform
+        createObstacle(3, 13, -22, 0.5);           // Spike on the last platform
 
         // Player setup
         const player = new THREE.Object3D();
@@ -160,7 +171,6 @@
         }
 
         function checkCollision() {
-            // Check collision with platforms
             for (const platform of platforms) {
                 const platformBox = new THREE.Box3().setFromObject(platform);
                 const playerBox = new THREE.Box3().setFromCenterAndSize(
@@ -171,22 +181,9 @@
                 if (platformBox.intersectsBox(playerBox)) {
                     player.position.y = platformBox.max.y + 1.6;
                     isGrounded = true;
-
-                    // Check if player hits an obstacle
-                    for (const obstacle of obstacles) {
-                        const obstacleBox = new THREE.Box3().setFromObject(obstacle);
-                        if (obstacleBox.intersectsBox(playerBox)) {
-                            // If player hits an obstacle, respawn at checkpoint
-                            player.position.copy(respawnPosition);
-                            velocityY = 0;
-                            return false;
-                        }
-                    }
-
                     return true;
                 }
             }
-
             isGrounded = false;
             return false;
         }
@@ -212,7 +209,6 @@
             }
         }
 
-        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
             movePlayer();
@@ -221,9 +217,7 @@
             renderer.render(scene, camera);
         }
 
-        // Show instructions initially
         instructions.style.display = "block";
-
         animate();
     </script>
 </body>
