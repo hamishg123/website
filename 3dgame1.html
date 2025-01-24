@@ -3,89 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Block Placement & Inventory</title>
+    <title>3D Game - Enhanced</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #hotbar {
+        #crosshair {
             position: absolute;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 5px;
+            width: 10px;
+            height: 10px;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
         }
-        .hotbar-item {
-            width: 50px;
-            height: 50px;
-            border: 2px solid white;
-            background-color: gray;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
             font-family: Arial, sans-serif;
             font-size: 18px;
-            color: white;
-            cursor: pointer;
-        }
-        .hotbar-item.selected {
-            border-color: yellow;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="hotbar"></div>
+    <div id="crosshair"></div>
+    <div id="instructions">Click to start</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Set up the scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
         // Add lighting
         const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 10, 10).normalize();
+        light.position.set(10, 20, 10);
+        light.castShadow = true;
+        light.shadow.mapSize.width = 2048;
+        light.shadow.mapSize.height = 2048;
+        light.shadow.camera.near = 0.5;
+        light.shadow.camera.far = 50;
         scene.add(light);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft ambient light
+        scene.add(ambientLight);
 
         // Create a grid of cubes (terrain)
         const blocks = [];
         const gridSize = 10;
         const cubeSize = 1;
+        const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+
         for (let x = 0; x < gridSize; x++) {
             for (let z = 0; z < gridSize; z++) {
                 const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-                const cube = new THREE.Mesh(geometry, material);
+                const cube = new THREE.Mesh(geometry, blockMaterial);
                 cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
+                cube.castShadow = true;
+                cube.receiveShadow = true;
                 scene.add(cube);
                 blocks.push(cube);
             }
         }
 
-        // Hotbar setup
-        const hotbar = document.getElementById("hotbar");
-        const blockTypes = [
-            { name: "Dirt", color: 0x8b4513 },
-            { name: "Stone", color: 0xaaaaaa },
-            { name: "Wood", color: 0xdeb887 },
-        ];
-        let selectedBlockIndex = 0;
-
-        blockTypes.forEach((block, index) => {
-            const item = document.createElement("div");
-            item.classList.add("hotbar-item");
-            if (index === selectedBlockIndex) item.classList.add("selected");
-            item.textContent = block.name;
-            hotbar.appendChild(item);
-
-            item.addEventListener("click", () => {
-                document.querySelectorAll(".hotbar-item").forEach(el => el.classList.remove("selected"));
-                item.classList.add("selected");
-                selectedBlockIndex = index;
-            });
-        });
+        const platformHeight = -cubeSize / 2; // Platform Y-coordinate
 
         // Player setup
         const player = new THREE.Object3D();
@@ -93,18 +86,32 @@
         scene.add(player);
         camera.position.y = 1.6;
 
-        const respawnPosition = new THREE.Vector3(0, 1.6, 0);
+        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0);
         player.position.copy(respawnPosition);
 
         let velocityY = 0;
         const gravity = -0.02;
+        const jumpStrength = 0.3;
         let isGrounded = false;
 
         // Pointer lock setup
+        const instructions = document.getElementById("instructions");
         const canvas = renderer.domElement;
-        canvas.addEventListener("click", () => canvas.requestPointerLock());
+
+        function enablePointerLock() {
+            canvas.requestPointerLock();
+        }
+
+        document.addEventListener("click", () => {
+            instructions.style.display = "none";
+            enablePointerLock();
+        });
+
         document.addEventListener("pointerlockchange", () => {
-            if (document.pointerLockElement !== canvas) {
+            if (document.pointerLockElement === canvas) {
+                console.log("Pointer lock enabled");
+            } else {
+                instructions.style.display = "block";
                 console.log("Pointer lock disabled");
             }
         });
@@ -139,11 +146,8 @@
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
 
-        function applyGravity() {
-            velocityY += gravity;
-            player.position.y += velocityY;
-
-            isGrounded = blocks.some(block => {
+        function checkCollision() {
+            for (const block of blocks) {
                 const blockBox = new THREE.Box3().setFromObject(block);
                 const playerBox = new THREE.Box3().setFromCenterAndSize(
                     player.position.clone().setY(player.position.y - 0.8),
@@ -151,50 +155,71 @@
                 );
 
                 if (blockBox.intersectsBox(playerBox)) {
-                    velocityY = 0;
                     player.position.y = blockBox.max.y + 1.6;
+                    isGrounded = true;
                     return true;
                 }
-                return false;
-            });
+            }
+            isGrounded = false;
+            return false;
         }
 
-        // Place and break blocks
-        const raycaster = new THREE.Raycaster();
-        document.addEventListener("mousedown", (event) => {
-            if (document.pointerLockElement !== canvas) return;
+        function applyGravity() {
+            velocityY += gravity;
+            player.position.y += velocityY;
 
+            if (checkCollision()) velocityY = 0;
+
+            if (player.position.y < platformHeight - 20) {
+                player.position.copy(respawnPosition);
+                velocityY = 0;
+            }
+        }
+
+        function handleJump() {
+            if (keys[" "] && isGrounded) {
+                velocityY = jumpStrength;
+                isGrounded = false;
+            }
+        }
+
+        // Block highlighting
+        const raycaster = new THREE.Raycaster();
+        let highlightedBlock = null;
+        const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+
+        function highlightBlock() {
             raycaster.setFromCamera(new THREE.Vector2(), camera);
             const intersects = raycaster.intersectObjects(blocks);
 
             if (intersects.length > 0) {
                 const target = intersects[0].object;
 
-                if (event.button === 0) { // Left-click to place block
-                    const newBlockGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                    const newBlockMaterial = new THREE.MeshStandardMaterial({ color: blockTypes[selectedBlockIndex].color });
-                    const newBlock = new THREE.Mesh(newBlockGeometry, newBlockMaterial);
-
-                    newBlock.position.copy(intersects[0].point).add(intersects[0].face.normal).divideScalar(cubeSize).floor().multiplyScalar(cubeSize).addScalar(cubeSize / 2);
-                    scene.add(newBlock);
-                    blocks.push(newBlock);
-                } else if (event.button === 2) { // Right-click to break block
-                    scene.remove(target);
-                    blocks.splice(blocks.indexOf(target), 1);
+                if (highlightedBlock && highlightedBlock !== target) {
+                    highlightedBlock.material = blockMaterial;
                 }
+
+                target.material = highlightMaterial;
+                highlightedBlock = target;
+            } else if (highlightedBlock) {
+                highlightedBlock.material = blockMaterial;
+                highlightedBlock = null;
             }
-        });
+        }
 
         // Animate the scene
         function animate() {
             requestAnimationFrame(animate);
 
             movePlayer();
+            handleJump();
             applyGravity();
+            highlightBlock();
 
             renderer.render(scene, camera);
         }
 
+        instructions.style.display = "block";
         animate();
     </script>
 </body>
