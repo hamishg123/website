@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Gravity and Respawn</title>
+    <title>3D Game - Jumping Mechanic</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -65,8 +65,10 @@
         const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0); // Start above the platform
         player.position.copy(respawnPosition);
 
-        let velocityY = 0; // Vertical velocity for gravity
+        let velocityY = 0; // Vertical velocity for gravity and jumping
         const gravity = -0.02; // Gravity strength
+        const jumpStrength = 0.3; // Jumping strength
+        let isGrounded = false; // Whether the player is on the ground
 
         // Pointer lock setup
         const instructions = document.getElementById("instructions");
@@ -124,8 +126,8 @@
                 Math.cos(player.rotation.y + Math.PI / 2)
             ).normalize();
 
-            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["w"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed));
             if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
@@ -141,9 +143,11 @@
                 if (blockBox.intersectsBox(playerBox)) {
                     // Push player up slightly to prevent overlap
                     player.position.y = blockBox.max.y + 1.6;
+                    isGrounded = true;
                     return true;
                 }
             }
+            isGrounded = false;
             return false;
         }
 
@@ -163,11 +167,19 @@
             }
         }
 
+        function handleJump() {
+            if (keys[" "] && isGrounded) {
+                velocityY = jumpStrength; // Apply jump strength
+                isGrounded = false; // Prevent continuous jumping
+            }
+        }
+
         // Animate the scene
         function animate() {
             requestAnimationFrame(animate);
 
             movePlayer();
+            handleJump();
             applyGravity();
 
             renderer.render(scene, camera);
