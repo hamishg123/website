@@ -79,7 +79,7 @@
         const checkpoints = [];
         const bridges = [];
 
-        // Create platform function
+        // Create platforms
         function createPlatform(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const platform = new THREE.Mesh(geometry, platformMaterial);
@@ -93,7 +93,7 @@
             const geometry = new THREE.ConeGeometry(size, size * 2, 4);
             const spike = new THREE.Mesh(geometry, spikeMaterial);
             spike.position.set(x, y, z);
-            spike.rotation.x = 0;
+            spike.rotation.x = 0; // Ensure spikes face upwards
             scene.add(spike);
             obstacles.push(spike);
         }
@@ -107,23 +107,51 @@
             checkpoints.push(checkpoint);
         }
 
-        // Create bridge
+        // Create bridge (to appear on key press)
         function createBridge(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const bridge = new THREE.Mesh(geometry, bridgeMaterial);
             bridge.position.set(x, y, z);
-            bridge.visible = false;  // Initially hidden
             scene.add(bridge);
             bridges.push(bridge);
+            bridge.visible = false;  // Initially hidden
         }
 
-        // Add platforms, obstacles, checkpoints, and bridges for multiple levels
-        for (let i = 0; i < 10; i++) {
-            createPlatform(i * 10, i * 4, -10, 6, 1, 6);  // Add platforms
-            createObstacle(i * 10 + 3, i * 4 + 1, -8, 0.5);  // Add obstacles
-            if (i % 3 === 0) createCheckpoint(i * 10, i * 4 + 2, -12, 1);  // Add checkpoints
-            if (i === 5) createBridge(i * 10 + 5, i * 4 + 2, -5, 12, 1, 4); // Add bridge on level 6
+        // Create levels
+        function createLevel(level) {
+            // Add platforms, obstacles, and checkpoints for each level
+            switch(level) {
+                case 1:
+                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
+                    createPlatform(2, 4, -8, 5, 1, 5);  // Small platform
+                    createObstacle(2, 1, -3, 0.5);      // Spike on ground platform
+                    createCheckpoint(-2, 21, -30, 1);   // Checkpoint on the last platform
+                    break;
+                case 2:
+                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
+                    createPlatform(5, 5, -10, 5, 1, 5);  // Small platform
+                    createObstacle(1, 2, -7, 0.5);      // Spike on ground platform
+                    createCheckpoint(5, 5, -15, 1);     // Checkpoint
+                    break;
+                case 3:
+                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
+                    createPlatform(2, 4, -8, 5, 1, 5);  // Small platform
+                    createPlatform(7, 8, -16, 6, 1, 6); // Medium platform
+                    createObstacle(0, 2, -12, 0.5);     // Spike
+                    createCheckpoint(7, 8, -20, 1);     // Checkpoint
+                    break;
+                // Add levels 4-10 as needed...
+            }
         }
+
+        // Toggle bridge visibility when two specific keys are pressed
+        let bridgeActivated = false;
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "1" && !bridgeActivated) {
+                bridges.forEach(bridge => bridge.visible = true);  // Show all bridges
+                bridgeActivated = true;
+            }
+        });
 
         // Player setup
         const player = new THREE.Object3D();
@@ -176,15 +204,6 @@
             }
         });
 
-        // Check if two buttons are pressed to activate the bridge
-        let bridgeActivated = false;
-        function checkBridgeActivation() {
-            if (keys["q"] && keys["e"]) {
-                bridgeActivated = true;
-                bridges.forEach(bridge => bridge.visible = true);  // Show bridges
-            }
-        }
-
         function movePlayer() {
             const speed = 0.1;
             const forward = new THREE.Vector3(
@@ -233,7 +252,7 @@
 
                 if (checkpointBox.intersectsBox(playerBox)) {
                     respawnPosition.copy(checkpoint.position);
-                    respawnPosition.y += 2;
+                    respawnPosition.y += 2; // Raise the respawn position slightly
                 }
             }
         }
@@ -281,13 +300,13 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            checkBridgeActivation();
             movePlayer();
             applyGravity();
             handleJump();
             renderer.render(scene, camera);
         }
 
+        createLevel(1); // Initialize the first level
         animate();
     </script>
 </body>
