@@ -3,13 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Minecraft-Like</title>
+    <title>3D Game - Minecraft-Like Movement</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div id="instructions">Click to start</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Set up the scene, camera, and renderer
@@ -25,34 +39,85 @@
         scene.add(light);
 
         // Create a grid of cubes (terrain)
-        const grid = [];
-        const gridSize = 10; // 10x10 grid
-        const cubeSize = 1; // Size of each cube
+        const gridSize = 10;
+        const cubeSize = 1;
         for (let x = 0; x < gridSize; x++) {
             for (let z = 0; z < gridSize; z++) {
                 const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 }); // Brown for dirt
+                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
                 const cube = new THREE.Mesh(geometry, material);
-                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2); // Center the grid
+                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
                 scene.add(cube);
-                grid.push(cube);
             }
         }
 
         // Position the camera
-        camera.position.set(0, 5, 10);
-        camera.lookAt(0, 0, 0);
+        const player = new THREE.Object3D(); // Create a player object
+        player.add(camera); // Attach the camera to the player
+        scene.add(player);
+        camera.position.y = 1.6; // Set camera height (like a player's eyes)
 
-        // Player movement
+        // Pointer lock setup
+        const instructions = document.getElementById("instructions");
+        const canvas = renderer.domElement;
+
+        function enablePointerLock() {
+            canvas.requestPointerLock();
+        }
+
+        document.addEventListener("click", () => {
+            instructions.style.display = "none";
+            enablePointerLock();
+        });
+
+        document.addEventListener("pointerlockchange", () => {
+            if (document.pointerLockElement === canvas) {
+                console.log("Pointer lock enabled");
+            } else {
+                instructions.style.display = "block";
+                console.log("Pointer lock disabled");
+            }
+        });
+
+        // Mouse look variables
+        let yaw = 0, pitch = 0;
+
+        document.addEventListener("mousemove", (event) => {
+            if (document.pointerLockElement === canvas) {
+                const sensitivity = 0.002;
+                yaw -= event.movementX * sensitivity; // Horizontal rotation
+                pitch -= event.movementY * sensitivity; // Vertical rotation
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+
+                player.rotation.y = yaw; // Rotate player horizontally
+                camera.rotation.x = pitch; // Rotate camera vertically
+            }
+        });
+
+        // Movement variables
         const keys = {};
-        document.addEventListener('keydown', (e) => keys[e.key] = true);
-        document.addEventListener('keyup', (e) => keys[e.key] = false);
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
 
         function movePlayer() {
-            if (keys['w']) camera.position.z -= 0.1; // Move forward
-            if (keys['s']) camera.position.z += 0.1; // Move backward
-            if (keys['a']) camera.position.x -= 0.1; // Move left
-            if (keys['d']) camera.position.x += 0.1; // Move right
+            const speed = 0.1;
+
+            const forward = new THREE.Vector3(
+                Math.sin(player.rotation.y),
+                0,
+                Math.cos(player.rotation.y)
+            ).normalize();
+
+            const right = new THREE.Vector3(
+                Math.sin(player.rotation.y + Math.PI / 2),
+                0,
+                Math.cos(player.rotation.y + Math.PI / 2)
+            ).normalize();
+
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed)); // Move forward
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed)); // Move backward
+            if (keys["a"]) player.position.add(right.multiplyScalar(-speed)); // Move left
+            if (keys["d"]) player.position.add(right.multiplyScalar(speed)); // Move right
         }
 
         // Animate the scene
@@ -65,6 +130,9 @@
             // Render the scene
             renderer.render(scene, camera);
         }
+
+        // Show instructions
+        instructions.style.display = "block";
 
         animate();
     </script>
