@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Platform Game with Sky</title>
+    <title>3D Platform Game</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -35,7 +35,7 @@
 </head>
 <body>
     <div id="instructions">Click to start</div>
-    <div id="crosshair"></div> <!-- Crosshair as an overlay -->
+    <div id="crosshair"></div> <!-- Crosshair overlay -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         const scene = new THREE.Scene();
@@ -52,40 +52,54 @@
         scene.add(ambientLight);
 
         // Add a sky (gradient background)
-        const skyMaterial = new THREE.MeshBasicMaterial({
-            side: THREE.BackSide,
-            color: 0x87ceeb, // Sky blue
-        });
+        const skyMaterial = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x87ceeb });
         const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
         const sky = new THREE.Mesh(skyGeometry, skyMaterial);
         scene.add(sky);
 
-        // Platforms and Obstacles
+        // Platforms, Obstacles, and Checkpoints
         const platforms = [];
         const obstacles = [];
+        const checkpoints = [];
         const platformMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
         const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 
-        // Function to create platforms
+        // Create platforms with outline
         function createPlatform(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const platform = new THREE.Mesh(geometry, platformMaterial);
             platform.position.set(x, y, z);
             scene.add(platform);
             platforms.push(platform);
+
+            // Add an outline to the platform
+            const edges = new THREE.EdgesGeometry(geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+            line.position.set(x, y, z);
+            scene.add(line);
         }
 
-        // Function to create obstacles (e.g., spikes)
+        // Create obstacles (e.g., spikes)
         function createObstacle(x, y, z, size) {
             const geometry = new THREE.ConeGeometry(size, size * 2, 4);
             const obstacle = new THREE.Mesh(geometry, obstacleMaterial);
             obstacle.position.set(x, y, z);
-            obstacle.rotation.x = Math.PI / 2; // Rotate to stand upright
+            obstacle.rotation.x = Math.PI; // Spikes facing upward
             scene.add(obstacle);
             obstacles.push(obstacle);
         }
 
-        // Create platforms and obstacles
+        // Create checkpoints
+        function createCheckpoint(x, y, z, size) {
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const checkpoint = new THREE.Mesh(geometry, checkpointMaterial);
+            checkpoint.position.set(x, y, z);
+            scene.add(checkpoint);
+            checkpoints.push(checkpoint);
+        }
+
+        // Add platforms, obstacles, and checkpoints
         createPlatform(0, 0, 0, 10, 1, 10);         // Ground platform
         createPlatform(2, 4, -8, 5, 1, 5);         // Small platform
         createPlatform(-3, 8, -15, 6, 1, 6);       // Medium platform
@@ -93,11 +107,11 @@
         createPlatform(4, 16, -25, 8, 1, 8);       // Large platform
         createPlatform(-2, 20, -30, 10, 1, 10);    // Extra large platform (checkpoint)
 
-        // Obstacles (spikes)
         createObstacle(2, 1, -3, 0.5);             // Spike on ground platform
-        createObstacle(0, 5, -9, 0.5);             // Spike on first small platform
+        createObstacle(0, 5, -9, 0.5);             // Spike on small platform
         createObstacle(-2, 9, -16, 0.5);           // Spike on medium platform
-        createObstacle(3, 13, -22, 0.5);           // Spike on the last platform
+
+        createCheckpoint(-2, 21, -30, 1);          // Checkpoint on the last platform
 
         // Player setup
         const player = new THREE.Object3D();
@@ -105,7 +119,7 @@
         scene.add(player);
         camera.position.y = 1.6;
 
-        let respawnPosition = new THREE.Vector3(0, 2.6, 0);
+        let respawnPosition = new THREE.Vector3(0, 2.6, 0); // Initial respawn position
         player.position.copy(respawnPosition);
 
         let velocityY = 0;
@@ -188,6 +202,21 @@
             return false;
         }
 
+        function checkCheckpoint() {
+            for (const checkpoint of checkpoints) {
+                const checkpointBox = new THREE.Box3().setFromObject(checkpoint);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (checkpointBox.intersectsBox(playerBox)) {
+                    respawnPosition.copy(checkpoint.position);
+                    respawnPosition.y += 2; // Raise the respawn position slightly
+                }
+            }
+        }
+
         function applyGravity() {
             velocityY += gravity;
             player.position.y += velocityY;
@@ -195,6 +224,8 @@
             if (checkCollision()) {
                 velocityY = 0;
             }
+
+            checkCheckpoint();
 
             if (player.position.y < -10) {
                 player.position.copy(respawnPosition);
