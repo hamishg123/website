@@ -126,8 +126,8 @@
                 Math.cos(player.rotation.y + Math.PI / 2)
             ).normalize();
 
-            if (keys["w"]) player.position.add(forward.multiplyScalar(speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
             if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
