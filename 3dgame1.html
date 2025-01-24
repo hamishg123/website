@@ -3,27 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Jumping Mechanic</title>
+    <title>3D Game - Block Placement & Inventory</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #instructions {
+        #hotbar {
             position: absolute;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+        }
+        .hotbar-item {
+            width: 50px;
+            height: 50px;
+            border: 2px solid white;
+            background-color: gray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-family: Arial, sans-serif;
             font-size: 18px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
+            color: white;
+            cursor: pointer;
+        }
+        .hotbar-item.selected {
+            border-color: yellow;
         }
     </style>
 </head>
 <body>
-    <div id="instructions">Click to start</div>
+    <div id="hotbar"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Set up the scene, camera, and renderer
@@ -53,8 +64,28 @@
             }
         }
 
-        // Calculate the lowest platform height
-        const platformHeight = -cubeSize / 2; // The Y-coordinate of the top surface of the blocks
+        // Hotbar setup
+        const hotbar = document.getElementById("hotbar");
+        const blockTypes = [
+            { name: "Dirt", color: 0x8b4513 },
+            { name: "Stone", color: 0xaaaaaa },
+            { name: "Wood", color: 0xdeb887 },
+        ];
+        let selectedBlockIndex = 0;
+
+        blockTypes.forEach((block, index) => {
+            const item = document.createElement("div");
+            item.classList.add("hotbar-item");
+            if (index === selectedBlockIndex) item.classList.add("selected");
+            item.textContent = block.name;
+            hotbar.appendChild(item);
+
+            item.addEventListener("click", () => {
+                document.querySelectorAll(".hotbar-item").forEach(el => el.classList.remove("selected"));
+                item.classList.add("selected");
+                selectedBlockIndex = index;
+            });
+        });
 
         // Player setup
         const player = new THREE.Object3D();
@@ -62,78 +93,57 @@
         scene.add(player);
         camera.position.y = 1.6;
 
-        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0); // Start above the platform
+        const respawnPosition = new THREE.Vector3(0, 1.6, 0);
         player.position.copy(respawnPosition);
 
-        let velocityY = 0; // Vertical velocity for gravity and jumping
-        const gravity = -0.02; // Gravity strength
-        const jumpStrength = 0.3; // Jumping strength
-        let isGrounded = false; // Whether the player is on the ground
+        let velocityY = 0;
+        const gravity = -0.02;
+        let isGrounded = false;
 
         // Pointer lock setup
-        const instructions = document.getElementById("instructions");
         const canvas = renderer.domElement;
-
-        function enablePointerLock() {
-            canvas.requestPointerLock();
-        }
-
-        document.addEventListener("click", () => {
-            instructions.style.display = "none";
-            enablePointerLock();
-        });
-
+        canvas.addEventListener("click", () => canvas.requestPointerLock());
         document.addEventListener("pointerlockchange", () => {
-            if (document.pointerLockElement === canvas) {
-                console.log("Pointer lock enabled");
-            } else {
-                instructions.style.display = "block";
+            if (document.pointerLockElement !== canvas) {
                 console.log("Pointer lock disabled");
             }
         });
 
-        // Mouse look variables
+        // Mouse look
         let yaw = 0, pitch = 0;
-
         document.addEventListener("mousemove", (event) => {
             if (document.pointerLockElement === canvas) {
                 const sensitivity = 0.002;
                 yaw -= event.movementX * sensitivity;
                 pitch -= event.movementY * sensitivity;
-                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
                 player.rotation.y = yaw;
                 camera.rotation.x = pitch;
             }
         });
 
-        // Movement variables
+        // Movement
         const keys = {};
         document.addEventListener("keydown", (e) => keys[e.key] = true);
         document.addEventListener("keyup", (e) => keys[e.key] = false);
 
         function movePlayer() {
             const speed = 0.1;
-            const forward = new THREE.Vector3(
-                Math.sin(player.rotation.y),
-                0,
-                Math.cos(player.rotation.y)
-            ).normalize();
+            const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y)).normalize();
+            const right = new THREE.Vector3(Math.sin(player.rotation.y + Math.PI / 2), 0, Math.cos(player.rotation.y + Math.PI / 2)).normalize();
 
-            const right = new THREE.Vector3(
-                Math.sin(player.rotation.y + Math.PI / 2),
-                0,
-                Math.cos(player.rotation.y + Math.PI / 2)
-            ).normalize();
-
-            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["w"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed));
             if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
 
-        function checkCollision() {
-            for (const block of blocks) {
+        function applyGravity() {
+            velocityY += gravity;
+            player.position.y += velocityY;
+
+            isGrounded = blocks.some(block => {
                 const blockBox = new THREE.Box3().setFromObject(block);
                 const playerBox = new THREE.Box3().setFromCenterAndSize(
                     player.position.clone().setY(player.position.y - 0.8),
@@ -141,52 +151,49 @@
                 );
 
                 if (blockBox.intersectsBox(playerBox)) {
-                    // Push player up slightly to prevent overlap
+                    velocityY = 0;
                     player.position.y = blockBox.max.y + 1.6;
-                    isGrounded = true;
                     return true;
                 }
-            }
-            isGrounded = false;
-            return false;
+                return false;
+            });
         }
 
-        function applyGravity() {
-            velocityY += gravity; // Apply gravity
-            player.position.y += velocityY; // Update vertical position
+        // Place and break blocks
+        const raycaster = new THREE.Raycaster();
+        document.addEventListener("mousedown", (event) => {
+            if (document.pointerLockElement !== canvas) return;
 
-            if (checkCollision()) {
-                velocityY = 0; // Stop falling
-            }
+            raycaster.setFromCamera(new THREE.Vector2(), camera);
+            const intersects = raycaster.intersectObjects(blocks);
 
-            // Respawn if fallen too far below the platform
-            const respawnThreshold = platformHeight - 20; // 20 blocks below the platform
-            if (player.position.y < respawnThreshold) {
-                player.position.copy(respawnPosition);
-                velocityY = 0;
-            }
-        }
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
 
-        function handleJump() {
-            if (keys[" "] && isGrounded) {
-                velocityY = jumpStrength; // Apply jump strength
-                isGrounded = false; // Prevent continuous jumping
+                if (event.button === 0) { // Left-click to place block
+                    const newBlockGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                    const newBlockMaterial = new THREE.MeshStandardMaterial({ color: blockTypes[selectedBlockIndex].color });
+                    const newBlock = new THREE.Mesh(newBlockGeometry, newBlockMaterial);
+
+                    newBlock.position.copy(intersects[0].point).add(intersects[0].face.normal).divideScalar(cubeSize).floor().multiplyScalar(cubeSize).addScalar(cubeSize / 2);
+                    scene.add(newBlock);
+                    blocks.push(newBlock);
+                } else if (event.button === 2) { // Right-click to break block
+                    scene.remove(target);
+                    blocks.splice(blocks.indexOf(target), 1);
+                }
             }
-        }
+        });
 
         // Animate the scene
         function animate() {
             requestAnimationFrame(animate);
 
             movePlayer();
-            handleJump();
             applyGravity();
 
             renderer.render(scene, camera);
         }
-
-        // Show instructions
-        instructions.style.display = "block";
 
         animate();
     </script>
