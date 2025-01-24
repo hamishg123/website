@@ -49,26 +49,36 @@
         let moveSpeed = 0.1;
         let cameraSpeed = 0.05;
         let lookSpeed = 0.002;
+        let isMouseLocked = false;
+
         let mouseX = 0, mouseY = 0;
 
         document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            if (isMouseLocked) {
+                mouseX = (event.movementX / window.innerWidth) * 2; 
+                mouseY = (event.movementY / window.innerHeight) * 2;
+            }
         });
 
         // Mouse lock for FPS-style camera look
         function updateCameraLook() {
-            camera.rotation.y += mouseX * lookSpeed;
-            camera.rotation.x += mouseY * lookSpeed;
+            camera.rotation.y -= mouseX * lookSpeed; // Rotate horizontally
+            camera.rotation.x -= mouseY * lookSpeed; // Rotate vertically
+            camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x)); // Limit vertical rotation
         }
 
         // Simple jump
         document.addEventListener('keydown', (event) => {
-            if (event.key === "w") camera.position.z -= moveSpeed;
-            if (event.key === "s") camera.position.z += moveSpeed;
-            if (event.key === "a") camera.position.x -= moveSpeed;
-            if (event.key === "d") camera.position.x += moveSpeed;
+            if (event.key === "w") velocity.z = -moveSpeed;
+            if (event.key === "s") velocity.z = moveSpeed;
+            if (event.key === "a") velocity.x = -moveSpeed;
+            if (event.key === "d") velocity.x = moveSpeed;
             if (event.key === " " && !isJumping) jump();
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === "w" || event.key === "s") velocity.z = 0;
+            if (event.key === "a" || event.key === "d") velocity.x = 0;
         });
 
         // Jumping function
@@ -110,6 +120,15 @@
             }
         });
 
+        // Lock mouse on mouse click for FPS-style control
+        document.addEventListener('click', () => {
+            if (!isMouseLocked) {
+                document.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+                document.requestPointerLock();
+                isMouseLocked = true;
+            }
+        });
+
         // Camera position and world creation
         camera.position.set(0, 1, 5);
         createWorld();
@@ -123,6 +142,10 @@
 
             // Apply gravity and handle player movement
             applyGravity();
+
+            // Move the player based on camera orientation (WASD)
+            camera.position.x += velocity.x;
+            camera.position.z += velocity.z;
 
             // Render the scene
             renderer.render(scene, camera);
