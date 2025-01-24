@@ -53,6 +53,17 @@
             return block;
         }
 
+        // Block removal: remove block if clicked
+        function removeBlock(x, y, z) {
+            const blocksToRemove = scene.children.filter(child => {
+                return child.position.x === x && child.position.y === y && child.position.z === z;
+            });
+
+            blocksToRemove.forEach(block => {
+                scene.remove(block);
+            });
+        }
+
         // Create a world of blocks (hitboxes included)
         function createWorld() {
             for (let x = -5; x < 5; x++) {
@@ -79,7 +90,9 @@
 
                 // Visualize block placement (this step is optional)
                 console.log(`Block hit at: ${blockX}, ${blockY}, ${blockZ}`);
+                return { x: blockX, y: blockY, z: blockZ };
             }
+            return null;
         }
 
         // Update mouse position for camera look
@@ -131,21 +144,17 @@
             }
         }
 
-        // Detect block placement on click
+        // Detect block placement on click (left-click to place, right-click to remove)
         document.addEventListener('mousedown', (event) => {
-            const direction = new THREE.Vector3();
-            camera.getWorldDirection(direction);
-            const raycaster = new THREE.Raycaster(camera.position, direction);
-            const intersects = raycaster.intersectObjects(scene.children, true);
+            const hitbox = detectHitbox();
+            if (hitbox) {
+                const { x, y, z } = hitbox;
 
-            if (intersects.length > 0) {
-                const point = intersects[0].point;
-                const blockX = Math.floor(point.x);
-                const blockY = Math.floor(point.y);
-                const blockZ = Math.floor(point.z);
-
-                // Add a new block next to the clicked block
-                createBlock(blockX + 1, blockY, blockZ, 0x00ff00);
+                if (event.button === 0) { // Left-click to place block
+                    createBlock(x + 1, y, z, 0x00ff00);  // Place block to the right of the hit block
+                } else if (event.button === 2) { // Right-click to remove block
+                    removeBlock(x, y, z);  // Remove the clicked block
+                }
             }
         });
 
