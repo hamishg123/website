@@ -71,19 +71,19 @@
         });
         const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
         const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const bridgeMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 
         // Platforms, Obstacles, and Checkpoints
         const platforms = [];
         const obstacles = [];
         const checkpoints = [];
+        const bridges = [];
 
-        // Create platforms
+        // Create platform function
         function createPlatform(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const platform = new THREE.Mesh(geometry, platformMaterial);
             platform.position.set(x, y, z);
-            platform.castShadow = true;
-            platform.receiveShadow = true;
             scene.add(platform);
             platforms.push(platform);
         }
@@ -93,8 +93,7 @@
             const geometry = new THREE.ConeGeometry(size, size * 2, 4);
             const spike = new THREE.Mesh(geometry, spikeMaterial);
             spike.position.set(x, y, z);
-            spike.rotation.x = 0; // Ensure spikes face upwards
-            spike.castShadow = true;
+            spike.rotation.x = 0;
             scene.add(spike);
             obstacles.push(spike);
         }
@@ -108,63 +107,23 @@
             checkpoints.push(checkpoint);
         }
 
-        // Create moving platform
-        let movingPlatform = new THREE.Object3D();
-        scene.add(movingPlatform);
-        function createMovingPlatform(x, y, z, width, height, depth) {
+        // Create bridge
+        function createBridge(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
-            const platform = new THREE.Mesh(geometry, platformMaterial);
-            platform.position.set(x, y, z);
-            platform.castShadow = true;
-            platform.receiveShadow = true;
-            movingPlatform.add(platform);
+            const bridge = new THREE.Mesh(geometry, bridgeMaterial);
+            bridge.position.set(x, y, z);
+            bridge.visible = false;  // Initially hidden
+            scene.add(bridge);
+            bridges.push(bridge);
         }
 
-        // Create rotating obstacle
-        function createRotatingObstacle(x, y, z, size) {
-            const geometry = new THREE.ConeGeometry(size, size * 2, 4);
-            const spike = new THREE.Mesh(geometry, spikeMaterial);
-            spike.position.set(x, y, z);
-            spike.rotation.x = 0; // Ensure spikes face upwards
-            spike.castShadow = true;
-            scene.add(spike);
-            obstacles.push(spike);
-
-            // Rotate the obstacle
-            function rotateObstacle() {
-                spike.rotation.y += 0.01;
-            }
-
-            rotateObstacle();
+        // Add platforms, obstacles, checkpoints, and bridges for multiple levels
+        for (let i = 0; i < 10; i++) {
+            createPlatform(i * 10, i * 4, -10, 6, 1, 6);  // Add platforms
+            createObstacle(i * 10 + 3, i * 4 + 1, -8, 0.5);  // Add obstacles
+            if (i % 3 === 0) createCheckpoint(i * 10, i * 4 + 2, -12, 1);  // Add checkpoints
+            if (i === 5) createBridge(i * 10 + 5, i * 4 + 2, -5, 12, 1, 4); // Add bridge on level 6
         }
-
-        // Create rain (Particle system)
-        const rainCount = 1000;
-        const rainGeometry = new THREE.BufferGeometry();
-        const rainPositions = [];
-        for (let i = 0; i < rainCount; i++) {
-            rainPositions.push(Math.random() * 1000 - 500, Math.random() * 1000 - 500, Math.random() * 1000 - 500);
-        }
-        rainGeometry.setAttribute('position', new THREE.Float32BufferAttribute(rainPositions, 3));
-        const rainMaterial = new THREE.PointsMaterial({ color: 0x888888, size: 0.5 });
-        const rain = new THREE.Points(rainGeometry, rainMaterial);
-        scene.add(rain);
-
-        function updateRain() {
-            rain.geometry.attributes.position.array.forEach((value, index) => {
-                if (index % 3 === 1) {
-                    rain.geometry.attributes.position.array[index] -= 1; // Simulate falling rain
-                    if (rain.geometry.attributes.position.array[index] < -500) {
-                        rain.geometry.attributes.position.array[index] = 500; // Reset position
-                    }
-                }
-            });
-            rain.geometry.attributes.position.needsUpdate = true;
-        }
-
-        // Shadows
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         // Player setup
         const player = new THREE.Object3D();
@@ -217,6 +176,15 @@
             }
         });
 
+        // Check if two buttons are pressed to activate the bridge
+        let bridgeActivated = false;
+        function checkBridgeActivation() {
+            if (keys["q"] && keys["e"]) {
+                bridgeActivated = true;
+                bridges.forEach(bridge => bridge.visible = true);  // Show bridges
+            }
+        }
+
         function movePlayer() {
             const speed = 0.1;
             const forward = new THREE.Vector3(
@@ -265,7 +233,7 @@
 
                 if (checkpointBox.intersectsBox(playerBox)) {
                     respawnPosition.copy(checkpoint.position);
-                    respawnPosition.y += 2; // Raise the respawn position slightly
+                    respawnPosition.y += 2;
                 }
             }
         }
@@ -311,60 +279,12 @@
             }
         }
 
-        // Score System
-        let score = 0;
-        const scoreDisplay = document.createElement('div');
-        scoreDisplay.style.position = 'absolute';
-        scoreDisplay.style.top = '20px';
-        scoreDisplay.style.left = '20px';
-        scoreDisplay.style.fontSize = '24px';
-        scoreDisplay.style.color = 'white';
-        document.body.appendChild(scoreDisplay);
-
-        function updateScore(points) {
-            score += points;
-            scoreDisplay.textContent = `Score: ${score}`;
-        }
-
-        // Level System
-        let level = 1;
-
-        function loadLevel(level) {
-            // Clear the current level and load a new one
-            clearLevel();
-
-            // Example levels
-            if (level === 1) {
-                createPlatform(0, 0, 0, 10, 1, 10);
-                createObstacle(2, 1, -3, 0.5);
-                createCheckpoint(-2, 21, -30, 1);
-            } else if (level === 2) {
-                createPlatform(0, 0, 0, 10, 1, 10);
-                createObstacle(3, 1, -7, 0.5);
-                createRotatingObstacle(5, 2, -15, 1);
-                createCheckpoint(-2, 21, -30, 1);
-            }
-        }
-
-        function clearLevel() {
-            // Clear previous platforms, obstacles, and checkpoints
-            platforms.forEach(platform => scene.remove(platform));
-            obstacles.forEach(obstacle => scene.remove(obstacle));
-            checkpoints.forEach(checkpoint => scene.remove(checkpoint));
-            platforms.length = 0;
-            obstacles.length = 0;
-            checkpoints.length = 0;
-        }
-
-        loadLevel(level);
-
-        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            checkBridgeActivation();
             movePlayer();
             applyGravity();
             handleJump();
-            updateRain();
             renderer.render(scene, camera);
         }
 
