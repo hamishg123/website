@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Enhanced</title>
+    <title>3D Game - Hotbar</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -31,11 +31,49 @@
             border-radius: 8px;
             display: none;
         }
+        /* Hotbar styles */
+        #hotbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        .hotbar-slot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fff;
+            background-color: #8b4513;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .hotbar-slot.selected {
+            border-color: yellow;
+        }
+        .block-icon {
+            width: 30px;
+            height: 30px;
+            background-color: #8b4513;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div id="crosshair"></div>
     <div id="instructions">Click to start</div>
+
+    <!-- Hotbar UI -->
+    <div id="hotbar">
+        <div class="hotbar-slot" data-index="0"><div class="block-icon"></div></div>
+        <div class="hotbar-slot" data-index="1"><div class="block-icon" style="background-color: #ff0000;"></div></div>
+        <div class="hotbar-slot" data-index="2"><div class="block-icon" style="background-color: #00ff00;"></div></div>
+        <div class="hotbar-slot" data-index="3"><div class="block-icon" style="background-color: #0000ff;"></div></div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Set up the scene, camera, and renderer
@@ -64,12 +102,17 @@
         const blocks = [];
         const gridSize = 10;
         const cubeSize = 1;
-        const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+        const blockMaterials = [
+            new THREE.MeshStandardMaterial({ color: 0x8b4513 }), // Brown (Wood)
+            new THREE.MeshStandardMaterial({ color: 0xff0000 }), // Red (Red Block)
+            new THREE.MeshStandardMaterial({ color: 0x00ff00 }), // Green (Green Block)
+            new THREE.MeshStandardMaterial({ color: 0x0000ff }), // Blue (Blue Block)
+        ];
 
         for (let x = 0; x < gridSize; x++) {
             for (let z = 0; z < gridSize; z++) {
                 const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const cube = new THREE.Mesh(geometry, blockMaterial);
+                const cube = new THREE.Mesh(geometry, blockMaterials[0]); // Default to brown blocks
                 cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
                 cube.castShadow = true;
                 cube.receiveShadow = true;
@@ -183,32 +226,37 @@
             }
         }
 
-        // Block highlighting with brightening effect
-        const raycaster = new THREE.Raycaster();
-        let highlightedBlock = null;
-        const highlightMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8b4513, // same as original block color
-            emissive: 0xffff00, // Add yellow glow effect
-            emissiveIntensity: 0.5 // Adjust intensity of the glow
+        // Hotbar functionality
+        let selectedBlockIndex = 0;
+
+        const hotbarSlots = document.querySelectorAll(".hotbar-slot");
+        hotbarSlots.forEach((slot, index) => {
+            slot.addEventListener("click", () => {
+                selectedBlockIndex = index;
+                updateHotbarSelection();
+            });
         });
 
-        function highlightBlock() {
-            raycaster.setFromCamera(new THREE.Vector2(), camera);
-            const intersects = raycaster.intersectObjects(blocks);
+        function updateHotbarSelection() {
+            hotbarSlots.forEach((slot, index) => {
+                slot.classList.toggle("selected", index === selectedBlockIndex);
+            });
+        }
 
-            if (intersects.length > 0) {
-                const target = intersects[0].object;
-
-                if (highlightedBlock && highlightedBlock !== target) {
-                    highlightedBlock.material.emissiveIntensity = 0; // Reset previous block
-                }
-
-                target.material.emissiveIntensity = 0.5; // Apply glow effect to new block
-                highlightedBlock = target;
-            } else if (highlightedBlock) {
-                highlightedBlock.material.emissiveIntensity = 0; // Reset if no block is highlighted
-                highlightedBlock = null;
+        // Block placing (right-click)
+        document.addEventListener("mousedown", (event) => {
+            if (event.button === 2) { // Right click
+                placeBlock();
             }
+        });
+
+        function placeBlock() {
+            const material = blockMaterials[selectedBlockIndex];
+            const newCube = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), material);
+            newCube.position.set(player.position.x + Math.sin(player.rotation.y), player.position.y, player.position.z + Math.cos(player.rotation.y));
+            newCube.castShadow = true;
+            newCube.receiveShadow = true;
+            scene.add(newCube);
         }
 
         // Animate the scene
@@ -218,12 +266,12 @@
             movePlayer();
             handleJump();
             applyGravity();
-            highlightBlock();
 
             renderer.render(scene, camera);
         }
 
         instructions.style.display = "block";
+        updateHotbarSelection();
         animate();
     </script>
 </body>
