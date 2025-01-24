@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game with Three.js</title>
+    <title>3D Game - Minecraft-Like</title>
     <style>
-        body { margin: 0; }
+        body { margin: 0; overflow: hidden; }
         canvas { display: block; }
     </style>
 </head>
@@ -19,24 +19,50 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Create a cube geometry
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+        // Add lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 10, 10).normalize();
+        scene.add(light);
+
+        // Create a grid of cubes (terrain)
+        const grid = [];
+        const gridSize = 10; // 10x10 grid
+        const cubeSize = 1; // Size of each cube
+        for (let x = 0; x < gridSize; x++) {
+            for (let z = 0; z < gridSize; z++) {
+                const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 }); // Brown for dirt
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2); // Center the grid
+                scene.add(cube);
+                grid.push(cube);
+            }
+        }
 
         // Position the camera
-        camera.position.z = 5;
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0, 0, 0);
 
-        // Animate the cube
+        // Player movement
+        const keys = {};
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function movePlayer() {
+            if (keys['w']) camera.position.z -= 0.1; // Move forward
+            if (keys['s']) camera.position.z += 0.1; // Move backward
+            if (keys['a']) camera.position.x -= 0.1; // Move left
+            if (keys['d']) camera.position.x += 0.1; // Move right
+        }
+
+        // Animate the scene
         function animate() {
             requestAnimationFrame(animate);
 
-            // Rotate the cube
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
+            // Handle player movement
+            movePlayer();
 
-            // Render the scene from the perspective of the camera
+            // Render the scene
             renderer.render(scene, camera);
         }
 
