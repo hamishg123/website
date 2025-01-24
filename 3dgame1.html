@@ -183,10 +183,14 @@
             }
         }
 
-        // Block highlighting
+        // Block highlighting with brightening effect
         const raycaster = new THREE.Raycaster();
         let highlightedBlock = null;
-        const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+        const highlightMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b4513, // same as original block color
+            emissive: 0xffff00, // Add yellow glow effect
+            emissiveIntensity: 0.5 // Adjust intensity of the glow
+        });
 
         function highlightBlock() {
             raycaster.setFromCamera(new THREE.Vector2(), camera);
@@ -196,13 +200,13 @@
                 const target = intersects[0].object;
 
                 if (highlightedBlock && highlightedBlock !== target) {
-                    highlightedBlock.material = blockMaterial;
+                    highlightedBlock.material.emissiveIntensity = 0; // Reset previous block
                 }
 
-                target.material = highlightMaterial;
+                target.material.emissiveIntensity = 0.5; // Apply glow effect to new block
                 highlightedBlock = target;
             } else if (highlightedBlock) {
-                highlightedBlock.material = blockMaterial;
+                highlightedBlock.material.emissiveIntensity = 0; // Reset if no block is highlighted
                 highlightedBlock = null;
             }
         }
