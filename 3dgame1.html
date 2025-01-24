@@ -62,9 +62,11 @@
         scene.add(player);
         camera.position.y = 1.6;
 
+        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0); // Start above the platform
+        player.position.copy(respawnPosition);
+
         let velocityY = 0; // Vertical velocity for gravity
         const gravity = -0.02; // Gravity strength
-        const respawnPosition = new THREE.Vector3(0, 5, 0); // Respawn point
 
         // Pointer lock setup
         const instructions = document.getElementById("instructions");
@@ -137,7 +139,9 @@
                 );
 
                 if (blockBox.intersectsBox(playerBox)) {
-                    return true; // Player is on a block
+                    // Push player up slightly to prevent overlap
+                    player.position.y = blockBox.max.y + 1.6;
+                    return true;
                 }
             }
             return false;
@@ -149,7 +153,6 @@
 
             if (checkCollision()) {
                 velocityY = 0; // Stop falling
-                player.position.y = Math.floor(player.position.y) + 1.6; // Snap to block
             }
 
             // Respawn if fallen too far below the platform
