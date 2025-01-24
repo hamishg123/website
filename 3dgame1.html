@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Mouse Look and WASD Movement</title>
+    <title>3D Game - Minecraft-Like Movement</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -52,7 +52,10 @@
         }
 
         // Position the camera
-        camera.position.set(0, 1, 5); // Start a bit above the ground
+        const player = new THREE.Object3D(); // Create a player object
+        player.add(camera); // Attach the camera to the player
+        scene.add(player);
+        camera.position.y = 1.6; // Set camera height (like a player's eyes)
 
         // Pointer lock setup
         const instructions = document.getElementById("instructions");
@@ -82,10 +85,12 @@
         document.addEventListener("mousemove", (event) => {
             if (document.pointerLockElement === canvas) {
                 const sensitivity = 0.002;
-                yaw -= event.movementX * sensitivity;
-                pitch -= event.movementY * sensitivity;
-                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Limit vertical look
-                camera.rotation.set(pitch, yaw, 0);
+                yaw -= event.movementX * sensitivity; // Horizontal rotation
+                pitch -= event.movementY * sensitivity; // Vertical rotation
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+
+                player.rotation.y = yaw; // Rotate player horizontally
+                camera.rotation.x = pitch; // Rotate camera vertically
             }
         });
 
@@ -96,21 +101,23 @@
 
         function movePlayer() {
             const speed = 0.1;
+
             const forward = new THREE.Vector3(
-                Math.sin(yaw),
+                Math.sin(player.rotation.y),
                 0,
-                Math.cos(yaw)
-            ).normalize();
-            const right = new THREE.Vector3(
-                Math.sin(yaw + Math.PI / 2),
-                0,
-                Math.cos(yaw + Math.PI / 2)
+                Math.cos(player.rotation.y)
             ).normalize();
 
-            if (keys["w"]) camera.position.add(forward.multiplyScalar(speed));
-            if (keys["s"]) camera.position.add(forward.multiplyScalar(-speed));
-            if (keys["a"]) camera.position.add(right.multiplyScalar(-speed));
-            if (keys["d"]) camera.position.add(right.multiplyScalar(speed));
+            const right = new THREE.Vector3(
+                Math.sin(player.rotation.y + Math.PI / 2),
+                0,
+                Math.cos(player.rotation.y + Math.PI / 2)
+            ).normalize();
+
+            if (keys["w"]) player.position.add(forward.multiplyScalar(speed)); // Move forward
+            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed)); // Move backward
+            if (keys["a"]) player.position.add(right.multiplyScalar(-speed)); // Move left
+            if (keys["d"]) player.position.add(right.multiplyScalar(speed)); // Move right
         }
 
         // Animate the scene
