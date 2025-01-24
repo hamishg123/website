@@ -36,43 +36,52 @@
         // Camera should be 2 blocks tall
         camera.position.set(0, 2, 5); // Set camera height to 2 blocks
 
+        // Store blocks in localStorage
+        const blockDataKey = "blocks"; // Key for localStorage
+
         // Block creation (with shading)
         function createBlock(x, y, z, color) {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
             const block = new THREE.Mesh(geometry, material);
             block.position.set(x, y, z);
-
-            // Add shading: make one side darker
-            const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.6 });
-            const darkSide = new THREE.Mesh(geometry, darkMaterial);
-            darkSide.position.set(x + 0.5, y, z); // Offset the darker side
-
             scene.add(block);
-            scene.add(darkSide);
-            return block;
+            return { x, y, z, block }; // Return position data for storage
         }
 
-        // Block removal: remove block if clicked
+        // Remove a block
         function removeBlock(x, y, z) {
-            const blocksToRemove = scene.children.filter(child => {
-                return child.position.x === x && child.position.y === y && child.position.z === z;
-            });
-
-            blocksToRemove.forEach(block => {
-                scene.remove(block);
+            scene.children.forEach(child => {
+                if (child.position.x === x && child.position.y === y && child.position.z === z) {
+                    scene.remove(child);
+                }
             });
         }
 
-        // Create a world of blocks (hitboxes included)
-        function createWorld() {
-            for (let x = -5; x < 5; x++) {
-                for (let y = 0; y < 2; y++) {
-                    for (let z = -5; z < 5; z++) {
-                        createBlock(x, y, z, 0x00ff00); // Green blocks
-                    }
-                }
+        // Function to create the world from localStorage
+        function loadWorld() {
+            const savedBlocks = JSON.parse(localStorage.getItem(blockDataKey));
+            if (savedBlocks) {
+                savedBlocks.forEach(block => {
+                    createBlock(block.x, block.y, block.z, block.color);
+                });
+            } else {
+                // If no saved world, create a default world
+                createWorld();
             }
+        }
+
+        // Create a basic default world with some blocks
+        function createWorld() {
+            const defaultBlocks = [
+                { x: -5, y: 0, z: -5, color: 0x00ff00 },
+                { x: 0, y: 0, z: 0, color: 0x00ff00 },
+                { x: 5, y: 0, z: 5, color: 0x00ff00 },
+                { x: -5, y: 1, z: -5, color: 0x00ff00 },
+                { x: 0, y: 1, z: 0, color: 0x00ff00 },
+                { x: 5, y: 1, z: 5, color: 0x00ff00 }
+            ];
+            defaultBlocks.forEach(block => createBlock(block.x, block.y, block.z, block.color));
         }
 
         // Block hitbox detection using raycasting
@@ -88,8 +97,6 @@
                 const blockY = Math.floor(point.y);
                 const blockZ = Math.floor(point.z);
 
-                // Visualize block placement (this step is optional)
-                console.log(`Block hit at: ${blockX}, ${blockY}, ${blockZ}`);
                 return { x: blockX, y: blockY, z: blockZ };
             }
             return null;
@@ -98,7 +105,7 @@
         // Update mouse position for camera look
         document.addEventListener('mousemove', (event) => {
             if (isMouseLocked) {
-                mouseX = (event.movementX / window.innerWidth) * 2; 
+                mouseX = (event.movementX / window.innerWidth) * 2;
                 mouseY = (event.movementY / window.innerHeight) * 2;
             }
         });
@@ -151,9 +158,11 @@
                 const { x, y, z } = hitbox;
 
                 if (event.button === 0) { // Left-click to place block
-                    createBlock(x + 1, y, z, 0x00ff00);  // Place block to the right of the hit block
+                    const blockData = createBlock(x + 1, y, z, 0x00ff00);  // Place block to the right of the hit block
+                    saveWorld();
                 } else if (event.button === 2) { // Right-click to remove block
-                    removeBlock(x, y, z);  // Remove the clicked block
+                    removeBlock(x, y, z);
+                    saveWorld();
                 }
             }
         });
@@ -167,8 +176,26 @@
             }
         });
 
+        // Save the world to localStorage
+        function saveWorld() {
+            const blocks = [];
+            scene.children.forEach(child => {
+                if (child instanceof THREE.Mesh) {
+                    const block = {
+                        x: Math.floor(child.position.x),
+                        y: Math.floor(child.position.y),
+                        z: Math.floor(child.position.z),
+                        color: child.material.color.getHex()
+                    };
+                    blocks.push(block);
+                }
+            });
+
+            localStorage.setItem(blockDataKey, JSON.stringify(blocks));
+        }
+
         // Initialize world and animation loop
-        createWorld();
+        loadWorld();
 
         function animate() {
             requestAnimationFrame(animate);
