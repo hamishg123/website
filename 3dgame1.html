@@ -140,8 +140,8 @@
             const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y)).normalize();
             const right = new THREE.Vector3(Math.sin(player.rotation.y + Math.PI / 2), 0, Math.cos(player.rotation.y + Math.PI / 2)).normalize();
 
-            if (keys["w"]) player.position.add(forward.multiplyScalar(speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
             if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
