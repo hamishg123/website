@@ -1,13 +1,23 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Jumping Mechanic</title>
+    <title>3D Game - Enhanced</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
+        }
         #instructions {
             position: absolute;
             top: 50%;
@@ -24,38 +34,51 @@
     </style>
 </head>
 <body>
+    <div id="crosshair"></div>
     <div id="instructions">Click to start</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Set up the scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
         // Add lighting
         const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 10, 10).normalize();
+        light.position.set(10, 20, 10);
+        light.castShadow = true;
+        light.shadow.mapSize.width = 2048;
+        light.shadow.mapSize.height = 2048;
+        light.shadow.camera.near = 0.5;
+        light.shadow.camera.far = 50;
         scene.add(light);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft ambient light
+        scene.add(ambientLight);
 
         // Create a grid of cubes (terrain)
         const blocks = [];
         const gridSize = 10;
         const cubeSize = 1;
+        const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+
         for (let x = 0; x < gridSize; x++) {
             for (let z = 0; z < gridSize; z++) {
                 const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-                const cube = new THREE.Mesh(geometry, material);
+                const cube = new THREE.Mesh(geometry, blockMaterial);
                 cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
+                cube.castShadow = true;
+                cube.receiveShadow = true;
                 scene.add(cube);
                 blocks.push(cube);
             }
         }
 
-        // Calculate the lowest platform height
-        const platformHeight = -cubeSize / 2; // The Y-coordinate of the top surface of the blocks
+        const platformHeight = -cubeSize / 2; // Platform Y-coordinate
 
         // Player setup
         const player = new THREE.Object3D();
@@ -63,13 +86,13 @@
         scene.add(player);
         camera.position.y = 1.6;
 
-        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0); // Start above the platform
+        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0);
         player.position.copy(respawnPosition);
 
-        let velocityY = 0; // Vertical velocity for gravity and jumping
-        const gravity = -0.02; // Gravity strength
-        const jumpStrength = 0.3; // Jumping strength
-        let isGrounded = false; // Whether the player is on the ground
+        let velocityY = 0;
+        const gravity = -0.02;
+        const jumpStrength = 0.3;
+        let isGrounded = false;
 
         // Pointer lock setup
         const instructions = document.getElementById("instructions");
@@ -93,39 +116,29 @@
             }
         });
 
-        // Mouse look variables
+        // Mouse look
         let yaw = 0, pitch = 0;
-
         document.addEventListener("mousemove", (event) => {
             if (document.pointerLockElement === canvas) {
                 const sensitivity = 0.002;
                 yaw -= event.movementX * sensitivity;
                 pitch -= event.movementY * sensitivity;
-                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
                 player.rotation.y = yaw;
                 camera.rotation.x = pitch;
             }
         });
 
-        // Movement variables
+        // Movement
         const keys = {};
         document.addEventListener("keydown", (e) => keys[e.key] = true);
         document.addEventListener("keyup", (e) => keys[e.key] = false);
 
         function movePlayer() {
             const speed = 0.1;
-            const forward = new THREE.Vector3(
-                Math.sin(player.rotation.y),
-                0,
-                Math.cos(player.rotation.y)
-            ).normalize();
-
-            const right = new THREE.Vector3(
-                Math.sin(player.rotation.y + Math.PI / 2),
-                0,
-                Math.cos(player.rotation.y + Math.PI / 2)
-            ).normalize();
+            const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y)).normalize();
+            const right = new THREE.Vector3(Math.sin(player.rotation.y + Math.PI / 2), 0, Math.cos(player.rotation.y + Math.PI / 2)).normalize();
 
             if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
             if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
@@ -142,7 +155,6 @@
                 );
 
                 if (blockBox.intersectsBox(playerBox)) {
-                    // Push player up slightly to prevent overlap
                     player.position.y = blockBox.max.y + 1.6;
                     isGrounded = true;
                     return true;
@@ -153,16 +165,12 @@
         }
 
         function applyGravity() {
-            velocityY += gravity; // Apply gravity
-            player.position.y += velocityY; // Update vertical position
+            velocityY += gravity;
+            player.position.y += velocityY;
 
-            if (checkCollision()) {
-                velocityY = 0; // Stop falling
-            }
+            if (checkCollision()) velocityY = 0;
 
-            // Respawn if fallen too far below the platform
-            const respawnThreshold = platformHeight - 20; // 20 blocks below the platform
-            if (player.position.y < respawnThreshold) {
+            if (player.position.y < platformHeight - 20) {
                 player.position.copy(respawnPosition);
                 velocityY = 0;
             }
@@ -170,8 +178,32 @@
 
         function handleJump() {
             if (keys[" "] && isGrounded) {
-                velocityY = jumpStrength; // Apply jump strength
-                isGrounded = false; // Prevent continuous jumping
+                velocityY = jumpStrength;
+                isGrounded = false;
+            }
+        }
+
+        // Block highlighting
+        const raycaster = new THREE.Raycaster();
+        let highlightedBlock = null;
+        const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+
+        function highlightBlock() {
+            raycaster.setFromCamera(new THREE.Vector2(), camera);
+            const intersects = raycaster.intersectObjects(blocks);
+
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
+
+                if (highlightedBlock && highlightedBlock !== target) {
+                    highlightedBlock.material = blockMaterial;
+                }
+
+                target.material = highlightMaterial;
+                highlightedBlock = target;
+            } else if (highlightedBlock) {
+                highlightedBlock.material = blockMaterial;
+                highlightedBlock = null;
             }
         }
 
@@ -182,13 +214,12 @@
             movePlayer();
             handleJump();
             applyGravity();
+            highlightBlock();
 
             renderer.render(scene, camera);
         }
 
-        // Show instructions
         instructions.style.display = "block";
-
         animate();
     </script>
 </body>
