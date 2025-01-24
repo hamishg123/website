@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Hotbar & Block Placement</title>
+    <title>3D Game - Enhanced Platforms</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -11,12 +11,12 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 10px;
-            height: 10px;
-            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
             background-color: white;
             border-radius: 50%;
             pointer-events: none;
+            transform: translate(-50%, -50%);
         }
         #instructions {
             position: absolute;
@@ -31,106 +31,68 @@
             border-radius: 8px;
             display: none;
         }
-        /* Hotbar styles */
-        #hotbar {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 10;
-        }
-        .hotbar-slot {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #fff;
-            background-color: #8b4513;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        .hotbar-slot.selected {
-            border-color: yellow;
-        }
-        .block-icon {
-            width: 30px;
-            height: 30px;
-            background-color: #8b4513;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
     <div id="crosshair"></div>
     <div id="instructions">Click to start</div>
-
-    <!-- Hotbar UI -->
-    <div id="hotbar">
-        <div class="hotbar-slot" data-index="0"><div class="block-icon"></div></div>
-        <div class="hotbar-slot" data-index="1"><div class="block-icon" style="background-color: #ff0000;"></div></div>
-        <div class="hotbar-slot" data-index="2"><div class="block-icon" style="background-color: #00ff00;"></div></div>
-        <div class="hotbar-slot" data-index="3"><div class="block-icon" style="background-color: #0000ff;"></div></div>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Set up the scene, camera, and renderer
+        // Scene, camera, renderer setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // Add lighting
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(10, 20, 10);
-        light.castShadow = true;
-        light.shadow.mapSize.width = 2048;
-        light.shadow.mapSize.height = 2048;
-        light.shadow.camera.near = 0.5;
-        light.shadow.camera.far = 50;
-        scene.add(light);
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft ambient light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(10, 10, 10);
+        scene.add(ambientLight, directionalLight);
 
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft ambient light
-        scene.add(ambientLight);
+        // Metal texture for platforms
+        const textureLoader = new THREE.TextureLoader();
+        const metalTexture = textureLoader.load('https://i.imgur.com/JyKvOpl.jpg'); // Metal texture URL
+        const metalMaterial = new THREE.MeshStandardMaterial({ map: metalTexture });
 
-        // Create a grid of cubes (terrain)
-        const blocks = [];
-        const gridSize = 10;
-        const cubeSize = 1;
-        const blockMaterials = [
-            new THREE.MeshStandardMaterial({ color: 0x8b4513 }), // Brown (Wood)
-            new THREE.MeshStandardMaterial({ color: 0xff0000 }), // Red (Red Block)
-            new THREE.MeshStandardMaterial({ color: 0x00ff00 }), // Green (Green Block)
-            new THREE.MeshStandardMaterial({ color: 0x0000ff }), // Blue (Blue Block)
-        ];
+        // Create platforms
+        const platforms = [];
+        const platformGeometry = new THREE.BoxGeometry(5, 1, 5);
 
-        for (let x = 0; x < gridSize; x++) {
-            for (let z = 0; z < gridSize; z++) {
-                const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const cube = new THREE.Mesh(geometry, blockMaterials[0]); // Default to brown blocks
-                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
-                cube.castShadow = true;
-                cube.receiveShadow = true;
-                scene.add(cube);
-                blocks.push(cube);
-            }
+        for (let i = 0; i < 15; i++) {
+            const platform = new THREE.Mesh(platformGeometry, metalMaterial);
+            platform.position.set(
+                Math.random() * 20 - 10,
+                i * 4,
+                Math.random() * 20 - 10
+            );
+            platform.castShadow = true;
+            platform.receiveShadow = true;
+            scene.add(platform);
+            platforms.push(platform);
         }
 
-        const platformHeight = -cubeSize / 2; // Platform Y-coordinate
+        // Spikes for obstacles
+        const spikeGeometry = new THREE.ConeGeometry(0.5, 2, 8);
+        const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+
+        for (let i = 0; i < 20; i++) {
+            const spike = new THREE.Mesh(spikeGeometry, spikeMaterial);
+            spike.rotation.x = Math.PI; // Point spikes upward
+            spike.position.set(
+                Math.random() * 20 - 10,
+                Math.random() * 50,
+                Math.random() * 20 - 10
+            );
+            scene.add(spike);
+        }
 
         // Player setup
         const player = new THREE.Object3D();
         player.add(camera);
+        camera.position.set(0, 1.6, 0);
         scene.add(player);
-        camera.position.y = 1.6;
-
-        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0);
-        player.position.copy(respawnPosition);
 
         let velocityY = 0;
         const gravity = -0.02;
@@ -151,37 +113,29 @@
         });
 
         document.addEventListener("pointerlockchange", () => {
-            if (document.pointerLockElement === canvas) {
-                console.log("Pointer lock enabled");
-            } else {
+            if (document.pointerLockElement !== canvas) {
                 instructions.style.display = "block";
-                console.log("Pointer lock disabled");
             }
         });
 
-        // Mouse look
-        let yaw = 0, pitch = 0;
-        document.addEventListener("mousemove", (event) => {
-            if (document.pointerLockElement === canvas) {
-                const sensitivity = 0.002;
-                yaw -= event.movementX * sensitivity;
-                pitch -= event.movementY * sensitivity;
-                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
-
-                player.rotation.y = yaw;
-                camera.rotation.x = pitch;
-            }
-        });
-
-        // Movement
+        // Movement controls
         const keys = {};
         document.addEventListener("keydown", (e) => keys[e.key] = true);
         document.addEventListener("keyup", (e) => keys[e.key] = false);
 
         function movePlayer() {
             const speed = 0.1;
-            const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y)).normalize();
-            const right = new THREE.Vector3(Math.sin(player.rotation.y + Math.PI / 2), 0, Math.cos(player.rotation.y + Math.PI / 2)).normalize();
+            const forward = new THREE.Vector3(
+                Math.sin(player.rotation.y),
+                0,
+                Math.cos(player.rotation.y)
+            ).normalize();
+
+            const right = new THREE.Vector3(
+                Math.sin(player.rotation.y + Math.PI / 2),
+                0,
+                Math.cos(player.rotation.y + Math.PI / 2)
+            ).normalize();
 
             if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
             if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
@@ -190,15 +144,15 @@
         }
 
         function checkCollision() {
-            for (const block of blocks) {
-                const blockBox = new THREE.Box3().setFromObject(block);
+            for (const platform of platforms) {
+                const platformBox = new THREE.Box3().setFromObject(platform);
                 const playerBox = new THREE.Box3().setFromCenterAndSize(
                     player.position.clone().setY(player.position.y - 0.8),
                     new THREE.Vector3(0.5, 1.6, 0.5)
                 );
 
-                if (blockBox.intersectsBox(playerBox)) {
-                    player.position.y = blockBox.max.y + 1.6;
+                if (platformBox.intersectsBox(playerBox)) {
+                    player.position.y = platformBox.max.y + 1.6;
                     isGrounded = true;
                     return true;
                 }
@@ -212,11 +166,7 @@
             player.position.y += velocityY;
 
             if (checkCollision()) velocityY = 0;
-
-            if (player.position.y < platformHeight - 20) {
-                player.position.copy(respawnPosition);
-                velocityY = 0;
-            }
+            if (player.position.y < -10) player.position.set(0, 5, 0); // Respawn
         }
 
         function handleJump() {
@@ -226,72 +176,15 @@
             }
         }
 
-        // Hotbar functionality
-        let selectedBlockIndex = 0;
-
-        const hotbarSlots = document.querySelectorAll(".hotbar-slot");
-        hotbarSlots.forEach((slot, index) => {
-            slot.addEventListener("click", () => {
-                selectedBlockIndex = index;
-                updateHotbarSelection();
-            });
-        });
-
-        function updateHotbarSelection() {
-            hotbarSlots.forEach((slot, index) => {
-                slot.classList.toggle("selected", index === selectedBlockIndex);
-            });
-        }
-
-        // Raycasting to find the block under the crosshair
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        function getIntersectedBlock() {
-            raycaster.update();
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(blocks);
-            return intersects.length > 0 ? intersects[0].object : null;
-        }
-
-        // Block placing (right-click)
-        document.addEventListener("mousedown", (event) => {
-            if (event.button === 2) { // Right click
-                placeBlock();
-            }
-        });
-
-        function placeBlock() {
-            const intersectedBlock = getIntersectedBlock();
-
-            if (intersectedBlock) {
-                // Place block above the intersected block
-                const material = blockMaterials[selectedBlockIndex];
-                const newCube = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), material);
-                newCube.position.set(
-                    intersectedBlock.position.x,
-                    intersectedBlock.position.y + cubeSize,
-                    intersectedBlock.position.z
-                );
-                newCube.castShadow = true;
-                newCube.receiveShadow = true;
-                scene.add(newCube);
-            }
-        }
-
-        // Animate the scene
+        // Animate
         function animate() {
             requestAnimationFrame(animate);
-
             movePlayer();
             handleJump();
             applyGravity();
-
             renderer.render(scene, camera);
         }
 
-        instructions.style.display = "block";
-        updateHotbarSelection();
         animate();
     </script>
 </body>
