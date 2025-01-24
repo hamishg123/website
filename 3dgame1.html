@@ -53,6 +53,9 @@
             }
         }
 
+        // Calculate the lowest platform height
+        const platformHeight = -cubeSize / 2; // The Y-coordinate of the top surface of the blocks
+
         // Player setup
         const player = new THREE.Object3D();
         player.add(camera);
@@ -119,8 +122,8 @@
                 Math.cos(player.rotation.y + Math.PI / 2)
             ).normalize();
 
-            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["w"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(-speed));
             if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
             if (keys["d"]) player.position.add(right.multiplyScalar(speed));
         }
@@ -149,8 +152,9 @@
                 player.position.y = Math.floor(player.position.y) + 1.6; // Snap to block
             }
 
-            // Respawn if fallen off the edge
-            if (player.position.y < -10) {
+            // Respawn if fallen too far below the platform
+            const respawnThreshold = platformHeight - 20; // 20 blocks below the platform
+            if (player.position.y < respawnThreshold) {
                 player.position.copy(respawnPosition);
                 velocityY = 0;
             }
