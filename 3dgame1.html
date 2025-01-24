@@ -347,6 +347,7 @@
         }
 
         function clearLevel() {
+            // Clear previous platforms, obstacles, and checkpoints
             platforms.forEach(platform => scene.remove(platform));
             obstacles.forEach(obstacle => scene.remove(obstacle));
             checkpoints.forEach(checkpoint => scene.remove(checkpoint));
