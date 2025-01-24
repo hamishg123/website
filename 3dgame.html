@@ -3,40 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game with Three.js</title>
+    <title>Basic Voxel World - Minecraft Style</title>
     <style>
-        body { margin: 0; }
+        body { margin: 0; overflow: hidden; }
         canvas { display: block; }
     </style>
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Set up the scene, camera, and renderer
+        // Setup basic scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Create a cube geometry
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+        // Function to create a simple cube (block)
+        function createBlock(x, y, z, color) {
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: color });
+            const block = new THREE.Mesh(geometry, material);
+            block.position.set(x, y, z);
+            scene.add(block);
+        }
 
-        // Position the camera
-        camera.position.z = 5;
+        // Create a simple world of blocks
+        function createWorld() {
+            for (let x = -5; x < 5; x++) {
+                for (let y = 0; y < 2; y++) {
+                    for (let z = -5; z < 5; z++) {
+                        createBlock(x, y, z, 0x00ff00); // Green blocks
+                    }
+                }
+            }
+        }
 
-        // Animate the cube
+        // Add some basic movement
+        let movementSpeed = 0.1;
+        let cameraSpeed = 1;
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "w") camera.position.z -= cameraSpeed;
+            if (event.key === "s") camera.position.z += cameraSpeed;
+            if (event.key === "a") camera.position.x -= cameraSpeed;
+            if (event.key === "d") camera.position.x += cameraSpeed;
+        });
+
+        // Camera position and controls
+        camera.position.z = 10;
+        camera.position.y = 5;
+        camera.rotation.x = -0.3;
+
+        // Create the world and start animation loop
+        createWorld();
         function animate() {
             requestAnimationFrame(animate);
-
-            // Rotate the cube
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-
-            // Render the scene from the perspective of the camera
             renderer.render(scene, camera);
         }
 
