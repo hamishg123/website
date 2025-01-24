@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Hotbar</title>
+    <title>3D Game - Hotbar & Block Placement</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -243,6 +243,17 @@
             });
         }
 
+        // Raycasting to find the block under the crosshair
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function getIntersectedBlock() {
+            raycaster.update();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(blocks);
+            return intersects.length > 0 ? intersects[0].object : null;
+        }
+
         // Block placing (right-click)
         document.addEventListener("mousedown", (event) => {
             if (event.button === 2) { // Right click
@@ -251,12 +262,21 @@
         });
 
         function placeBlock() {
-            const material = blockMaterials[selectedBlockIndex];
-            const newCube = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), material);
-            newCube.position.set(player.position.x + Math.sin(player.rotation.y), player.position.y, player.position.z + Math.cos(player.rotation.y));
-            newCube.castShadow = true;
-            newCube.receiveShadow = true;
-            scene.add(newCube);
+            const intersectedBlock = getIntersectedBlock();
+
+            if (intersectedBlock) {
+                // Place block above the intersected block
+                const material = blockMaterials[selectedBlockIndex];
+                const newCube = new THREE.Mesh(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize), material);
+                newCube.position.set(
+                    intersectedBlock.position.x,
+                    intersectedBlock.position.y + cubeSize,
+                    intersectedBlock.position.z
+                );
+                newCube.castShadow = true;
+                newCube.receiveShadow = true;
+                scene.add(newCube);
+            }
         }
 
         // Animate the scene
