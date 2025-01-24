@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Minecraft-Like Movement</title>
+    <title>3D Game - Gravity and Respawn</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -39,6 +39,7 @@
         scene.add(light);
 
         // Create a grid of cubes (terrain)
+        const blocks = [];
         const gridSize = 10;
         const cubeSize = 1;
         for (let x = 0; x < gridSize; x++) {
@@ -48,14 +49,24 @@
                 const cube = new THREE.Mesh(geometry, material);
                 cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
                 scene.add(cube);
+                blocks.push(cube);
             }
         }
 
-        // Position the camera
-        const player = new THREE.Object3D(); // Create a player object
-        player.add(camera); // Attach the camera to the player
+        // Calculate the lowest platform height
+        const platformHeight = -cubeSize / 2; // The Y-coordinate of the top surface of the blocks
+
+        // Player setup
+        const player = new THREE.Object3D();
+        player.add(camera);
         scene.add(player);
-        camera.position.y = 1.6; // Set camera height (like a player's eyes)
+        camera.position.y = 1.6;
+
+        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0); // Start above the platform
+        player.position.copy(respawnPosition);
+
+        let velocityY = 0; // Vertical velocity for gravity
+        const gravity = -0.02; // Gravity strength
 
         // Pointer lock setup
         const instructions = document.getElementById("instructions");
@@ -85,12 +96,12 @@
         document.addEventListener("mousemove", (event) => {
             if (document.pointerLockElement === canvas) {
                 const sensitivity = 0.002;
-                yaw -= event.movementX * sensitivity; // Horizontal rotation
-                pitch -= event.movementY * sensitivity; // Vertical rotation
+                yaw -= event.movementX * sensitivity;
+                pitch -= event.movementY * sensitivity;
                 pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
 
-                player.rotation.y = yaw; // Rotate player horizontally
-                camera.rotation.x = pitch; // Rotate camera vertically
+                player.rotation.y = yaw;
+                camera.rotation.x = pitch;
             }
         });
 
@@ -101,7 +112,6 @@
 
         function movePlayer() {
             const speed = 0.1;
-
             const forward = new THREE.Vector3(
                 Math.sin(player.rotation.y),
                 0,
@@ -114,20 +124,52 @@
                 Math.cos(player.rotation.y + Math.PI / 2)
             ).normalize();
 
-            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed)); // Move forward
-            if (keys["s"]) player.position.add(forward.multiplyScalar(speed)); // Move backward
-            if (keys["a"]) player.position.add(right.multiplyScalar(-speed)); // Move left
-            if (keys["d"]) player.position.add(right.multiplyScalar(speed)); // Move right
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
+            if (keys["d"]) player.position.add(right.multiplyScalar(speed));
+        }
+
+        function checkCollision() {
+            for (const block of blocks) {
+                const blockBox = new THREE.Box3().setFromObject(block);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (blockBox.intersectsBox(playerBox)) {
+                    // Push player up slightly to prevent overlap
+                    player.position.y = blockBox.max.y + 1.6;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function applyGravity() {
+            velocityY += gravity; // Apply gravity
+            player.position.y += velocityY; // Update vertical position
+
+            if (checkCollision()) {
+                velocityY = 0; // Stop falling
+            }
+
+            // Respawn if fallen too far below the platform
+            const respawnThreshold = platformHeight - 20; // 20 blocks below the platform
+            if (player.position.y < respawnThreshold) {
+                player.position.copy(respawnPosition);
+                velocityY = 0;
+            }
         }
 
         // Animate the scene
         function animate() {
             requestAnimationFrame(animate);
 
-            // Handle player movement
             movePlayer();
+            applyGravity();
 
-            // Render the scene
             renderer.render(scene, camera);
         }
 
