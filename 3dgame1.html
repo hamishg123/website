@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Game - Mouse Look and WASD Movement</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">Click to start</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Set up the scene, camera, and renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 10, 10).normalize();
+        scene.add(light);
+
+        // Create a grid of cubes (terrain)
+        const gridSize = 10;
+        const cubeSize = 1;
+        for (let x = 0; x < gridSize; x++) {
+            for (let z = 0; z < gridSize; z++) {
+                const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                const material = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
+                scene.add(cube);
+            }
+        }
+
+        // Position the camera
+        camera.position.set(0, 1, 5); // Start a bit above the ground
+
+        // Pointer lock setup
+        const instructions = document.getElementById("instructions");
+        const canvas = renderer.domElement;
+
+        function enablePointerLock() {
+            canvas.requestPointerLock();
+        }
+
+        document.addEventListener("click", () => {
+            instructions.style.display = "none";
+            enablePointerLock();
+        });
+
+        document.addEventListener("pointerlockchange", () => {
+            if (document.pointerLockElement === canvas) {
+                console.log("Pointer lock enabled");
+            } else {
+                instructions.style.display = "block";
+                console.log("Pointer lock disabled");
+            }
+        });
+
+        // Mouse look variables
+        let yaw = 0, pitch = 0;
+
+        document.addEventListener("mousemove", (event) => {
+            if (document.pointerLockElement === canvas) {
+                const sensitivity = 0.002;
+                yaw -= event.movementX * sensitivity;
+                pitch -= event.movementY * sensitivity;
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Limit vertical look
+                camera.rotation.set(pitch, yaw, 0);
+            }
+        });
+
+        // Movement variables
+        const keys = {};
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        function movePlayer() {
+            const speed = 0.1;
+            const forward = new THREE.Vector3(
+                Math.sin(yaw),
+                0,
+                Math.cos(yaw)
+            ).normalize();
+            const right = new THREE.Vector3(
+                Math.sin(yaw + Math.PI / 2),
+                0,
+                Math.cos(yaw + Math.PI / 2)
+            ).normalize();
+
+            if (keys["w"]) camera.position.add(forward.multiplyScalar(speed));
+            if (keys["s"]) camera.position.add(forward.multiplyScalar(-speed));
+            if (keys["a"]) camera.position.add(right.multiplyScalar(-speed));
+            if (keys["d"]) camera.position.add(right.multiplyScalar(speed));
+        }
+
+        // Animate the scene
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Handle player movement
+            movePlayer();
+
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+
+        // Show instructions
+        instructions.style.display = "block";
+
+        animate();
+    </script>
+</body>
+</html>
