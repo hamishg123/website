@@ -71,13 +71,11 @@
         });
         const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
         const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-        const bridgeMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
 
         // Platforms, Obstacles, and Checkpoints
         const platforms = [];
         const obstacles = [];
         const checkpoints = [];
-        const bridges = [];
 
         // Create platforms
         function createPlatform(x, y, z, width, height, depth) {
@@ -107,51 +105,24 @@
             checkpoints.push(checkpoint);
         }
 
-        // Create bridge (to appear on key press)
-        function createBridge(x, y, z, width, height, depth) {
-            const geometry = new THREE.BoxGeometry(width, height, depth);
-            const bridge = new THREE.Mesh(geometry, bridgeMaterial);
-            bridge.position.set(x, y, z);
-            scene.add(bridge);
-            bridges.push(bridge);
-            bridge.visible = false;  // Initially hidden
-        }
+        // Add platforms, obstacles, and checkpoints
+        createPlatform(0, 0, 0, 10, 1, 10);         // Ground platform
+        createPlatform(2, 4, -8, 5, 1, 5);         // Small platform
+        createPlatform(-3, 8, -15, 6, 1, 6);       // Medium platform
+        createPlatform(1, 12, -20, 6, 1, 6);       // Medium platform
+        createPlatform(4, 16, -25, 8, 1, 8);       // Large platform
+        createPlatform(-2, 20, -30, 10, 1, 10);    // Extra large platform (checkpoint)
+        createPlatform(5, 22, -35, 6, 1, 6);       // Hard platform
+        createPlatform(-4, 24, -40, 6, 1, 6);      // Narrow platform
+        createPlatform(2, 26, -45, 5, 1, 5);       // Small moving platform
 
-        // Create levels
-        function createLevel(level) {
-            // Add platforms, obstacles, and checkpoints for each level
-            switch(level) {
-                case 1:
-                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
-                    createPlatform(2, 4, -8, 5, 1, 5);  // Small platform
-                    createObstacle(2, 1, -3, 0.5);      // Spike on ground platform
-                    createCheckpoint(-2, 21, -30, 1);   // Checkpoint on the last platform
-                    break;
-                case 2:
-                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
-                    createPlatform(5, 5, -10, 5, 1, 5);  // Small platform
-                    createObstacle(1, 2, -7, 0.5);      // Spike on ground platform
-                    createCheckpoint(5, 5, -15, 1);     // Checkpoint
-                    break;
-                case 3:
-                    createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
-                    createPlatform(2, 4, -8, 5, 1, 5);  // Small platform
-                    createPlatform(7, 8, -16, 6, 1, 6); // Medium platform
-                    createObstacle(0, 2, -12, 0.5);     // Spike
-                    createCheckpoint(7, 8, -20, 1);     // Checkpoint
-                    break;
-                // Add levels 4-10 as needed...
-            }
-        }
+        createObstacle(2, 1, -3, 0.5);             // Spike on ground platform
+        createObstacle(0, 5, -9, 0.5);             // Spike on small platform
+        createObstacle(-2, 9, -16, 0.5);           // Spike on medium platform
+        createObstacle(3, 18, -28, 0.5);           // Spike on large platform
+        createObstacle(-1, 21, -32, 0.5);          // Spike on extra large platform
 
-        // Toggle bridge visibility when two specific keys are pressed
-        let bridgeActivated = false;
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "1" && !bridgeActivated) {
-                bridges.forEach(bridge => bridge.visible = true);  // Show all bridges
-                bridgeActivated = true;
-            }
-        });
+        createCheckpoint(-2, 21, -30, 1);          // Checkpoint on the last platform
 
         // Player setup
         const player = new THREE.Object3D();
@@ -306,7 +277,6 @@
             renderer.render(scene, camera);
         }
 
-        createLevel(1); // Initialize the first level
         animate();
     </script>
 </body>
