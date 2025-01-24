@@ -51,43 +51,49 @@
         const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
         scene.add(ambientLight);
 
-        // Add a sky (gradient background)
+        // Sky
         const skyMaterial = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x87ceeb });
         const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
         const sky = new THREE.Mesh(skyGeometry, skyMaterial);
         scene.add(sky);
 
+        // Load textures for platforms
+        const loader = new THREE.TextureLoader();
+        const platformTexture = loader.load('https://threejs.org/examples/textures/checker.png');
+        platformTexture.wrapS = platformTexture.wrapT = THREE.RepeatWrapping;
+        platformTexture.repeat.set(4, 4);
+
+        // Materials
+        const platformMaterial = new THREE.MeshStandardMaterial({
+            map: platformTexture,
+            metalness: 0.1,
+            roughness: 0.8,
+        });
+        const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+
         // Platforms, Obstacles, and Checkpoints
         const platforms = [];
         const obstacles = [];
         const checkpoints = [];
-        const platformMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-        const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 
-        // Create platforms with outline
+        // Create platforms
         function createPlatform(x, y, z, width, height, depth) {
             const geometry = new THREE.BoxGeometry(width, height, depth);
             const platform = new THREE.Mesh(geometry, platformMaterial);
             platform.position.set(x, y, z);
             scene.add(platform);
             platforms.push(platform);
-
-            // Add an outline to the platform
-            const edges = new THREE.EdgesGeometry(geometry);
-            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
-            line.position.set(x, y, z);
-            scene.add(line);
         }
 
         // Create obstacles (e.g., spikes)
         function createObstacle(x, y, z, size) {
             const geometry = new THREE.ConeGeometry(size, size * 2, 4);
-            const obstacle = new THREE.Mesh(geometry, obstacleMaterial);
-            obstacle.position.set(x, y, z);
-            obstacle.rotation.x = Math.PI; // Correct orientation for upward spikes
-            scene.add(obstacle);
-            obstacles.push(obstacle);
+            const spike = new THREE.Mesh(geometry, spikeMaterial);
+            spike.position.set(x, y, z);
+            spike.rotation.x = 0; // Ensure spikes face upwards
+            scene.add(spike);
+            obstacles.push(spike);
         }
 
         // Create checkpoints
@@ -119,7 +125,7 @@
         scene.add(player);
         camera.position.y = 1.6;
 
-        let respawnPosition = new THREE.Vector3(0, 2.6, 0); // Initial respawn position
+        let respawnPosition = new THREE.Vector3(0, 2.6, 0);
         player.position.copy(respawnPosition);
 
         let velocityY = 0;
@@ -261,12 +267,11 @@
         function animate() {
             requestAnimationFrame(animate);
             movePlayer();
-            handleJump();
             applyGravity();
+            handleJump();
             renderer.render(scene, camera);
         }
 
-        instructions.style.display = "block";
         animate();
     </script>
 </body>
