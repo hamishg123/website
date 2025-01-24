@@ -35,7 +35,7 @@
 </head>
 <body>
     <div id="instructions">Click to start</div>
-    <div id="crosshair"></div> <!-- Crosshair overlay -->
+    <div id="crosshair"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         const scene = new THREE.Scene();
@@ -85,7 +85,7 @@
             const geometry = new THREE.ConeGeometry(size, size * 2, 4);
             const obstacle = new THREE.Mesh(geometry, obstacleMaterial);
             obstacle.position.set(x, y, z);
-            obstacle.rotation.x = Math.PI; // Spikes facing upward
+            obstacle.rotation.x = Math.PI; // Correct orientation for upward spikes
             scene.add(obstacle);
             obstacles.push(obstacle);
         }
@@ -217,6 +217,23 @@
             }
         }
 
+        function checkSpikeCollision() {
+            for (const obstacle of obstacles) {
+                const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (obstacleBox.intersectsBox(playerBox)) {
+                    player.position.copy(respawnPosition);
+                    velocityY = 0;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function applyGravity() {
             velocityY += gravity;
             player.position.y += velocityY;
@@ -226,6 +243,7 @@
             }
 
             checkCheckpoint();
+            checkSpikeCollision();
 
             if (player.position.y < -10) {
                 player.position.copy(respawnPosition);
