@@ -1,0 +1,51 @@
+<script>
+// Existing Code
+
+// Add a block type
+const blockTypes = {
+    dirt: new THREE.MeshStandardMaterial({ color: 0x8b4513 }),
+    grass: new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
+};
+let selectedBlockType = "dirt";
+
+// Add key listener for changing block type
+document.addEventListener("keydown", (e) => {
+    if (e.key === "1") selectedBlockType = "dirt";
+    if (e.key === "2") selectedBlockType = "grass";
+});
+
+// Block placement and destruction
+document.addEventListener("mousedown", (e) => {
+    if (e.button === 0 && highlightedBlock) {
+        // Destroy block
+        scene.remove(highlightedBlock);
+        blocks.splice(blocks.indexOf(highlightedBlock), 1);
+        highlightedBlock = null;
+    } else if (e.button === 2) {
+        // Place block
+        raycaster.setFromCamera(new THREE.Vector2(), camera);
+        const intersects = raycaster.intersectObjects(blocks);
+        if (intersects.length > 0) {
+            const intersect = intersects[0];
+            const newBlock = new THREE.Mesh(
+                new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
+                blockTypes[selectedBlockType]
+            );
+            const normal = intersect.face.normal.clone();
+            const position = intersect.point
+                .clone()
+                .add(normal.multiplyScalar(cubeSize))
+                .divideScalar(cubeSize)
+                .floor()
+                .multiplyScalar(cubeSize)
+                .addScalar(cubeSize / 2);
+
+            newBlock.position.copy(position);
+            newBlock.castShadow = true;
+            newBlock.receiveShadow = true;
+            scene.add(newBlock);
+            blocks.push(newBlock);
+        }
+    }
+});
+</script>
