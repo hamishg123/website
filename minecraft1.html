@@ -239,7 +239,6 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "2") selectedBlockType = "grass";
 });
 
-// Block placement and destruction
 document.addEventListener("mousedown", (e) => {
     if (e.button === 0 && highlightedBlock) {
         // Destroy block
@@ -256,14 +255,14 @@ document.addEventListener("mousedown", (e) => {
                 new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
                 blockTypes[selectedBlockType]
             );
+
             const normal = intersect.face.normal.clone();
             const position = intersect.point
                 .clone()
                 .add(normal.multiplyScalar(cubeSize))
                 .divideScalar(cubeSize)
-                .floor()
-                .multiplyScalar(cubeSize)
-                .addScalar(cubeSize / 2);
+                .round()
+                .multiplyScalar(cubeSize);
 
             newBlock.position.copy(position);
             newBlock.castShadow = true;
@@ -273,6 +272,7 @@ document.addEventListener("mousedown", (e) => {
         }
     }
 });
+
 </script>
 </body>
 </html>
