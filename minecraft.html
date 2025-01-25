@@ -53,7 +53,7 @@
     let velocity = new THREE.Vector3();
     let direction = new THREE.Vector3();
     const speed = 5;
-    const jumpPower = 10;
+    const jumpHeight = cubeSize; // Jump height equivalent to one block
     const gravity = -20;
     let canJump = false;
 
@@ -125,7 +125,7 @@
 
       // Jump
       if (keys.space && canJump) {
-        velocity.y = jumpPower;
+        velocity.y = Math.sqrt(-2 * gravity * jumpHeight); // Calculate jump velocity
         canJump = false;
       }
 
