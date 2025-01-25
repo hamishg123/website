@@ -47,13 +47,14 @@
     const player = new THREE.Object3D();
     player.position.set(worldSize / 2, 2, worldSize / 2);
     scene.add(player);
-    camera.position.set(0, 1.5, 0); // Camera offset from player
+    camera.position.set(0, 1.5, 5); // Camera offset from player
     player.add(camera);
 
     let velocity = new THREE.Vector3();
+    let direction = new THREE.Vector3();
     const speed = 5;
     const jumpPower = 10;
-    const gravity = -0.5;
+    const gravity = -20;
     let canJump = false;
 
     // Movement controls
@@ -126,10 +127,21 @@
       velocity.y += gravity * delta;
 
       // Movement
-      if (keys.w) velocity.z = -speed * delta;
-      if (keys.s) velocity.z = speed * delta;
-      if (keys.a) velocity.x = -speed * delta;
-      if (keys.d) velocity.x = speed * delta;
+      direction.z = Number(keys.w) - Number(keys.s);
+      direction.x = Number(keys.d) - Number(keys.a);
+      direction.normalize();
+
+      if (keys.w || keys.s || keys.a || keys.d) {
+        const moveX = direction.x * speed * delta;
+        const moveZ = direction.z * speed * delta;
+
+        const angle = player.rotation.y;
+        const sin = Math.sin(angle);
+        const cos = Math.cos(angle);
+
+        player.position.x += moveZ * sin + moveX * cos;
+        player.position.z += moveZ * cos - moveX * sin;
+      }
 
       // Jump
       if (keys.space && canJump) {
@@ -138,7 +150,7 @@
       }
 
       // Update position
-      player.position.add(velocity);
+      player.position.y += velocity.y * delta;
 
       // Prevent bouncing by stopping downward velocity when on the platform
       if (player.position.y <= cubeSize) {
