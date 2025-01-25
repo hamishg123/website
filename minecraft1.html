@@ -38,156 +38,56 @@
     <div id="instructions">Click to start</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Set up the scene, camera, and renderer
+        // Scene, camera, and renderer setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // Add lighting
+        // Lighting
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(10, 20, 10);
-        light.castShadow = true;
-        light.shadow.mapSize.width = 2048;
-        light.shadow.mapSize.height = 2048;
-        light.shadow.camera.near = 0.5;
-        light.shadow.camera.far = 50;
         scene.add(light);
-
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft ambient light
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
         scene.add(ambientLight);
 
-        // Create a grid of cubes (terrain)
-        const blocks = [];
-        const gridSize = 10;
+        // Blocks and materials
         const cubeSize = 1;
-        const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+        const blocks = [];
+        const blockMaterials = {
+            dirt: new THREE.MeshStandardMaterial({ color: 0x8b4513 }),
+            grass: new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+        };
+        let selectedBlockType = "dirt";
 
-        for (let x = 0; x < gridSize; x++) {
-            for (let z = 0; z < gridSize; z++) {
-                const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                const cube = new THREE.Mesh(geometry, blockMaterial);
-                cube.position.set(x - gridSize / 2, -cubeSize / 2, z - gridSize / 2);
-                cube.castShadow = true;
-                cube.receiveShadow = true;
+        // Create ground blocks
+        for (let x = -5; x < 5; x++) {
+            for (let z = -5; z < 5; z++) {
+                const cube = new THREE.Mesh(
+                    new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
+                    blockMaterials.dirt
+                );
+                cube.position.set(x * cubeSize, -cubeSize / 2, z * cubeSize);
                 scene.add(cube);
                 blocks.push(cube);
             }
         }
 
-        const platformHeight = -cubeSize / 2; // Platform Y-coordinate
-
         // Player setup
         const player = new THREE.Object3D();
         player.add(camera);
-        scene.add(player);
         camera.position.y = 1.6;
+        scene.add(player);
 
-        const respawnPosition = new THREE.Vector3(0, platformHeight + 1.6, 0);
-        player.position.copy(respawnPosition);
-
-        let velocityY = 0;
-        const gravity = -0.02;
-        const jumpStrength = 0.3;
-        let isGrounded = false;
-
-        // Pointer lock setup
-        const instructions = document.getElementById("instructions");
-        const canvas = renderer.domElement;
-
-        function enablePointerLock() {
-            canvas.requestPointerLock();
-        }
-
-        document.addEventListener("click", () => {
-            instructions.style.display = "none";
-            enablePointerLock();
-        });
-
-        document.addEventListener("pointerlockchange", () => {
-            if (document.pointerLockElement === canvas) {
-                console.log("Pointer lock enabled");
-            } else {
-                instructions.style.display = "block";
-                console.log("Pointer lock disabled");
-            }
-        });
-
-        // Mouse look
-        let yaw = 0, pitch = 0;
-        document.addEventListener("mousemove", (event) => {
-            if (document.pointerLockElement === canvas) {
-                const sensitivity = 0.002;
-                yaw -= event.movementX * sensitivity;
-                pitch -= event.movementY * sensitivity;
-                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
-
-                player.rotation.y = yaw;
-                camera.rotation.x = pitch;
-            }
-        });
-
-        // Movement
-        const keys = {};
-        document.addEventListener("keydown", (e) => keys[e.key] = true);
-        document.addEventListener("keyup", (e) => keys[e.key] = false);
-
-        function movePlayer() {
-            const speed = 0.1;
-            const forward = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y)).normalize();
-            const right = new THREE.Vector3(Math.sin(player.rotation.y + Math.PI / 2), 0, Math.cos(player.rotation.y + Math.PI / 2)).normalize();
-
-            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
-            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
-            if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
-            if (keys["d"]) player.position.add(right.multiplyScalar(speed));
-        }
-
-        function checkCollision() {
-            for (const block of blocks) {
-                const blockBox = new THREE.Box3().setFromObject(block);
-                const playerBox = new THREE.Box3().setFromCenterAndSize(
-                    player.position.clone().setY(player.position.y - 0.8),
-                    new THREE.Vector3(0.5, 1.6, 0.5)
-                );
-
-                if (blockBox.intersectsBox(playerBox)) {
-                    player.position.y = blockBox.max.y + 1.6;
-                    isGrounded = true;
-                    return true;
-                }
-            }
-            isGrounded = false;
-            return false;
-        }
-
-        function applyGravity() {
-            velocityY += gravity;
-            player.position.y += velocityY;
-
-            if (checkCollision()) velocityY = 0;
-
-            if (player.position.y < platformHeight - 20) {
-                player.position.copy(respawnPosition);
-                velocityY = 0;
-            }
-        }
-
-        function handleJump() {
-            if (keys[" "] && isGrounded) {
-                velocityY = jumpStrength;
-                isGrounded = false;
-            }
-        }
-
-        // Block highlighting
+        // Raycaster for block interaction
         const raycaster = new THREE.Raycaster();
         let highlightedBlock = null;
+
+        // Highlight material
         const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
 
+        // Highlight block
         function highlightBlock() {
             raycaster.setFromCamera(new THREE.Vector2(), camera);
             const intersects = raycaster.intersectObjects(blocks);
@@ -196,83 +96,74 @@
                 const target = intersects[0].object;
 
                 if (highlightedBlock && highlightedBlock !== target) {
-                    highlightedBlock.material = blockMaterial;
+                    highlightedBlock.material = blockMaterials.dirt;
                 }
 
                 target.material = highlightMaterial;
                 highlightedBlock = target;
             } else if (highlightedBlock) {
-                highlightedBlock.material = blockMaterial;
+                highlightedBlock.material = blockMaterials.dirt;
                 highlightedBlock = null;
             }
         }
 
-        // Animate the scene
+        // Place block only if it aligns with existing blocks
+        function placeBlock(intersect) {
+            const normal = intersect.face.normal.clone();
+            const position = intersect.point.clone().add(normal.multiplyScalar(cubeSize));
+
+            // Snap position to the grid
+            position.x = Math.round(position.x / cubeSize) * cubeSize;
+            position.y = Math.round(position.y / cubeSize) * cubeSize;
+            position.z = Math.round(position.z / cubeSize) * cubeSize;
+
+            // Ensure block is placed only if directly on another block
+            const belowPosition = position.clone().sub(new THREE.Vector3(0, cubeSize, 0));
+            const isBelowBlock = blocks.some(block => block.position.equals(belowPosition));
+
+            if (isBelowBlock) {
+                const newBlock = new THREE.Mesh(
+                    new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
+                    blockMaterials[selectedBlockType]
+                );
+                newBlock.position.copy(position);
+                scene.add(newBlock);
+                blocks.push(newBlock);
+            }
+        }
+
+        // Handle block placement and destruction
+        document.addEventListener("mousedown", (e) => {
+            raycaster.setFromCamera(new THREE.Vector2(), camera);
+            const intersects = raycaster.intersectObjects(blocks);
+
+            if (intersects.length > 0) {
+                if (e.button === 0 && highlightedBlock) {
+                    // Destroy block
+                    scene.remove(highlightedBlock);
+                    blocks.splice(blocks.indexOf(highlightedBlock), 1);
+                    highlightedBlock = null;
+                } else if (e.button === 2) {
+                    // Place block
+                    placeBlock(intersects[0]);
+                }
+            }
+        });
+
+        // Block type selection
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "1") selectedBlockType = "dirt";
+            if (e.key === "2") selectedBlockType = "grass";
+        });
+
+        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-
-            movePlayer();
-            handleJump();
-            applyGravity();
             highlightBlock();
-
             renderer.render(scene, camera);
         }
 
-        instructions.style.display = "block";
         animate();
     </script>
-
-<script>
-// Existing Code
-
-// Add a block type
-const blockTypes = {
-    dirt: new THREE.MeshStandardMaterial({ color: 0x8b4513 }),
-    grass: new THREE.MeshStandardMaterial({ color: 0x00ff00 }),
-};
-let selectedBlockType = "dirt";
-
-// Add key listener for changing block type
-document.addEventListener("keydown", (e) => {
-    if (e.key === "1") selectedBlockType = "dirt";
-    if (e.key === "2") selectedBlockType = "grass";
-});
-
-document.addEventListener("mousedown", (e) => {
-    if (e.button === 0 && highlightedBlock) {
-        // Destroy block
-        scene.remove(highlightedBlock);
-        blocks.splice(blocks.indexOf(highlightedBlock), 1);
-        highlightedBlock = null;
-    } else if (e.button === 2) {
-        // Place block
-        raycaster.setFromCamera(new THREE.Vector2(), camera);
-        const intersects = raycaster.intersectObjects(blocks);
-        if (intersects.length > 0) {
-            const intersect = intersects[0];
-            const newBlock = new THREE.Mesh(
-                new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
-                blockTypes[selectedBlockType]
-            );
-
-            const normal = intersect.face.normal.clone();
-            const position = intersect.point
-                .clone()
-                .add(normal.multiplyScalar(cubeSize))
-                .divideScalar(cubeSize)
-                .round()
-                .multiplyScalar(cubeSize);
-
-            newBlock.position.copy(position);
-            newBlock.castShadow = true;
-            newBlock.receiveShadow = true;
-            scene.add(newBlock);
-            blocks.push(newBlock);
-        }
-    }
-});
-
-</script>
 </body>
 </html>
