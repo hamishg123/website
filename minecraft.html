@@ -21,18 +21,16 @@
 
     // Create a grid of cubes (the "world")
     const cubeSize = 1;
-    const worldSize = 10; // 10x10x10 world
+    const worldSize = 10; // 10x10x10 platform
 
     const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
     const material = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
 
     for (let x = 0; x < worldSize; x++) {
-      for (let y = 0; y < worldSize / 2; y++) { // Half the height
-        for (let z = 0; z < worldSize; z++) {
-          const cube = new THREE.Mesh(geometry, material);
-          cube.position.set(x * cubeSize, y * cubeSize, z * cubeSize);
-          scene.add(cube);
-        }
+      for (let z = 0; z < worldSize; z++) {
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.set(x * cubeSize, 0, z * cubeSize);
+        scene.add(cube);
       }
     }
 
@@ -45,14 +43,111 @@
     const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
     scene.add(ambientLight);
 
-    // Camera controls
-    camera.position.set(worldSize / 2, worldSize, worldSize * 1.5);
-    camera.lookAt(worldSize / 2, 0, worldSize / 2);
+    // Player setup
+    const player = new THREE.Object3D();
+    player.position.set(worldSize / 2, 2, worldSize / 2);
+    scene.add(player);
+    camera.position.set(0, 1.5, 0); // Camera offset from player
+    player.add(camera);
+
+    let velocity = new THREE.Vector3();
+    const speed = 5;
+    const jumpPower = 10;
+    const gravity = -0.5;
+    let canJump = false;
+
+    // Movement controls
+    const keys = { w: false, a: false, s: false, d: false, space: false };
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key in keys) keys[e.key] = true;
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key in keys) keys[e.key] = false;
+    });
+
+    // Mouse controls
+    let isPointerLocked = false;
+    document.body.addEventListener('click', () => {
+      if (!isPointerLocked) {
+        document.body.requestPointerLock();
+      }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+      isPointerLocked = document.pointerLockElement === document.body;
+    });
+
+    const lookDirection = new THREE.Vector2();
+    document.addEventListener('mousemove', (e) => {
+      if (isPointerLocked) {
+        lookDirection.x -= e.movementX * 0.002;
+        lookDirection.y -= e.movementY * 0.002;
+        lookDirection.y = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, lookDirection.y));
+        player.rotation.y = lookDirection.x;
+        camera.rotation.x = lookDirection.y;
+      }
+    });
+
+    // Block placement
+    const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+    window.addEventListener('click', (e) => {
+      if (isPointerLocked) {
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+
+        const intersects = raycaster.intersectObjects(scene.children);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          const normal = intersect.face.normal.clone();
+          const position = intersect.point.clone().add(normal.multiplyScalar(0.5)).floor().addScalar(0.5);
+
+          const block = new THREE.Mesh(geometry, blockMaterial);
+          block.position.copy(position);
+          scene.add(block);
+        }
+      }
+    });
+
+    // Respawn player
+    function respawnPlayer() {
+      player.position.set(worldSize / 2, 2, worldSize / 2);
+      velocity.set(0, 0, 0);
+    }
 
     // Render loop
+    const clock = new THREE.Clock();
     function animate() {
-      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      // Apply gravity
+      velocity.y += gravity * delta;
+
+      // Movement
+      if (keys.w) velocity.z = -speed * delta;
+      if (keys.s) velocity.z = speed * delta;
+      if (keys.a) velocity.x = -speed * delta;
+      if (keys.d) velocity.x = speed * delta;
+
+      // Jump
+      if (keys.space && canJump) {
+        velocity.y = jumpPower;
+        canJump = false;
+      }
+
+      // Update position
+      player.position.add(velocity);
+
+      // Check for collision with the platform
+      if (player.position.y < 0) {
+        respawnPlayer();
+      } else if (player.position.y <= cubeSize) {
+        canJump = true;
+      }
+
       renderer.render(scene, camera);
+      requestAnimationFrame(animate);
     }
 
     animate();
@@ -62,22 +157,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-    });
-
-    // Add basic interactivity (click to remove block)
-    window.addEventListener('click', (event) => {
-      const mouse = new THREE.Vector2();
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, camera);
-
-      const intersects = raycaster.intersectObjects(scene.children);
-      if (intersects.length > 0) {
-        const clickedObject = intersects[0].object;
-        scene.remove(clickedObject);
-      }
     });
   </script>
 </body>
