@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Game - Enhanced</title>
+    <title>3D Game with Movement</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -18,24 +18,10 @@
             border-radius: 50%;
             pointer-events: none;
         }
-        #instructions {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 18px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div id="crosshair"></div>
-    <div id="instructions">Click to start</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Scene, camera, and renderer setup
@@ -79,6 +65,41 @@
         player.add(camera);
         camera.position.y = 1.6;
         scene.add(player);
+
+        // Pointer lock for mouse control
+        document.body.addEventListener("click", () => document.body.requestPointerLock());
+        document.addEventListener("pointerlockchange", () => {
+            if (document.pointerLockElement !== document.body) {
+                console.log("Pointer lock disabled.");
+            }
+        });
+
+        // Movement variables
+        const keys = {};
+        let yaw = 0, pitch = 0;
+        document.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
+        document.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
+        document.addEventListener("mousemove", (e) => {
+            if (document.pointerLockElement === document.body) {
+                const sensitivity = 0.002;
+                yaw -= e.movementX * sensitivity;
+                pitch -= e.movementY * sensitivity;
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+                player.rotation.y = yaw;
+                camera.rotation.x = pitch;
+            }
+        });
+
+        function movePlayer() {
+            const speed = 0.1;
+            const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
+            const right = new THREE.Vector3(Math.sin(yaw + Math.PI / 2), 0, Math.cos(yaw + Math.PI / 2)).normalize();
+
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
+            if (keys["d"]) player.position.add(right.multiplyScalar(speed));
+        }
 
         // Raycaster for block interaction
         const raycaster = new THREE.Raycaster();
@@ -159,6 +180,7 @@
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            movePlayer();
             highlightBlock();
             renderer.render(scene, camera);
         }
