@@ -145,6 +145,8 @@
         velocity.y = 0;
         canJump = true;
         player.position.y = intersects[0].point.y + 1; // Snap to block surface
+      } else {
+        canJump = false; // Player is in the air
       }
 
       // Check for falling off the platform
