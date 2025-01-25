@@ -21,6 +21,7 @@
         const speed = 5, jumpSpeed = 5, gravity = -9.8;
         let velocity = new THREE.Vector3();
         let canJump = false;
+        const heightMap = []; // Store terrain heights
 
         // Initialize the scene
         function init() {
@@ -68,9 +69,11 @@
             };
 
             for (let x = 0; x < worldWidth; x++) {
+                heightMap[x] = [];
                 for (let z = 0; z < worldDepth; z++) {
                     // Use noise to create varied terrain heights
-                    const height = Math.floor(simplex.noise2D(x / 20, z / 20) * worldHeight);
+                    const height = Math.floor(simplex.noise2D(x / 20, z / 20) * worldHeight) + 5;
+                    heightMap[x][z] = height; // Store height for collision and spawning
 
                     for (let y = 0; y <= height; y++) {
                         let material = y === height ? materials.grass : y > height - 2 ? materials.dirt : materials.stone;
@@ -87,7 +90,13 @@
             const playerGeometry = new THREE.BoxGeometry(0.5, 1.8, 0.5);
             const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
             player = new THREE.Mesh(playerGeometry, playerMaterial);
-            player.position.set(worldWidth / 2, worldHeight + 5, worldDepth / 2); // Start above the terrain
+
+            // Spawn the player above the highest terrain point
+            const spawnX = Math.floor(worldWidth / 2);
+            const spawnZ = Math.floor(worldDepth / 2);
+            const spawnY = heightMap[spawnX][spawnZ] + 2;
+
+            player.position.set(spawnX * blockSize, spawnY * blockSize, spawnZ * blockSize);
             scene.add(player);
         }
 
@@ -154,8 +163,12 @@
             player.position.add(velocity);
 
             // Keep player above terrain (simple collision detection)
-            if (player.position.y < 1) {
-                player.position.y = 1;
+            const x = Math.floor(player.position.x / blockSize);
+            const z = Math.floor(player.position.z / blockSize);
+            const terrainHeight = heightMap[x]?.[z] || 0;
+
+            if (player.position.y < terrainHeight + 1) {
+                player.position.y = terrainHeight + 1;
                 velocity.y = 0;
                 canJump = true;
             }
