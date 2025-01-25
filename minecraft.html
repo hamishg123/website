@@ -54,7 +54,7 @@
     let direction = new THREE.Vector3();
     const speed = 5;
     const jumpHeight = cubeSize; // Jump height equivalent to one block
-    const gravity = -20;
+    const gravity = -9.8; // Earth's gravity for more realistic jump
     let canJump = false;
 
     // Movement controls
@@ -103,10 +103,10 @@
     function animate() {
       const delta = clock.getDelta();
 
-      // Apply gravity
+      // Apply gravity to velocity
       velocity.y += gravity * delta;
 
-      // Movement
+      // Movement logic
       direction.z = Number(keys.s) - Number(keys.w);
       direction.x = Number(keys.d) - Number(keys.a);
       direction.normalize();
@@ -123,16 +123,16 @@
         player.position.z += moveZ * cos - moveX * sin;
       }
 
-      // Jump
+      // Jump mechanic
       if (keys.space && canJump) {
-        velocity.y = Math.sqrt(-2 * gravity * jumpHeight); // Calculate jump velocity
-        canJump = false;
+        velocity.y = Math.sqrt(-2 * gravity * jumpHeight); // Jump force based on gravity
+        canJump = false; // Prevent mid-air jump
       }
 
-      // Update position
+      // Update player position
       player.position.y += velocity.y * delta;
 
-      // Check if player is falling through or walking through objects
+      // Ground check using raycaster
       const raycaster = new THREE.Raycaster(
         player.position.clone(),
         new THREE.Vector3(0, -1, 0),
@@ -142,18 +142,19 @@
 
       const intersects = raycaster.intersectObjects(scene.children);
       if (intersects.length > 0) {
-        velocity.y = 0;
-        canJump = true;
-        player.position.y = intersects[0].point.y + 1; // Snap to block surface
+        velocity.y = 0; // Stop falling
+        canJump = true; // Allow jumping again
+        player.position.y = intersects[0].point.y + 1; // Align player to the ground
       } else {
         canJump = false; // Player is in the air
       }
 
-      // Check for falling off the platform
+      // Check if the player falls below a certain point (reset if they fall too far)
       if (player.position.y < -10) {
         respawnPlayer();
       }
 
+      // Render the scene
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
