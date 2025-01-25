@@ -114,6 +114,7 @@
     function respawnPlayer() {
       player.position.set(worldSize / 2, 2, worldSize / 2);
       velocity.set(0, 0, 0);
+      canJump = true; // Ensure the player is reset correctly
     }
 
     // Render loop
@@ -139,11 +140,16 @@
       // Update position
       player.position.add(velocity);
 
-      // Check for collision with the platform
+      // Prevent bouncing by stopping downward velocity when on the platform
+      if (player.position.y <= cubeSize) {
+        player.position.y = cubeSize; // Snap to platform height
+        velocity.y = 0; // Stop downward velocity
+        canJump = true; // Allow jumping again
+      }
+
+      // Check for falling off the platform
       if (player.position.y < 0) {
         respawnPlayer();
-      } else if (player.position.y <= cubeSize) {
-        canJump = true;
       }
 
       renderer.render(scene, camera);
