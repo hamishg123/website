@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Minecraft World</title>
+    <title>Optimized Minecraft World</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -12,142 +12,118 @@
 <body>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script>
-        let scene, camera, renderer;
+        let scene, camera, renderer, clock;
         let player, controls;
-        let world = [];
-
-        const blockSize = 1;
         const worldWidth = 100, worldHeight = 10, worldDepth = 100;
-        
-        // Create the scene, camera, and renderer
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        const blockSize = 1;
+        const visibleRange = 25; // Limit rendering to a 25-block radius
 
-        // Create a basic cube geometry
-        function createBlock(x, y, z, color) {
-            const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-            const material = new THREE.MeshBasicMaterial({ color: color });
-            const block = new THREE.Mesh(geometry, material);
-            block.position.set(x, y, z);
-            scene.add(block);
-            return block;
+        // Initialize Scene
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Add lighting for better visuals
+            const light = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(light);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(10, 50, 10);
+            scene.add(directionalLight);
+
+            // Generate the world
+            generateWorld();
+
+            // Add the player
+            createPlayer();
+
+            // Set the initial camera position
+            camera.position.set(50, 10, 50);
+
+            // Handle user input
+            setupInput();
+
+            // Start rendering loop
+            animate();
         }
 
-        // Generate a basic world
+        // Generate a simplified world
         function generateWorld() {
+            const blockGeometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
+
+            const materials = {
+                stone: new THREE.MeshBasicMaterial({ color: 0x808080 }),
+                dirt: new THREE.MeshBasicMaterial({ color: 0x6E4B3A }),
+                grass: new THREE.MeshBasicMaterial({ color: 0x228B22 })
+            };
+
+            const blockGroup = new THREE.Group();
+
             for (let x = 0; x < worldWidth; x++) {
                 for (let y = 0; y < worldHeight; y++) {
                     for (let z = 0; z < worldDepth; z++) {
-                        let blockColor = 0x808080; // Default is stone
+                        let material = materials.stone;
 
-                        // Create dirt at the surface
-                        if (y === 0) {
-                            blockColor = 0x6E4B3A; // Dirt color
+                        if (y === 0) material = materials.dirt; // Dirt layer
+                        if (y === 1 && Math.random() < 0.01) material = materials.grass; // Random trees
+
+                        if (y <= 1) { // Only render layers near the surface
+                            const block = new THREE.Mesh(blockGeometry, material);
+                            block.position.set(x * blockSize, y * blockSize, z * blockSize);
+                            blockGroup.add(block);
                         }
-
-                        // Add trees (simple cubes as trees)
-                        if (y === 1 && Math.random() < 0.01) {
-                            blockColor = 0x228B22; // Tree leaves
-                            createBlock(x, y + 1, z, blockColor);
-                        }
-
-                        world.push(createBlock(x * blockSize, y * blockSize, z * blockSize, blockColor));
                     }
                 }
             }
+
+            scene.add(blockGroup);
         }
 
-        // Create player (simple cube for now)
+        // Create the player
         function createPlayer() {
             const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
             const material = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
             player = new THREE.Mesh(geometry, material);
-            player.position.set(50, 1, 50);  // Start position in the center
+            player.position.set(worldWidth / 2, 2, worldDepth / 2); // Start in the middle
             scene.add(player);
         }
 
-        // Movement logic (WASD for movement, space for jumping)
-        let speed = 0.1;
-        let jumpSpeed = 0.2;
-        let gravity = -0.02;
-        let isJumping = false;
-        let velocity = new THREE.Vector3();
+        // Handle player input
+        const keys = {};
+        function setupInput() {
+            document.addEventListener('keydown', (event) => keys[event.key] = true);
+            document.addEventListener('keyup', (event) => keys[event.key] = false);
+        }
 
-        function handleMovement() {
-            let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, jump = false;
+        // Handle player movement
+        const velocity = new THREE.Vector3();
+        function movePlayer(delta) {
+            const speed = 5;
+            if (keys['w']) velocity.z = -speed * delta; // Forward
+            if (keys['s']) velocity.z = speed * delta; // Backward
+            if (keys['a']) velocity.x = -speed * delta; // Left
+            if (keys['d']) velocity.x = speed * delta; // Right
 
-            // Listen for keyboard input
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'w') moveForward = true;
-                if (event.key === 's') moveBackward = true;
-                if (event.key === 'a') moveLeft = true;
-                if (event.key === 'd') moveRight = true;
-                if (event.key === ' ') jump = true;
-            });
-
-            // Handle movement based on keys pressed
-            let direction = new THREE.Vector3();
-            if (moveForward) direction.z -= 1;
-            if (moveBackward) direction.z += 1;
-            if (moveLeft) direction.x -= 1;
-            if (moveRight) direction.x += 1;
-            
-            // Normalize direction for consistent speed in all directions
-            direction.normalize().multiplyScalar(speed);
-            velocity.x = direction.x;
-            velocity.z = direction.z;
-
-            // Jump logic
-            if (jump && !isJumping) {
-                velocity.y = jumpSpeed;
-                isJumping = true;
-            }
-
-            // Apply gravity
-            velocity.y += gravity;
-
-            // Move player
             player.position.add(velocity);
-
-            // Prevent going through the ground
-            if (player.position.y <= 1) {
-                player.position.y = 1;
-                isJumping = false;
-            }
+            camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
+            velocity.set(0, 0, 0); // Reset velocity
         }
 
-        // Camera control with mouse
-        let mouseX = 0, mouseY = 0;
-        document.addEventListener('mousemove', (event) => {
-            mouseX = event.clientX / window.innerWidth - 0.5;
-            mouseY = event.clientY / window.innerHeight - 0.5;
-        });
-
-        // Set up controls
-        function setupControls() {
-            camera.rotation.set(mouseY * 0.5, mouseX * 0.5, 0);
-        }
-
-        // Render the scene
+        // Render loop
         function animate() {
-            requestAnimationFrame(animate);
-            handleMovement();
-            setupControls();
+            const delta = clock.getDelta(); // Time since last frame
+            movePlayer(delta); // Update player position
             renderer.render(scene, camera);
+            requestAnimationFrame(animate);
         }
 
-        // Initialize the world and player
-        generateWorld();
-        createPlayer();
-
-        // Camera position
-        camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
-
-        // Start the animation
-        animate();
+        // Initialize everything
+        init();
     </script>
 </body>
 </html>
