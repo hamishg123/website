@@ -45,9 +45,9 @@
 
     // Player setup
     const player = new THREE.Object3D();
-    player.position.set(worldSize / 2, 2, worldSize / 2);
+    player.position.set(worldSize / 2, 5, worldSize / 2);
     scene.add(player);
-    camera.position.set(0, 1.5, 5); // Camera offset from player
+    camera.position.set(0, 0, 0); // Camera in first-person view
     player.add(camera);
 
     let velocity = new THREE.Vector3();
@@ -91,29 +91,9 @@
       }
     });
 
-    // Block placement
-    const blockMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-    window.addEventListener('click', (e) => {
-      if (isPointerLocked) {
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera({ x: 0, y: 0 }, camera);
-
-        const intersects = raycaster.intersectObjects(scene.children);
-        if (intersects.length > 0) {
-          const intersect = intersects[0];
-          const normal = intersect.face.normal.clone();
-          const position = intersect.point.clone().add(normal.multiplyScalar(0.5)).floor().addScalar(0.5);
-
-          const block = new THREE.Mesh(geometry, blockMaterial);
-          block.position.copy(position);
-          scene.add(block);
-        }
-      }
-    });
-
     // Respawn player
     function respawnPlayer() {
-      player.position.set(worldSize / 2, 2, worldSize / 2);
+      player.position.set(worldSize / 2, 5, worldSize / 2);
       velocity.set(0, 0, 0);
       canJump = true; // Ensure the player is reset correctly
     }
@@ -152,15 +132,23 @@
       // Update position
       player.position.y += velocity.y * delta;
 
-      // Prevent bouncing by stopping downward velocity when on the platform
-      if (player.position.y <= cubeSize) {
-        player.position.y = cubeSize; // Snap to platform height
-        velocity.y = 0; // Stop downward velocity
-        canJump = true; // Allow jumping again
+      // Check if player is falling through or walking through objects
+      const raycaster = new THREE.Raycaster(
+        player.position.clone(),
+        new THREE.Vector3(0, -1, 0),
+        0,
+        1.5
+      );
+
+      const intersects = raycaster.intersectObjects(scene.children);
+      if (intersects.length > 0) {
+        velocity.y = 0;
+        canJump = true;
+        player.position.y = intersects[0].point.y + 1; // Snap to block surface
       }
 
       // Check for falling off the platform
-      if (player.position.y < 0) {
+      if (player.position.y < -10) {
         respawnPlayer();
       }
 
