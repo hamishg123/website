@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimized Minecraft World</title>
+    <title>3D World with Depth and First-Person View</title>
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
@@ -11,89 +11,110 @@
 </head>
 <body>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simplex-noise/dist/esm/simplex-noise.min.js"></script>
     <script>
         let scene, camera, renderer, clock;
         let player, controls;
-        const worldWidth = 100, worldHeight = 10, worldDepth = 100;
+        const worldWidth = 100, worldDepth = 100;
         const blockSize = 1;
-        const visibleRange = 25; // Limit rendering to a 25-block radius
+        const worldHeight = 10; // Max height for the terrain
+        const speed = 5, jumpSpeed = 5, gravity = -9.8;
+        let velocity = new THREE.Vector3();
+        let canJump = false;
 
-        // Initialize Scene
+        // Initialize the scene
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
-
             clock = new THREE.Clock();
 
-            // Add lighting for better visuals
-            const light = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(light);
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
 
+            // Add directional light
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight.position.set(10, 50, 10);
+            directionalLight.position.set(50, 100, 50);
             scene.add(directionalLight);
 
-            // Generate the world
-            generateWorld();
+            // Generate terrain
+            generateTerrain();
 
-            // Add the player
+            // Create player
             createPlayer();
 
-            // Set the initial camera position
-            camera.position.set(50, 10, 50);
+            // Set up first-person controls
+            setupFirstPersonControls();
 
-            // Handle user input
+            // Add event listeners
             setupInput();
 
-            // Start rendering loop
+            // Start animation loop
             animate();
         }
 
-        // Generate a simplified world
-        function generateWorld() {
+        // Generate terrain with depth
+        function generateTerrain() {
+            const simplex = new SimplexNoise(); // Generate height variations
             const blockGeometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
 
             const materials = {
-                stone: new THREE.MeshBasicMaterial({ color: 0x808080 }),
-                dirt: new THREE.MeshBasicMaterial({ color: 0x6E4B3A }),
-                grass: new THREE.MeshBasicMaterial({ color: 0x228B22 })
+                grass: new THREE.MeshLambertMaterial({ color: 0x228B22 }),
+                dirt: new THREE.MeshLambertMaterial({ color: 0x6E4B3A }),
+                stone: new THREE.MeshLambertMaterial({ color: 0x808080 })
             };
 
-            const blockGroup = new THREE.Group();
-
             for (let x = 0; x < worldWidth; x++) {
-                for (let y = 0; y < worldHeight; y++) {
-                    for (let z = 0; z < worldDepth; z++) {
-                        let material = materials.stone;
+                for (let z = 0; z < worldDepth; z++) {
+                    // Use noise to create varied terrain heights
+                    const height = Math.floor(simplex.noise2D(x / 20, z / 20) * worldHeight);
 
-                        if (y === 0) material = materials.dirt; // Dirt layer
-                        if (y === 1 && Math.random() < 0.01) material = materials.grass; // Random trees
-
-                        if (y <= 1) { // Only render layers near the surface
-                            const block = new THREE.Mesh(blockGeometry, material);
-                            block.position.set(x * blockSize, y * blockSize, z * blockSize);
-                            blockGroup.add(block);
-                        }
+                    for (let y = 0; y <= height; y++) {
+                        let material = y === height ? materials.grass : y > height - 2 ? materials.dirt : materials.stone;
+                        const block = new THREE.Mesh(blockGeometry, material);
+                        block.position.set(x * blockSize, y * blockSize, z * blockSize);
+                        scene.add(block);
                     }
                 }
             }
-
-            scene.add(blockGroup);
         }
 
         // Create the player
         function createPlayer() {
-            const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
-            player = new THREE.Mesh(geometry, material);
-            player.position.set(worldWidth / 2, 2, worldDepth / 2); // Start in the middle
+            const playerGeometry = new THREE.BoxGeometry(0.5, 1.8, 0.5);
+            const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(worldWidth / 2, worldHeight + 5, worldDepth / 2); // Start above the terrain
             scene.add(player);
         }
 
-        // Handle player input
+        // Set up first-person controls
+        function setupFirstPersonControls() {
+            camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
+            document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+
+            document.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            });
+
+            let rotationX = 0, rotationY = 0;
+
+            document.addEventListener('mousemove', (event) => {
+                const sensitivity = 0.002;
+                rotationY -= event.movementX * sensitivity;
+                rotationX -= event.movementY * sensitivity;
+
+                // Limit vertical look angle
+                rotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotationX));
+
+                camera.rotation.set(rotationX, rotationY, 0);
+            });
+        }
+
+        // Handle input
         const keys = {};
         function setupInput() {
             document.addEventListener('keydown', (event) => keys[event.key] = true);
@@ -101,28 +122,57 @@
         }
 
         // Handle player movement
-        const velocity = new THREE.Vector3();
         function movePlayer(delta) {
-            const speed = 5;
-            if (keys['w']) velocity.z = -speed * delta; // Forward
-            if (keys['s']) velocity.z = speed * delta; // Backward
-            if (keys['a']) velocity.x = -speed * delta; // Left
-            if (keys['d']) velocity.x = speed * delta; // Right
+            velocity.x = 0;
+            velocity.z = 0;
 
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.y = 0;
+            forward.normalize();
+
+            const right = new THREE.Vector3();
+            right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+            if (keys['w']) velocity.add(forward);
+            if (keys['s']) velocity.sub(forward);
+            if (keys['a']) velocity.sub(right);
+            if (keys['d']) velocity.add(right);
+
+            velocity.normalize().multiplyScalar(speed * delta);
+
+            // Apply gravity
+            velocity.y += gravity * delta;
+
+            // Handle jumping
+            if (keys[' '] && canJump) {
+                velocity.y = jumpSpeed;
+                canJump = false;
+            }
+
+            // Update player position
             player.position.add(velocity);
-            camera.position.set(player.position.x, player.position.y + 2, player.position.z + 5);
-            velocity.set(0, 0, 0); // Reset velocity
+
+            // Keep player above terrain (simple collision detection)
+            if (player.position.y < 1) {
+                player.position.y = 1;
+                velocity.y = 0;
+                canJump = true;
+            }
+
+            // Update camera position
+            camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
         }
 
-        // Render loop
+        // Animate the scene
         function animate() {
-            const delta = clock.getDelta(); // Time since last frame
-            movePlayer(delta); // Update player position
+            const delta = clock.getDelta();
+            movePlayer(delta);
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
 
-        // Initialize everything
+        // Initialize the scene
         init();
     </script>
 </body>
