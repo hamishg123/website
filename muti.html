@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple WebRTC Multiplayer Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    canvas {
+      border: 1px solid #000;
+    }
+    textarea {
+      width: 80%;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple WebRTC Multiplayer Game</h1>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div>
+    <h2>Connection Setup</h2>
+    <textarea id="offer" placeholder="Paste or share your connection offer..."></textarea><br>
+    <button id="createOffer">Create Offer</button>
+    <button id="connect">Connect</button><br>
+    <textarea id="answer" placeholder="Paste or share your connection answer..."></textarea><br>
+    <button id="createAnswer">Create Answer</button>
+  </div>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // WebRTC setup
+    const peerConnection = new RTCPeerConnection();
+    let dataChannel;
+
+    // Store player positions
+    const players = {
+      self: { x: 100, y: 100, color: 'red' },
+      remote: { x: 200, y: 200, color: 'blue' },
+    };
+
+    // Draw players on canvas
+    function drawPlayers() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const id in players) {
+        const player = players[id];
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, 20, 20);
+      }
+    }
+
+    // Send position to remote player
+    function sendPosition() {
+      if (dataChannel && dataChannel.readyState === 'open') {
+        dataChannel.send(JSON.stringify(players.self));
+      }
+    }
+
+    // Keyboard movement
+    document.addEventListener('keydown', (event) => {
+      const moveAmount = 5;
+      switch (event.key) {
+        case 'w':
+          players.self.y -= moveAmount;
+          break;
+        case 's':
+          players.self.y += moveAmount;
+          break;
+        case 'a':
+          players.self.x -= moveAmount;
+          break;
+        case 'd':
+          players.self.x += moveAmount;
+          break;
+      }
+      drawPlayers();
+      sendPosition();
+    });
+
+    // WebRTC signaling handlers
+    document.getElementById('createOffer').addEventListener('click', async () => {
+      dataChannel = peerConnection.createDataChannel('game');
+      setupDataChannel();
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      document.getElementById('offer').value = JSON.stringify(peerConnection.localDescription);
+    });
+
+    document.getElementById('createAnswer').addEventListener('click', async () => {
+      const offer = JSON.parse(document.getElementById('offer').value);
+      await peerConnection.setRemoteDescription(offer);
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      document.getElementById('answer').value = JSON.stringify(peerConnection.localDescription);
+    });
+
+    document.getElementById('connect').addEventListener('click', async () => {
+      const answer = JSON.parse(document.getElementById('answer').value);
+      await peerConnection.setRemoteDescription(answer);
+    });
+
+    // Data channel setup
+    function setupDataChannel() {
+      dataChannel.onmessage = (event) => {
+        players.remote = JSON.parse(event.data);
+        drawPlayers();
+      };
+    }
+
+    peerConnection.ondatachannel = (event) => {
+      dataChannel = event.channel;
+      setupDataChannel();
+    };
+
+    // Initial draw
+    drawPlayers();
+  </script>
+</body>
+</html>
