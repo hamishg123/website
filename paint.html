@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drawing App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid black;
+      display: block;
+      margin: auto;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <h1>Drawing App</h1>
+  <input type="color" id="colorPicker">
+  <input type="range" id="brushSize" min="1" max="50" value="5">
+  <button id="eraser">Eraser</button>
+  <button id="blur">Blur Brush</button>
+  <button id="save">Save</button>
+  <button id="load">Load</button>
+  <input type="text" id="fileName" placeholder="Enter file name">
+  <canvas id="drawingCanvas" width="800" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById("drawingCanvas");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+    let brushColor = "#000000";
+    let brushSize = 5;
+    let isErasing = false;
+    let isBlurring = false;
+    
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mousemove", draw);
+    
+    document.getElementById("colorPicker").addEventListener("input", (e) => {
+      brushColor = e.target.value;
+      isErasing = false;
+      isBlurring = false;
+    });
+    
+    document.getElementById("brushSize").addEventListener("input", (e) => {
+      brushSize = e.target.value;
+    });
+    
+    document.getElementById("eraser").addEventListener("click", () => {
+      isErasing = true;
+      isBlurring = false;
+    });
+    
+    document.getElementById("blur").addEventListener("click", () => {
+      isBlurring = true;
+      isErasing = false;
+    });
+    
+    function draw(event) {
+      if (!drawing) return;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = isErasing ? "#FFFFFF" : brushColor;
+      
+      if (isBlurring) {
+        ctx.filter = "blur(5px)";
+      } else {
+        ctx.filter = "none";
+      }
+      
+      ctx.beginPath();
+      ctx.moveTo(event.offsetX, event.offsetY);
+      ctx.lineTo(event.offsetX, event.offsetY);
+      ctx.stroke();
+      ctx.closePath();
+    }
+    
+    document.getElementById("save").addEventListener("click", () => {
+      const fileName = document.getElementById("fileName").value || "drawing";
+      localStorage.setItem(fileName, canvas.toDataURL());
+      alert("Saved as " + fileName);
+    });
+    
+    document.getElementById("load").addEventListener("click", () => {
+      const fileName = document.getElementById("fileName").value;
+      if (!fileName || !localStorage.getItem(fileName)) {
+        alert("No saved file found");
+        return;
+      }
+      const img = new Image();
+      img.src = localStorage.getItem(fileName);
+      img.onload = () => ctx.drawImage(img, 0, 0);
+    });
+  </script>
+</body>
+</html>
