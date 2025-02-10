@@ -83,7 +83,7 @@
     });
 
     setRebirthButton.addEventListener("click", function() {
-        if (password.value === sigma) {
+        if (password.value === "sigma") {
             let rebirth = parseInt(rebirthInput.value, 10); // Get the rebirth value from the input
             localStorage.setItem("rebirth", rebirth); // Save rebirth to localStorage
             alert("Rebirth value has been updated!");
