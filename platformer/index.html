@@ -105,19 +105,33 @@
             checkpoints.push(checkpoint);
         }
 
-        // Add platforms, obstacles, and checkpoints
-        createPlatform(0, 0, 0, 10, 1, 10);         // Ground platform
-        createPlatform(2, 4, -8, 5, 1, 5);         // Small platform
-        createPlatform(-3, 8, -15, 6, 1, 6);       // Medium platform
-        createPlatform(1, 12, -20, 6, 1, 6);       // Medium platform
-        createPlatform(4, 16, -25, 8, 1, 8);       // Large platform
-        createPlatform(-2, 20, -30, 10, 1, 10);    // Extra large platform (checkpoint)
+        // Start with your first platform
+createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
+createPlatform(2, 4, -8, 5, 1, 5);   // Small platform
+createPlatform(-3, 8, -15, 6, 1, 6); // Medium platform
+createPlatform(1, 12, -20, 6, 1, 6); // Medium platform
+createPlatform(4, 16, -25, 8, 1, 8); // Large platform
+createPlatform(-2, 20, -30, 10, 1, 10); // Extra large platform (checkpoint)
 
-        createObstacle(2, 1, -3, 0.5);             // Spike on ground platform
-        createObstacle(0, 5, -9, 0.5);             // Spike on small platform
-        createObstacle(-2, 9, -16, 0.5);           // Spike on medium platform
+// Create 100 more platforms and obstacles
+for (let i = 1; i <= 100; i++) {
+    let x = i * 2; // Modify to spread platforms out
+    let y = i * 4; // Increase height as we move forward
+    let z = -i * 8; // Spread the platforms farther apart in the Z-axis
 
-        createCheckpoint(-2, 21, -30, 1);          // Checkpoint on the last platform
+    // Creating the platforms with incremental sizes
+    createPlatform(x, y, z, 5 + (i % 5), 1, 5 + (i % 5));  // Platforms with varying sizes
+
+    // Place spikes around the platform based on the index
+    createObstacle(x, y + 1, z, 0.5); // Spike on top of platform
+    createObstacle(x + 2, y + 1, z, 0.5); // Additional spike
+    createObstacle(x - 2, y + 1, z, 0.5); // Additional spike
+
+    // Add a checkpoint every 10 platforms
+    if (i % 10 === 0) {
+        createCheckpoint(x, y + 2, z, 1); // Checkpoint every 10th platform
+    }
+}
 
         // Player setup
         const player = new THREE.Object3D();
