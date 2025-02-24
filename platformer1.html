@@ -104,46 +104,43 @@
             scene.add(checkpoint);
             checkpoints.push(checkpoint);
         }
-        // Start with your first platform
-createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
-createPlatform(2, 4, -8, 5, 1, 5);   // Small platform
-createPlatform(-3, 8, -15, 6, 1, 6); // Medium platform
-createPlatform(1, 12, -20, 6, 1, 6); // Medium platform
-createPlatform(4, 16, -25, 8, 1, 8); // Large platform
-createPlatform(-2, 20, -30, 10, 1, 10); // Extra large platform (checkpoint)
+        // Fixed platform locations (X, Y, Z)
+// We ensure platforms are reachable by adjusting their height (Y) and horizontal (X, Z) distances.
+let platformLocations = [
+    {x: 0, y: 0, z: 0, width: 10, depth: 10},     // Ground platform
+    {x: 5, y: 4, z: -10, width: 5, depth: 5},     // Small platform
+    {x: -5, y: 8, z: -20, width: 6, depth: 6},    // Medium platform
+    {x: 2, y: 12, z: -30, width: 6, depth: 6},    // Medium platform
+    {x: 7, y: 16, z: -40, width: 8, depth: 8},    // Large platform
+    {x: -3, y: 20, z: -50, width: 10, depth: 10},  // Extra large platform (checkpoint)
+];
 
-// Function to generate random numbers between two values
-function randomInRange(min, max) {
-    return Math.random() * (max - min) + min;
+// Function to create the platforms and obstacles at designated positions
+for (let i = 0; i < platformLocations.length; i++) {
+    let platform = platformLocations[i];
+
+    // Create platform
+    createPlatform(platform.x, platform.y, platform.z, platform.width, 1, platform.depth);
+
+    // Add obstacles (spikes) in different spots around the platform
+    // Add a few spikes around each platform with slight variation in their position
+    let spikeCount = 3;  // Add 3 spikes for each platform, for example
+    for (let j = 0; j < spikeCount; j++) {
+        let spikeX = platform.x + randomInRange(-2, 2);  // Random spike positions around the platform
+        let spikeY = platform.y + randomInRange(0, 1);  // Random vertical spike position
+        let spikeZ = platform.z + randomInRange(-2, 2);  // Random spike position in Z direction
+        createObstacle(spikeX, spikeY, spikeZ, 0.5);
+    }
+
+    // Add checkpoint after every 5 platforms (just an example)
+    if ((i + 1) % 5 === 0) {
+        createCheckpoint(platform.x, platform.y + 2, platform.z, 1); // Add checkpoint
+    }
 }
 
-// Create 100 more platforms and obstacles
-let currentHeight = 0;  // Start at ground level
-for (let i = 1; i <= 100; i++) {
-    let x = randomInRange(i * 2 - 5, i * 2 + 5); // Randomize X position to add variation
-    let y = currentHeight + randomInRange(-3, 3); // Random Y change (up or down)
-    let z = -i * 8 + randomInRange(-5, 5); // Randomize Z to make platforms not all in a straight line
-    
-    // Create platforms with varying sizes and random height adjustments
-    createPlatform(x, y, z, 5 + (i % 5), 1, 5 + (i % 5));  
-
-    // Add obstacles (spikes) at random positions around the platform
-    let spikeCount = Math.floor(randomInRange(1, 4)); // Random number of spikes per platform (1-3)
-    for (let j = 0; j < spikeCount; j++) {
-        let spikeX = x + randomInRange(-3, 3);  // Random horizontal position of spikes
-        let spikeY = y + randomInRange(0, 2);  // Random vertical placement (above or on the platform)
-        let spikeZ = z + randomInRange(-3, 3);  // Random horizontal displacement for Z axis
-
-        createObstacle(spikeX, spikeY, spikeZ, 0.5); // Create the spike
-    }
-
-    // Add a checkpoint every 10 platforms
-    if (i % 10 === 0) {
-        createCheckpoint(x, y + 2, z, 1); // Checkpoint every 10th platform
-    }
-
-    // Update current height to use for the next platform
-    currentHeight = y;
+// Function to generate random numbers between two values for spike placement
+function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
        
