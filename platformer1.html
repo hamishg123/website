@@ -7,7 +7,7 @@
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #instructions {
+        instructions {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -104,6 +104,80 @@
             scene.add(checkpoint);
             checkpoints.push(checkpoint);
         }
+        // Function to simulate the gun shooting projectiles
+function shootGun(gunX, gunY, gunZ, direction) {
+    // Create a bullet at the gun's position
+    let bullet = createBullet(gunX, gunY, gunZ, direction);  // Assuming a function that creates bullets
+    bullets.push(bullet);  // Store the bullet in a global array to track it
+
+    // Bullet movement (assuming simple physics)
+    setInterval(() => {
+        bullet.x += bullet.velocityX;
+        bullet.y += bullet.velocityY;
+        bullet.z += bullet.velocityZ;
+
+        // Collision detection (simplified)
+        if (checkCollision(bullet)) {
+            // Handle collision (e.g., damage player, destroy bullet)
+            destroyBullet(bullet); 
+        }
+    }, 100);  // Move the bullet every 100ms
+}
+
+// Function to create a bullet
+function createBullet(x, y, z, direction) {
+    let bullet = {
+        x: x,
+        y: y,
+        z: z,
+        velocityX: direction.x * 0.5, // Speed in X direction
+        velocityY: direction.y * 0.5, // Speed in Y direction
+        velocityZ: direction.z * 0.5, // Speed in Z direction
+    };
+    return bullet;
+}
+
+// Function to check for collision (simplified)
+function checkCollision(bullet) {
+    // Check if the bullet collides with a platform or the player
+    // You can expand this with actual collision logic
+    return false; // Placeholder - no collision detection here
+}
+
+// Function to destroy the bullet after collision
+function destroyBullet(bullet) {
+    let index = bullets.indexOf(bullet);
+    if (index !== -1) {
+        bullets.splice(index, 1);  // Remove bullet from array
+    }
+}
+
+// Create a list of guns (placed on certain platforms)
+let guns = [
+    {x: 5, y: 5, z: -10, direction: {x: 1, y: 0, z: 0}},   // Gun shooting towards the right
+    {x: -5, y: 8, z: -20, direction: {x: 0, y: 1, z: 0}},   // Gun shooting upwards
+    {x: 2, y: 12, z: -30, direction: {x: 0, y: -1, z: 0}},  // Gun shooting downwards
+];
+
+// Function to place guns on platforms and make them shoot
+function placeGuns() {
+    guns.forEach(gun => {
+        // Create gun at specified position (for visualization, if needed)
+        createObstacle(gun.x, gun.y, gun.z, 1); // A placeholder obstacle representing the gun
+
+        // Make the gun shoot periodically (e.g., every 2 seconds)
+        setInterval(() => {
+            shootGun(gun.x, gun.y, gun.z, gun.direction);
+        }, 2000);  // Shooting every 2 seconds
+    });
+}
+
+// Example of how to use the functions to add guns and make them shoot
+let bullets = []; // Store active bullets
+
+// Place guns on platforms
+placeGuns();
+
         // Fixed platform locations (X, Y, Z)
 // We ensure platforms are reachable by adjusting their height (Y) and horizontal (X, Z) distances.
 let platformLocations = [
