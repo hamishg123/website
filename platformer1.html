@@ -1,4 +1,110 @@
-// Start with your first platform
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Platform Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">Click to start</div>
+    <div id="crosshair"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 20, 10);
+        scene.add(light);
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+
+        // Sky
+        const skyMaterial = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x87ceeb });
+        const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        // Load textures for platforms
+        const loader = new THREE.TextureLoader();
+        const platformTexture = loader.load('https://threejs.org/examples/textures/checker.png');
+        platformTexture.wrapS = platformTexture.wrapT = THREE.RepeatWrapping;
+        platformTexture.repeat.set(4, 4);
+
+        // Materials
+        const platformMaterial = new THREE.MeshStandardMaterial({
+            map: platformTexture,
+            metalness: 0.1,
+            roughness: 0.8,
+        });
+        const spikeMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const checkpointMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+
+        // Platforms, Obstacles, and Checkpoints
+        const platforms = [];
+        const obstacles = [];
+        const checkpoints = [];
+
+        // Create platforms
+        function createPlatform(x, y, z, width, height, depth) {
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const platform = new THREE.Mesh(geometry, platformMaterial);
+            platform.position.set(x, y, z);
+            scene.add(platform);
+            platforms.push(platform);
+        }
+
+        // Create obstacles (e.g., spikes)
+        function createObstacle(x, y, z, size) {
+            const geometry = new THREE.ConeGeometry(size, size * 2, 4);
+            const spike = new THREE.Mesh(geometry, spikeMaterial);
+            spike.position.set(x, y, z);
+            spike.rotation.x = 0; // Ensure spikes face upwards
+            scene.add(spike);
+            obstacles.push(spike);
+        }
+
+        // Create checkpoints
+        function createCheckpoint(x, y, z, size) {
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const checkpoint = new THREE.Mesh(geometry, checkpointMaterial);
+            checkpoint.position.set(x, y, z);
+            scene.add(checkpoint);
+            checkpoints.push(checkpoint);
+        }
+        // Start with your first platform
 createPlatform(0, 0, 0, 10, 1, 10);  // Ground platform
 createPlatform(2, 4, -8, 5, 1, 5);   // Small platform
 createPlatform(-3, 8, -15, 6, 1, 6); // Medium platform
@@ -39,3 +145,162 @@ for (let i = 1; i <= 100; i++) {
     // Update current height to use for the next platform
     currentHeight = y;
 }
+
+       
+        // Player setup
+        const player = new THREE.Object3D();
+        player.add(camera);
+        scene.add(player);
+        camera.position.y = 1.6;
+
+        let respawnPosition = new THREE.Vector3(0, 2.6, 0);
+        player.position.copy(respawnPosition);
+
+        let velocityY = 0;
+        const gravity = -0.02;
+        const jumpStrength = 0.4;
+        let isGrounded = false;
+
+        // Pointer lock
+        const instructions = document.getElementById("instructions");
+        const canvas = renderer.domElement;
+
+        function enablePointerLock() {
+            canvas.requestPointerLock();
+        }
+
+        document.addEventListener("click", () => {
+            instructions.style.display = "none";
+            enablePointerLock();
+        });
+
+        document.addEventListener("pointerlockchange", () => {
+            if (document.pointerLockElement !== canvas) {
+                instructions.style.display = "block";
+            }
+        });
+
+        // Movement and rotation
+        let yaw = 0, pitch = 0;
+        const keys = {};
+
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
+        document.addEventListener("mousemove", (event) => {
+            if (document.pointerLockElement === canvas) {
+                const sensitivity = 0.002;
+                yaw -= event.movementX * sensitivity;
+                pitch -= event.movementY * sensitivity;
+                pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+
+                player.rotation.y = yaw;
+                camera.rotation.x = pitch;
+            }
+        });
+
+        function movePlayer() {
+            const speed = 0.1;
+            const forward = new THREE.Vector3(
+                Math.sin(player.rotation.y),
+                0,
+                Math.cos(player.rotation.y)
+            ).normalize();
+
+            const right = new THREE.Vector3(
+                Math.sin(player.rotation.y + Math.PI / 2),
+                0,
+                Math.cos(player.rotation.y + Math.PI / 2)
+            ).normalize();
+
+            if (keys["w"]) player.position.add(forward.multiplyScalar(-speed));
+            if (keys["s"]) player.position.add(forward.multiplyScalar(speed));
+            if (keys["a"]) player.position.add(right.multiplyScalar(-speed));
+            if (keys["d"]) player.position.add(right.multiplyScalar(speed));
+        }
+
+        function checkCollision() {
+            for (const platform of platforms) {
+                const platformBox = new THREE.Box3().setFromObject(platform);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (platformBox.intersectsBox(playerBox)) {
+                    player.position.y = platformBox.max.y + 1.6;
+                    isGrounded = true;
+                    return true;
+                }
+            }
+            isGrounded = false;
+            return false;
+        }
+
+        function checkCheckpoint() {
+            for (const checkpoint of checkpoints) {
+                const checkpointBox = new THREE.Box3().setFromObject(checkpoint);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (checkpointBox.intersectsBox(playerBox)) {
+                    respawnPosition.copy(checkpoint.position);
+                    respawnPosition.y += 2; // Raise the respawn position slightly
+                }
+            }
+        }
+
+        function checkSpikeCollision() {
+            for (const obstacle of obstacles) {
+                const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+                const playerBox = new THREE.Box3().setFromCenterAndSize(
+                    player.position.clone().setY(player.position.y - 0.8),
+                    new THREE.Vector3(0.5, 1.6, 0.5)
+                );
+
+                if (obstacleBox.intersectsBox(playerBox)) {
+                    player.position.copy(respawnPosition);
+                    velocityY = 0;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function applyGravity() {
+            velocityY += gravity;
+            player.position.y += velocityY;
+
+            if (checkCollision()) {
+                velocityY = 0;
+            }
+
+            checkCheckpoint();
+            checkSpikeCollision();
+
+            if (player.position.y < -10) {
+                player.position.copy(respawnPosition);
+                velocityY = 0;
+            }
+        }
+
+        function handleJump() {
+            if (keys[" "] && isGrounded) {
+                velocityY = jumpStrength;
+                isGrounded = false;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            movePlayer();
+            applyGravity();
+            handleJump();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
