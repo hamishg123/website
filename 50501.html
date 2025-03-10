@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>50-50 Chance Game</title>
+<style>
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f0f0; font-family: Arial, sans-serif; }
+  button { padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>50-50 Chance Game</h1>
+<p>High Score: <span id="high-score">0</span></p>
+<p>Current Score: <span id="score">0</span></p>
+<p>Chance of Reset: <span id="reset-chance">10</span>%</p>
+<button onclick="playGame()">Take a Chance!</button>
+<script>
+let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
+let resetChance = 10;
+document.getElementById("high-score").innerText = highScore;
+document.getElementById("reset-chance").innerText = resetChance;
+
+function playGame() {
+    if (Math.random() < resetChance / 100) {
+        alert("You lost! Game reset.");
+        score = 0;
+        resetChance = 10;
+    } else {
+        score++;
+        resetChance = Math.min(100, resetChance + (resetChance * 0.2));
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("highScore", highScore);
+        }
+    }
+    document.getElementById("score").innerText = score;
+    document.getElementById("high-score").innerText = highScore;
+    document.getElementById("reset-chance").innerText = resetChance.toFixed(1);
+}
+</script>
+</body>
+</html>
