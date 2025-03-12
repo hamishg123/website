@@ -5,10 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>50-50 Chance Game</title>
 <style>
-  body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #1e293b; color: #f0f0f0; font-family: Arial, sans-serif; }
-  button { padding: 10px 20px; margin-top: 20px; cursor: pointer; background-color: #3b82f6; color: #fff; border: none; border-radius: 8px; transition: 0.3s; }
-  button:hover { background-color: #2563eb; }
-  .message { margin-top: 20px; font-size: 18px; }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e293b, #3b82f6);
+    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+  p {
+    font-size: 1.2em;
+  }
+  button {
+    padding: 15px 30px;
+    margin-top: 20px;
+    cursor: pointer;
+    background-color: #facc15;
+    color: #1e293b;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 12px;
+    transition: 0.3s;
+    font-weight: bold;
+  }
+  button:hover {
+    background-color: #eab308;
+  }
+  .message {
+    margin-top: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -34,7 +68,7 @@ function playGame() {
         document.getElementById("message").innerText = "Oof! Try again.";
     } else {
         score++;
-        resetChance = Math.min(100, resetChance + (resetChance * 0.2));
+        resetChance = Math.min(100, resetChance + 10);
         if (score > highScore) {
             highScore = score;
             localStorage.setItem("highScore", highScore);
