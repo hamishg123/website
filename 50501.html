@@ -5,8 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>50-50 Chance Game</title>
 <style>
-  body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f0f0; font-family: Arial, sans-serif; }
-  button { padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e293b, #3b82f6);
+    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+  p {
+    font-size: 1.2em;
+  }
+  button {
+    padding: 15px 30px;
+    margin-top: 20px;
+    cursor: pointer;
+    background-color: #facc15;
+    color: #1e293b;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 12px;
+    transition: 0.3s;
+    font-weight: bold;
+  }
+  button:hover {
+    background-color: #eab308;
+  }
+  .message {
+    margin-top: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  .shop {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    width: 300px;
+  }
+  .upgrade-button {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 1em;
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .upgrade-button:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -15,29 +73,62 @@
 <p>Current Score: <span id="score">0</span></p>
 <p>Chance of Reset: <span id="reset-chance">10</span>%</p>
 <button onclick="playGame()">Take a Chance!</button>
+<p class="message" id="message"></p>
+<div class="shop">
+  <h2>Upgrades</h2>
+  <button class="upgrade-button" id="auto-clicker" onclick="buyUpgrade('autoClicker')" disabled>Auto Clicker (Unlocks at 10)</button>
+  <button class="upgrade-button" id="reduce-reset" onclick="buyUpgrade('reduceReset')" disabled>Reduce Reset Chance (Unlocks at 20)</button>
+</div>
 <script>
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
 let resetChance = 10;
+let upgrades = JSON.parse(localStorage.getItem("upgrades")) || { autoClicker: false, reduceReset: false };
 document.getElementById("high-score").innerText = highScore;
 document.getElementById("reset-chance").innerText = resetChance;
+const messages = ["Just one more!", "Keep going!", "You got this!", "Feeling lucky?", "Don’t stop now!"];
 
 function playGame() {
     if (Math.random() < resetChance / 100) {
         alert("You lost! Game reset.");
         score = 0;
         resetChance = 10;
+        document.getElementById("message").innerText = "Oof! Try again.";
     } else {
         score++;
-        resetChance = Math.min(100, resetChance + (resetChance * 0.2));
+        resetChance = Math.min(100, resetChance + (resetChance * 0.1));
         if (score > highScore) {
             highScore = score;
             localStorage.setItem("highScore", highScore);
         }
+        document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
     }
     document.getElementById("score").innerText = score;
     document.getElementById("high-score").innerText = highScore;
     document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
+    updateUpgrades();
+}
+
+function updateUpgrades() {
+    if (highScore >= 10 && !upgrades.autoClicker) {
+        document.getElementById("auto-clicker").disabled = false;
+    }
+    if (highScore >= 20 && !upgrades.reduceReset) {
+        document.getElementById("reduce-reset").disabled = false;
+    }
+}
+
+function buyUpgrade(upgrade) {
+    if (upgrade === "autoClicker" && highScore >= 10 && !upgrades.autoClicker) {
+        upgrades.autoClicker = true;
+        setInterval(() => playGame(), 3000);
+    }
+    if (upgrade === "reduceReset" && highScore >= 20 && !upgrades.reduceReset) {
+        upgrades.reduceReset = true;
+        resetChance *= 0.9;
+    }
+    localStorage.setItem("upgrades", JSON.stringify(upgrades));
+    document.getElementById(upgrade === "autoClicker" ? "auto-clicker" : "reduce-reset").disabled = true;
 }
 </script>
 </body>
