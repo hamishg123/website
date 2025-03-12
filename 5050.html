@@ -68,7 +68,7 @@ function playGame() {
         document.getElementById("message").innerText = "Oof! Try again.";
     } else {
         score++;
-        resetChance = Math.min(100, resetChance + 10);
+        resetChance = Math.min(100, resetChance + (resetChance * 0.1));
         if (score > highScore) {
             highScore = score;
             localStorage.setItem("highScore", highScore);
