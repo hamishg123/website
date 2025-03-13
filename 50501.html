@@ -61,10 +61,6 @@
     border-radius: 8px;
     cursor: pointer;
   }
-  .upgrade-button:disabled {
-    background-color: #888;
-    cursor: not-allowed;
-  }
 </style>
 </head>
 <body>
@@ -74,19 +70,23 @@
 <p>Chance of Reset: <span id="reset-chance">10</span>%</p>
 <button onclick="playGame()">Take a Chance!</button>
 <p class="message" id="message"></p>
-<div class="shop">
+<div class="shop" id="shop">
   <h2>Upgrades</h2>
-  <button class="upgrade-button" id="auto-clicker" onclick="buyUpgrade('autoClicker')" disabled>Auto Clicker (Unlocks at 10)</button>
-  <button class="upgrade-button" id="reduce-reset" onclick="buyUpgrade('reduceReset')" disabled>Reduce Reset Chance (Unlocks at 20)</button>
 </div>
 <script>
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
 let resetChance = 10;
-let upgrades = JSON.parse(localStorage.getItem("upgrades")) || { autoClicker: false, reduceReset: false };
-document.getElementById("high-score").innerText = highScore;
-document.getElementById("reset-chance").innerText = resetChance;
+let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
 const messages = ["Just one more!", "Keep going!", "You got this!", "Feeling lucky?", "Don’t stop now!"];
+const availableUpgrades = [
+  { id: "autoClicker", name: "Auto Clicker", unlockAt: 10, effect: () => setInterval(() => playGame(), 3000) },
+  { id: "reduceReset", name: "Reduce Reset Chance", unlockAt: 15, effect: () => resetChance *= 0.9 }
+];
+
+document.getElementById("high-score").innerText = highScore;
+
+document.getElementById("reset-chance").innerText = resetChance;
 
 function playGame() {
     if (Math.random() < resetChance / 100) {
@@ -110,26 +110,30 @@ function playGame() {
 }
 
 function updateUpgrades() {
-    if (highScore >= 10 && !upgrades.autoClicker) {
-        document.getElementById("auto-clicker").disabled = false;
-    }
-    if (highScore >= 20 && !upgrades.reduceReset) {
-        document.getElementById("reduce-reset").disabled = false;
+    const shop = document.getElementById("shop");
+    shop.innerHTML = "<h2>Upgrades</h2>";
+    availableUpgrades.forEach(upg => {
+        if (highScore >= upg.unlockAt && !upgrades[upg.id]) {
+            let btn = document.createElement("button");
+            btn.innerText = upg.name + " (Unlocks at " + upg.unlockAt + ")";
+            btn.classList.add("upgrade-button");
+            btn.onclick = () => buyUpgrade(upg.id);
+            shop.appendChild(btn);
+        }
+    });
+}
+
+function buyUpgrade(upgradeId) {
+    const upgrade = availableUpgrades.find(upg => upg.id === upgradeId);
+    if (upgrade && highScore >= upgrade.unlockAt && !upgrades[upgradeId]) {
+        upgrades[upgradeId] = true;
+        upgrade.effect();
+        localStorage.setItem("upgrades", JSON.stringify(upgrades));
+        updateUpgrades();
     }
 }
 
-function buyUpgrade(upgrade) {
-    if (upgrade === "autoClicker" && highScore >= 10 && !upgrades.autoClicker) {
-        upgrades.autoClicker = true;
-        setInterval(() => playGame(), 3000);
-    }
-    if (upgrade === "reduceReset" && highScore >= 20 && !upgrades.reduceReset) {
-        upgrades.reduceReset = true;
-        resetChance *= 0.9;
-    }
-    localStorage.setItem("upgrades", JSON.stringify(upgrades));
-    document.getElementById(upgrade === "autoClicker" ? "auto-clicker" : "reduce-reset").disabled = true;
-}
+updateUpgrades();
 </script>
 </body>
 </html>
