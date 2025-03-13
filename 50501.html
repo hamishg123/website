@@ -65,7 +65,7 @@
 </head>
 <body>
 <h1>50-50 Chance Game</h1>
-<p>High Score: <span id="high-score">0</span></p>
+<p>High Score (Money): <span id="high-score">0</span></p>
 <p>Current Score: <span id="score">0</span></p>
 <p>Chance of Reset: <span id="reset-chance">10</span>%</p>
 <button onclick="playGame()">Take a Chance!</button>
@@ -75,17 +75,16 @@
 </div>
 <script>
 let score = 0;
-let highScore = localStorage.getItem("highScore") || 0;
+let highScore = parseInt(localStorage.getItem("highScore")) || 0;
 let resetChance = 10;
 let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
 const messages = ["Just one more!", "Keep going!", "You got this!", "Feeling lucky?", "Don’t stop now!"];
 const availableUpgrades = [
-  { id: "autoClicker", name: "Auto Clicker", unlockAt: 10, effect: () => setInterval(() => playGame(), 3000) },
-  { id: "reduceReset", name: "Reduce Reset Chance", unlockAt: 15, effect: () => resetChance *= 0.9 }
+  { id: "autoClicker", name: "Auto Clicker", unlockAt: 10, cost: 10, effect: () => setInterval(() => playGame(), 3000) },
+  { id: "reduceReset", name: "Reduce Reset Chance", unlockAt: 15, cost: 15, effect: () => resetChance *= 0.9 }
 ];
 
 document.getElementById("high-score").innerText = highScore;
-
 document.getElementById("reset-chance").innerText = resetChance;
 
 function playGame() {
@@ -113,9 +112,9 @@ function updateUpgrades() {
     const shop = document.getElementById("shop");
     shop.innerHTML = "<h2>Upgrades</h2>";
     availableUpgrades.forEach(upg => {
-        if (highScore >= upg.unlockAt && !upgrades[upg.id]) {
+        if (highScore >= upg.cost && !upgrades[upg.id]) {
             let btn = document.createElement("button");
-            btn.innerText = upg.name + " (Unlocks at " + upg.unlockAt + ")";
+            btn.innerText = upg.name + " (Cost: " + upg.cost + ")";
             btn.classList.add("upgrade-button");
             btn.onclick = () => buyUpgrade(upg.id);
             shop.appendChild(btn);
@@ -125,10 +124,13 @@ function updateUpgrades() {
 
 function buyUpgrade(upgradeId) {
     const upgrade = availableUpgrades.find(upg => upg.id === upgradeId);
-    if (upgrade && highScore >= upgrade.unlockAt && !upgrades[upgradeId]) {
+    if (upgrade && highScore >= upgrade.cost && !upgrades[upgradeId]) {
+        highScore -= upgrade.cost;
         upgrades[upgradeId] = true;
         upgrade.effect();
         localStorage.setItem("upgrades", JSON.stringify(upgrades));
+        localStorage.setItem("highScore", highScore);
+        document.getElementById("high-score").innerText = highScore;
         updateUpgrades();
     }
 }
