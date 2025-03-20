@@ -27,11 +27,19 @@
     th {
       background-color: #f4f4f4;
     }
+    .soundboard {
+      margin-top: 20px;
+    }
+    .sound-button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <h1>annoy the teacher</h1>
-  <p>Click "Start" to play the audio. Lower your volume at 50% or more, then click "Stop" to stop the timer! you can play against a friend and see who is last to click stop</p>
+  <p>Click "Start" to play the audio. Lower your volume at 50% or more, then click "Stop" to stop the timer! You can play against a friend and see who is last to click stop.</p>
   <button id="startButton">Start</button>
   <button id="confirmButton" disabled>Stop</button>
   <p id="timer">Timer: 0.00 seconds</p>
@@ -45,10 +53,21 @@
         <th>Time (seconds)</th>
       </tr>
     </thead>
-    <tbody id="leaderboard">
-      <!-- Leaderboard scores will be dynamically inserted here -->
-    </tbody>
+    <tbody id="leaderboard"></tbody>
   </table>
+
+  <h2>Soundboard</h2>
+  <div class="soundboard">
+    <button class="sound-button" data-key="1">1</button>
+    <button class="sound-button" data-key="2">2</button>
+    <button class="sound-button" data-key="3">3</button>
+    <button class="sound-button" data-key="4">4</button>
+    <button class="sound-button" data-key="5">5</button>
+    <button class="sound-button" data-key="6">6</button>
+    <button class="sound-button" data-key="7">7</button>
+    <button class="sound-button" data-key="8">8</button>
+    <button class="sound-button" data-key="9">9</button>
+  </div>
 
   <script>
     const audio = document.getElementById("audio");
@@ -60,21 +79,16 @@
     let timer = 0;
     let interval;
 
-    // Load leaderboard from local storage
     function loadLeaderboard() {
       const scores = JSON.parse(localStorage.getItem("leaderboard1")) || [];
-      leaderboardTable.innerHTML = scores
-        .sort((a, b) => a - b) // Sort scores in ascending order
-        .map((score, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${score.toFixed(2)}</td>
-          </tr>
-        `)
-        .join("");
+      leaderboardTable.innerHTML = scores.sort((a, b) => a - b).map((score, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${score.toFixed(2)}</td>
+        </tr>
+      `).join("");
     }
 
-    // Save a new score to the leaderboard
     function saveScore(score) {
       const scores = JSON.parse(localStorage.getItem("leaderboard1")) || [];
       scores.push(score);
@@ -82,35 +96,50 @@
       loadLeaderboard();
     }
 
-    // Start the game
     startButton.addEventListener("click", () => {
-      audio.play().catch(error => console.error("Audio playback error:", error)); // Play the audio
+      audio.play().catch(error => console.error("Audio playback error:", error));
       timer = 0;
       timerDisplay.textContent = "Timer: 0.00 seconds";
       confirmButton.disabled = false;
       startButton.disabled = true;
-
-      // Start the timer
       interval = setInterval(() => {
         timer += 0.1;
         timerDisplay.textContent = `Timer: ${timer.toFixed(2)} seconds`;
-      }, 100); // Update every 0.1 seconds
+      }, 100);
     });
 
-    // Stop the timer when "Stop" is clicked
     confirmButton.addEventListener("click", () => {
-      clearInterval(interval); // Stop the timer
-      audio.pause(); // Pause the audio
-      audio.currentTime = 0; // Reset audio position
+      clearInterval(interval);
+      audio.pause();
+      audio.currentTime = 0;
       confirmButton.disabled = true;
       startButton.disabled = false;
-
       alert(`You stopped the timer at ${timer.toFixed(2)} seconds!`);
-      saveScore(timer); // Save the score to the leaderboard
+      saveScore(timer);
     });
 
-    // Initialize leaderboard on page load
     loadLeaderboard();
+
+    // Soundboard functionality
+    const sounds = {};
+    for (let i = 1; i <= 9; i++) {
+      sounds[i] = new Audio(`sound${i}.mp3`);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (sounds[event.key]) {
+        sounds[event.key].currentTime = 0;
+        sounds[event.key].play();
+      }
+    });
+
+    document.querySelectorAll(".sound-button").forEach(button => {
+      button.addEventListener("click", () => {
+        const key = button.getAttribute("data-key");
+        sounds[key].currentTime = 0;
+        sounds[key].play();
+      });
+    });
   </script>
 </body>
 </html>
