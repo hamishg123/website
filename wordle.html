@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini Wordle</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #121213;
+      color: #fff;
+      margin-top: 40px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tile {
+      width: 60px;
+      height: 60px;
+      font-size: 2rem;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 60px;
+      border: 2px solid #3a3a3c;
+      background: #121213;
+      color: #fff;
+    }
+    .correct {
+      background: #538d4e;
+      border: none;
+    }
+    .present {
+      background: #b59f3b;
+      border: none;
+    }
+    .absent {
+      background: #3a3a3c;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wordle Clone</h1>
+  <div id="board" class="board"></div>
+  <p id="message"></p>
+
+  <script>
+    const words = ["apple", "grape", "chair", "plant", "crane", "blame"];
+    const target = words[Math.floor(Math.random() * words.length)];
+    const board = document.getElementById("board");
+    const message = document.getElementById("message");
+
+    let currentRow = 0;
+    let currentGuess = "";
+
+    const MAX_ROWS = 6;
+
+    // Create the tiles
+    for (let i = 0; i < MAX_ROWS * 5; i++) {
+      const div = document.createElement("div");
+      div.classList.add("tile");
+      board.appendChild(div);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (message.textContent) return;
+
+      if (e.key === "Enter") {
+        if (currentGuess.length < 5) return;
+
+        checkGuess();
+      } else if (e.key === "Backspace") {
+        if (currentGuess.length > 0) {
+          currentGuess = currentGuess.slice(0, -1);
+          updateTiles();
+        }
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        if (currentGuess.length < 5) {
+          currentGuess += e.key.toLowerCase();
+          updateTiles();
+        }
+      }
+    });
+
+    function updateTiles() {
+      const start = currentRow * 5;
+      for (let i = 0; i < 5; i++) {
+        const tile = board.children[start + i];
+        tile.textContent = currentGuess[i] || "";
+      }
+    }
+
+    function checkGuess() {
+      const start = currentRow * 5;
+      const guess = currentGuess;
+      const result = Array(5).fill("absent");
+      const letterCount = {};
+
+      // Count letters in target word
+      for (let i = 0; i < 5; i++) {
+        const letter = target[i];
+        letterCount[letter] = (letterCount[letter] || 0) + 1;
+      }
+
+      // First pass: correct letters
+      for (let i = 0; i < 5; i++) {
+        if (guess[i] === target[i]) {
+          result[i] = "correct";
+          letterCount[guess[i]]--;
+        }
+      }
+
+      // Second pass: present letters
+      for (let i = 0; i < 5; i++) {
+        if (result[i] === "correct") continue;
+        if (target.includes(guess[i]) && letterCount[guess[i]] > 0) {
+          result[i] = "present";
+          letterCount[guess[i]]--;
+        }
+      }
+
+      // Apply colors
+      for (let i = 0; i < 5; i++) {
+        const tile = board.children[start + i];
+        tile.classList.add(result[i]);
+      }
+
+      if (guess === target) {
+        message.textContent = "🎉 You guessed it!";
+      } else {
+        currentRow++;
+        currentGuess = "";
+        if (currentRow === MAX_ROWS) {
+          message.textContent = `💥 The word was "${target.toUpperCase()}"`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
