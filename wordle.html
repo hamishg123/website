@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mini Wordle</title>
+  <title>Wordle</title>
   <style>
     body {
       font-family: sans-serif;
@@ -51,7 +51,32 @@
   <p id="message"></p>
 
   <script>
-    const words = ["apple", "grape", "chair", "plant", "crane", "blame"];
+    const words = [
+  "apple", "grape", "chair", "plant", "crane", "blame", "baker", "beach", "begin", "black",
+  "blend", "brake", "brick", "blush", "blood", "bloom", "block", "chase", "clash", "clamp",
+  "climb", "clock", "candy", "clean", "cleft", "clear", "clove", "crisp", "crowd", "dance",
+  "daisy", "drain", "dream", "drink", "ditch", "doubt", "drool", "drift", "drawl", "earth",
+  "elbow", "entry", "empty", "elite", "evoke", "exert", "event", "extra", "exile", "faith",
+  "flame", "flock", "faint", "flesh", "frame", "frown", "fresh", "flare", "float", "giant",
+  "grove", "grace", "grasp", "glove", "group", "gloat", "glare", "harsh", "heist", "hatch",
+  "haste", "heave", "hover", "honey", "honor", "heart", "ivory", "index", "inner", "intro",
+  "irony", "ideal", "inbox", "input", "image", "itemy", "jolly", "jumpy", "joint", "judge",
+  "keen", "kinky", "knot", "knife", "knack", "knee", "known", "kneed", "knock", "knell",
+  "leash", "lemon", "lapse", "latch", "liver", "lucky", "lunch", "lunar", "lacer", "local",
+  "moose", "mango", "magic", "melon", "money", "mirth", "minor", "mount", "mole", "night",
+  "nacho", "nerve", "nifty", "north", "nerdy", "needy", "peach", "press", "perch", "plaza",
+  "plume", "plane", "punch", "pound", "power", "quack", "quick", "quiet", "quest", "queen",
+  "quip", "quirk", "quote", "quake", "quash", "roast", "raise", "reach", "rage", "risky",
+  "reset", "racer", "rover", "rays", "salt", "shale", "sheen", "shout", "shook", "scale",
+  "seize", "stack", "stale", "stark", "table", "train", "track", "trick", "theme", "there",
+  "threw", "treat", "tried", "taste", "unite", "under", "ultra", "usher", "unzip", "unfit",
+  "untie", "unity", "usage", "vigor", "viper", "vocal", "voted", "vague", "vials", "value",
+  "vapor", "vines", "voice", "wager", "waste", "waltz", "whale", "wheel", "water", "worry",
+  "watch", "woody", "xenon", "xmas", "xcite", "xtrim", "xerox", "yodel", "young", "yappy",
+  "yahoo", "yield", "yummy", "yacht", "yoker", "zebra", "zesty", "zippy", "zoned", "zappy",
+  "zinc", "zesty", "zipper"
+];
+
     const target = words[Math.floor(Math.random() * words.length)];
     const board = document.getElementById("board");
     const message = document.getElementById("message");
