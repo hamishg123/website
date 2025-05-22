@@ -220,7 +220,7 @@ function updateUpgrades() {
   const shop = document.getElementById("shop");
   shop.innerHTML = "<h2>Upgrades</h2>";
   availableUpgrades.forEach(upg => {
-    if (highScore >= upg.cost && !upgrades[upg.id]) {
+    if (highScore >= upg.unlockAt && !upgrades[upg.id]) {
       let btn = document.createElement("button");
       btn.innerText = upg.name + " (Cost: " + upg.cost + ")";
       btn.classList.add("upgrade-button");
