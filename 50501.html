@@ -79,60 +79,168 @@ let highScore = parseInt(localStorage.getItem("highScore")) || 0;
 let resetChance = 10;
 let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {};
 const messages = ["Just one more!", "Keep going!", "You got this!", "Feeling lucky?", "Don’t stop now!"];
+
+let basePlayGame = function () {
+  if (Math.random() < resetChance / 100) {
+    alert("You lost! Game reset.");
+    score = 0;
+    resetChance = 10;
+    document.getElementById("message").innerText = "Oof! Try again.";
+  } else {
+    score++;
+    resetChance = Math.min(100, resetChance + (resetChance * 0.1));
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("highScore", highScore);
+    }
+    document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
+  }
+  document.getElementById("score").innerText = score;
+  document.getElementById("high-score").innerText = highScore;
+  document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
+  updateUpgrades();
+};
+
+let playGame = () => basePlayGame();
+
 const availableUpgrades = [
-  { id: "autoClicker", name: "Auto Clicker", unlockAt: 10, cost: 10, effect: () => setInterval(() => playGame(), 3000) },
-  { id: "reduceReset", name: "Reduce Reset Chance", unlockAt: 15, cost: 15, effect: () => resetChance *= 0.9 }
+  {
+    id: "autoClicker",
+    name: "Auto Clicker",
+    unlockAt: 10,
+    cost: 10,
+    effect: () => setInterval(() => playGame(), 3000)
+  },
+  {
+    id: "reduceReset",
+    name: "Reduce Reset Chance",
+    unlockAt: 15,
+    cost: 15,
+    effect: () => { resetChance *= 0.9; }
+  },
+  {
+    id: "boostMultiplier",
+    name: "Double Rewards",
+    unlockAt: 20,
+    cost: 20,
+    effect: () => {
+      const original = playGame;
+      playGame = function () {
+        if (Math.random() < resetChance / 100) {
+          alert("You lost! Game reset.");
+          score = 0;
+          resetChance = 10;
+          document.getElementById("message").innerText = "Oof! Try again.";
+        } else {
+          score += 2;
+          resetChance = Math.min(100, resetChance + (resetChance * 0.1));
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("highScore", highScore);
+          }
+          document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
+        }
+        document.getElementById("score").innerText = score;
+        document.getElementById("high-score").innerText = highScore;
+        document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
+        updateUpgrades();
+      };
+    }
+  },
+  {
+    id: "resetFloor",
+    name: "Never Below 5",
+    unlockAt: 25,
+    cost: 25,
+    effect: () => {
+      const original = playGame;
+      playGame = function () {
+        const wasAbove5 = score >= 5;
+        if (Math.random() < resetChance / 100) {
+          if (wasAbove5) {
+            score = 5;
+            document.getElementById("message").innerText = "Saved by Reset Floor!";
+          } else {
+            alert("You lost! Game reset.");
+            score = 0;
+            resetChance = 10;
+            document.getElementById("message").innerText = "Oof! Try again.";
+          }
+        } else {
+          score++;
+          resetChance = Math.min(100, resetChance + (resetChance * 0.1));
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("highScore", highScore);
+          }
+          document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
+        }
+        document.getElementById("score").innerText = score;
+        document.getElementById("high-score").innerText = highScore;
+        document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
+        updateUpgrades();
+      };
+    }
+  },
+  {
+    id: "slowerDecay",
+    name: "Slower Reset Chance Increase",
+    unlockAt: 30,
+    cost: 30,
+    effect: () => {
+      const original = playGame;
+      playGame = function () {
+        if (Math.random() < resetChance / 100) {
+          alert("You lost! Game reset.");
+          score = 0;
+          resetChance = 10;
+          document.getElementById("message").innerText = "Oof! Try again.";
+        } else {
+          score++;
+          resetChance = Math.min(100, resetChance + (resetChance * 0.05)); // slower
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("highScore", highScore);
+          }
+          document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
+        }
+        document.getElementById("score").innerText = score;
+        document.getElementById("high-score").innerText = highScore;
+        document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
+        updateUpgrades();
+      };
+    }
+  }
 ];
 
 document.getElementById("high-score").innerText = highScore;
 document.getElementById("reset-chance").innerText = resetChance;
 
-function playGame() {
-    if (Math.random() < resetChance / 100) {
-        alert("You lost! Game reset.");
-        score = 0;
-        resetChance = 10;
-        document.getElementById("message").innerText = "Oof! Try again.";
-    } else {
-        score++;
-        resetChance = Math.min(100, resetChance + (resetChance * 0.1));
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem("highScore", highScore);
-        }
-        document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
-    }
-    document.getElementById("score").innerText = score;
-    document.getElementById("high-score").innerText = highScore;
-    document.getElementById("reset-chance").innerText = resetChance.toFixed(0);
-    updateUpgrades();
-}
-
 function updateUpgrades() {
-    const shop = document.getElementById("shop");
-    shop.innerHTML = "<h2>Upgrades</h2>";
-    availableUpgrades.forEach(upg => {
-        if (highScore >= upg.cost && !upgrades[upg.id]) {
-            let btn = document.createElement("button");
-            btn.innerText = upg.name + " (Cost: " + upg.cost + ")";
-            btn.classList.add("upgrade-button");
-            btn.onclick = () => buyUpgrade(upg.id);
-            shop.appendChild(btn);
-        }
-    });
+  const shop = document.getElementById("shop");
+  shop.innerHTML = "<h2>Upgrades</h2>";
+  availableUpgrades.forEach(upg => {
+    if (highScore >= upg.cost && !upgrades[upg.id]) {
+      let btn = document.createElement("button");
+      btn.innerText = upg.name + " (Cost: " + upg.cost + ")";
+      btn.classList.add("upgrade-button");
+      btn.onclick = () => buyUpgrade(upg.id);
+      shop.appendChild(btn);
+    }
+  });
 }
 
 function buyUpgrade(upgradeId) {
-    const upgrade = availableUpgrades.find(upg => upg.id === upgradeId);
-    if (upgrade && highScore >= upgrade.cost && !upgrades[upgradeId]) {
-        highScore -= upgrade.cost;
-        upgrades[upgradeId] = true;
-        upgrade.effect();
-        localStorage.setItem("upgrades", JSON.stringify(upgrades));
-        localStorage.setItem("highScore", highScore);
-        document.getElementById("high-score").innerText = highScore;
-        updateUpgrades();
-    }
+  const upgrade = availableUpgrades.find(upg => upg.id === upgradeId);
+  if (upgrade && highScore >= upgrade.cost && !upgrades[upgradeId]) {
+    highScore -= upgrade.cost;
+    upgrades[upgradeId] = true;
+    upgrade.effect();
+    localStorage.setItem("upgrades", JSON.stringify(upgrades));
+    localStorage.setItem("highScore", highScore);
+    document.getElementById("high-score").innerText = highScore;
+    updateUpgrades();
+  }
 }
 
 updateUpgrades();
