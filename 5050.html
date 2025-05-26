@@ -91,9 +91,8 @@ function playGame() {
       document.getElementById("message").innerText = "Saved by Reset Floor!";
     } else {
       alert("You lost! Game reset.");
-      score = 0;
-      resetChance = 10;
-      document.getElementById("message").innerText = "Oof! Try again.";
+      hardReset();
+      return;
     }
   } else {
     let scoreIncrement = upgrades["boostMultiplier"] ? 2 : 1;
@@ -110,6 +109,13 @@ function playGame() {
     document.getElementById("message").innerText = messages[Math.floor(Math.random() * messages.length)];
   }
 
+  updateDisplay();
+}
+
+function hardReset() {
+  score = 0;
+  resetChance = 10;
+  document.getElementById("message").innerText = "Oof! Try again.";
   updateDisplay();
 }
 
