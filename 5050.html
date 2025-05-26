@@ -160,7 +160,9 @@ const availableUpgrades = [
     name: "Never Below 5",
     cost: 25,
     unlockAt: 25,
-    effect: () => {}
+    effect: () => {
+      if (score < 5) score = 5;
+    }
   },
   {
     id: "slowerDecay",
@@ -199,5 +201,6 @@ function buyUpgrade(upgradeId) {
 
 updateDisplay();
 </script>
+
 </body>
 </html>
