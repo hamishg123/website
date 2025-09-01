@@ -5,24 +5,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- SEO Meta Tags -->
     <title>Flappy Bird Online | Play Free Web Game</title>
     <meta name="description" content="Play Flappy Bird online for free! Tap to fly, avoid obstacles, and challenge your friends for the highest score. Works directly in your browser.">
-    <meta name="keywords" content="Flappy Bird, play Flappy Bird online, free game, Unity WebGL, browser games, endless runner, retro arcade">
-    <meta name="author" content="Hami2h123 Games">
-
-    <!-- Open Graph (Facebook/Discord preview) -->
-    <meta property="og:title" content="Flappy Bird Online | Free Game">
-    <meta property="og:description" content="Play Flappy Bird directly in your browser. Can you beat the high score?">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="TemplateData/preview.jpg"> <!-- Add a preview image -->
-    <meta property="og:url" content="https://yourwebsite.com/">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Flappy Bird Online">
-    <meta name="twitter:description" content="Fly through pipes and test your skills in this fun web version of Flappy Bird.">
-    <meta name="twitter:image" content="TemplateData/preview.jpg">
 
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
@@ -63,13 +47,30 @@
         font-weight: bold;
         margin: 10px 0;
       }
+
+      /* Fullscreen button styling */
+      #unity-fullscreen-button {
+        margin-top: 10px;
+        padding: 10px 18px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #0078ff;
+        color: #fff;
+        transition: background 0.2s;
+      }
+
+      #unity-fullscreen-button:hover {
+        background: #005bb5;
+      }
     </style>
   </head>
   <body>
     <main id="unity-container" class="unity-desktop" role="main">
       <canvas id="unity-canvas" width="960" height="600" aria-label="Flappy Bird Game Canvas"></canvas>
-      <div id="unity-loading-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-        <div id="unity-logo" alt="Game logo"></div>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
         </div>
@@ -77,58 +78,5 @@
       <div id="unity-mobile-warning">⚠️ WebGL builds are not supported on mobile devices.</div>
       <footer id="unity-footer">
         <div id="unity-build-title">Flappy Bird by Hami2h123 Games</div>
-        <div><a href="/">Back to Homepage</a></div>
-      </footer>
-    </main>
-
-    <script>
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/FlappyBird.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/FlappyBird.data",
-        frameworkUrl: buildUrl + "/FlappyBird.framework.js",
-        codeUrl: buildUrl + "/FlappyBird.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Hami2h123 Games",
-        productName: "Flappy Bird",
-        productVersion: "1.0",
-      };
-
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var mobileWarning = document.querySelector("#unity-mobile-warning");
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        container.className = "unity-mobile";
-        config.devicePixelRatio = 1;
-        mobileWarning.style.display = "block";
-        setTimeout(() => {
-          mobileWarning.style.display = "none";
-        }, 5000);
-      } else {
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
-      loadingBar.style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
-  </body>
-</html>
+        <button id="unity-fullscreen-button">Go Fullscreen</button>
+        <div><a href="/">Back to Homepage</
