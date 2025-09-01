@@ -1,122 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Voiceflow Widget -->
-  <script type="text/javascript">
-    (function(d, t) {
-        var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-        v.onload = function() {
-          window.voiceflow.chat.load({
-            verify: { projectID: '6793e94e464ea163655229ec' },
-            url: 'https://general-runtime.voiceflow.com',
-            versionID: 'production'
-          });
-        }
-        v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; 
-        v.type = "text/javascript"; 
-        s.parentNode.insertBefore(v, s);
-    })(document, 'script');
-  </script>
-
-  <!-- Meta -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Play Free Unblocked Games Online | Hamish's Game Site</title>
-  <meta name="description" content="Play free unblocked games online at Hamish's Game Site. From classics like Flappy Bird and Cookie Clicker to new Unity games, enjoy endless fun at school, work, or home.">
-  <meta name="keywords" content="unblocked games, play games online, free web games, Flappy Bird, Cookie Clicker, school games, browser games">
-  <meta name="author" content="Hamish Gordon">
-
-  <!-- Open Graph for Social Sharing -->
-  <meta property="og:title" content="Hamish's Game Site - Free Unblocked Games">
-  <meta property="og:description" content="Play the best unblocked games online. Flappy Bird, Cookie Clicker, and many more free browser games!">
-  <meta property="og:image" content="https://hamish.site/preview.png">
-  <meta property="og:url" content="https://hamish.site">
-  <meta property="og:type" content="website">
-
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcnXXR-gP-jKLjckFUsyXi9-sSwuSFHyukfQ&s" type="image/x-icon">
-
-  <!-- Ads -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2902824217499330" crossorigin="anonymous"></script>
-
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Hamish's Game Site",
-    "url": "https://hamish.site",
-    "description": "Play free unblocked games online at Hamish's Game Site.",
-    "inLanguage": "en",
-    "author": { "@type": "Person", "name": "Hamish Gordon" },
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://hamish.site/?s={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
-
+  <title>Play Free Unblocked Games | Hamish's Game Site</title>
+  <meta name="description" content="Play free unblocked games online at Hamish's Game Site. From Flappy Bird to Cookie Clicker and Unity-powered games, enjoy endless fun.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: #fff;
       text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
-      padding: 20px;
+      padding: 30px 20px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
     }
 
-    h1 {
+    header h1 {
       margin: 10px 0;
+      font-size: 2.5rem;
+      font-weight: 600;
     }
 
     main {
-      padding: 20px;
+      flex: 1;
+      padding: 30px;
     }
 
-    /* Game grid */
+    h2 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    /* Game Grid */
     .game-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 25px;
       margin-top: 20px;
     }
 
     .game-card {
-      background: #222;
-      border-radius: 12px;
-      padding: 10px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      background: #1a1a1a;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.3s;
     }
 
     .game-card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      transform: translateY(-8px);
     }
 
     .game-card img {
       width: 100%;
-      border-radius: 8px;
+      display: block;
+      border-radius: 15px;
     }
 
-    .game-card p {
-      margin: 8px 0 0;
+    /* Hover Description Overlay */
+    .game-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      opacity: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      text-align: center;
       font-size: 14px;
+      line-height: 1.4;
+      border-radius: 15px;
+      transition: opacity 0.3s ease;
+    }
+
+    .game-card:hover .game-overlay {
+      opacity: 1;
     }
 
     footer {
       padding: 20px;
       font-size: 14px;
-      color: #aaa;
+      color: #bbb;
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
     }
 
     footer a {
-      color: #00aaff;
+      color: #00c3ff;
       text-decoration: none;
     }
   </style>
@@ -125,26 +110,25 @@
   <header>
     <p>🎮 New Unity Games Added Weekly!</p>
     <h1>Hamish's Game Site</h1>
-    <hr>
   </header>
 
   <main>
     <h2>Play Free Unblocked Games</h2>
     <div class="game-grid">
-      <!-- Example Game Cards -->
+      <!-- Example Game -->
       <a href="FlappyBird" target="_blank" class="game-card">
         <img src="1v1lol/flappybird.png" alt="Play Flappy Bird Online">
-        <p>Flappy Bird</p>
+        <div class="game-overlay">Guide your bird through pipes in this addictive classic!</div>
       </a>
 
       <a href="5050" target="_blank" class="game-card">
         <img src="5050.png" alt="Play 5050 Game Online">
-        <p>5050</p>
+        <div class="game-overlay">Test your luck in the 50/50 chance game!</div>
       </a>
 
       <a href="week1.html" target="_blank" class="game-card">
         <img src="preview-week1.png" alt="Game of the Week">
-        <p>Game of the Week</p>
+        <div class="game-overlay">Our featured pick of the week — play now!</div>
       </a>
     </div>
   </main>
