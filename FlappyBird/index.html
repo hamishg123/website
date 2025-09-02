@@ -1,30 +1,96 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Flappy Bird</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Flappy Bird Online | Play Free Web Game</title>
+    <meta name="description" content="Play Flappy Bird online for free! Tap to fly, avoid obstacles, and challenge your friends for the highest score. Works directly in your browser.">
+
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to bottom, #87ceeb, #ffffff);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      #unity-container {
+        text-align: center;
+      }
+
+      #unity-footer {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #333;
+      }
+
+      #unity-footer a {
+        text-decoration: none;
+        color: #0078ff;
+      }
+
+      #unity-footer a:hover {
+        text-decoration: underline;
+      }
+
+      #unity-mobile-warning {
+        color: red;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      * Fullscreen button styling */
+#unity-fullscreen-button {
+  display: inline-block;       /* prevents squishing */
+  min-width: 140px;            /* ensures it's wide enough */
+  margin-top: 12px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #0078ff;
+  color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+
+#unity-fullscreen-button:hover {
+  background: #005bb5;
+  transform: scale(1.05);      /* subtle grow effect */
+}
+
+#unity-fullscreen-button:active {
+  transform: scale(0.97);      /* slight press effect */
+}
+    </style>
   </head>
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600></canvas>
+    <main id="unity-container" class="unity-desktop" role="main">
+      <canvas id="unity-canvas" width="960" height="600" aria-label="Flappy Bird Game Canvas"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
         </div>
       </div>
-      <div id="unity-mobile-warning">
-        WebGL builds are not supported on mobile devices.
-      </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Flappy Bird</div>
-      </div>
-    </div>
+      <div id="unity-mobile-warning">⚠️ WebGL builds are not supported on mobile devices.</div>
+      <footer id="unity-footer">
+        <div id="unity-build-title">Flappy Bird by Hami2h123 Games</div>
+        <button id="unity-fullscreen-button"></button>
+        <div><a href="/">Back to Homepage</a></div>
+      </footer>
+    </main>
+
     <script>
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/FlappyBird.loader.js";
@@ -45,17 +111,8 @@
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
       var mobileWarning = document.querySelector("#unity-mobile-warning");
 
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
-        // Avoid draining fillrate performance on mobile devices,
-        // and default/override low DPI mode on mobile browsers.
         config.devicePixelRatio = 1;
         mobileWarning.style.display = "block";
         setTimeout(() => {
