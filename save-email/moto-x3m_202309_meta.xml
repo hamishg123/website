@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <identifier>moto-x3m_202309</identifier>
+  <mediatype>software</mediatype>
+  <collection>softwarelibrary_flash_games</collection>
+  <description>Game</description>
+  <scanner>Internet Archive HTML5 Uploader 1.7.0</scanner>
+  <subject>game</subject>
+  <subject>flash</subject>
+  <title>moto-x3m</title>
+  <uploader>juderafton@g.horrycountyschools.net</uploader>
+  <publicdate>2023-09-25 12:36:45</publicdate>
+  <addeddate>2023-09-25 12:36:45</addeddate>
+  <curation>[curator]validator@archive.org[/curator][date]20230925124215[/date][comment]checked for malware[/comment]</curation>
+  <autoemulator>true</autoemulator>
+  <emulator>ruffle-swf</emulator>
+  <emulator_ext>swf</emulator_ext>
+  <collection_added>softwarelibrary</collection_added>
+  <collection_added>emulation</collection_added>
+  <collection>softwarelibrary_flash</collection>
+  <collection>emulation</collection>
+  <collection_added>softwarelibrary_flash</collection_added>
+</metadata>
