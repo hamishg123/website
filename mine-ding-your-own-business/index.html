@@ -71,12 +71,6 @@
         color: #fff;
         text-shadow: 0 0 6px #4caf50;
       }
-
-      #unity-mobile-warning {
-        color: #ff8080;
-        font-weight: bold;
-        margin-top: 10px;
-      }
     </style>
   </head>
   <body>
@@ -84,9 +78,6 @@
       <canvas id="unity-canvas" width=960 height=600></canvas>
       <div id="unity-loading-bar">
         <div id="unity-progress-bar-full"></div>
-      </div>
-      <div id="unity-mobile-warning">
-        WebGL builds are not supported on mobile devices.
       </div>
       <div id="unity-footer">
         <div id="unity-build-title">Mine-Ding Your Own Business</div>
@@ -112,15 +103,10 @@
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var mobileWarning = document.querySelector("#unity-mobile-warning");
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
         config.devicePixelRatio = 1;
-        mobileWarning.style.display = "block";
-        setTimeout(() => {
-          mobileWarning.style.display = "none";
-        }, 5000);
       } else {
         canvas.style.width = "960px";
         canvas.style.height = "600px";
