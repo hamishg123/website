@@ -1,30 +1,110 @@
 <!DOCTYPE html>
 <html lang="en-us">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Mine-Ding Your Own Business</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Mine-Ding Your Own Business | Cave Adventure Game</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+
+  <!-- SEO Meta -->
+  <meta name="description" content="Play Mine-Ding Your Own Business, a fun Unity WebGL cave adventure game! Dodge obstacles, collect seeds, unlock skins, and challenge your friends with high scores.">
+  <meta name="keywords" content="mine-ding, unity webgl game, play flappy bird clone, cave game online, free browser games, adventure game, mining game, hami2h123 games">
+  <meta name="author" content="Hami2h123 Games">
+
+  <!-- Open Graph for Social Media -->
+  <meta property="og:title" content="Mine-Ding Your Own Business | Play Free Mining Game">
+  <meta property="og:description" content="Collect falling ores and deposit them into the pipe to earn money. Use your earnings to upgrade your cart’s speed, ore capacity, and even control how often ores spawn. Expand your mining empire by purchasing new plots, and boost efficiency with funnels that automatically collect ores for you.">
+  <meta property="og:image" content="https://optimize360.shop/minding.png">
+  <meta property="og:url" content="https://optimize360.shop/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mine-Ding Your Own Business">
+  <meta name="twitter:description" content="Collect falling ores and deposit them into the pipe to earn money. Use your earnings to upgrade your cart’s speed, ore capacity, and even control how often ores spawn. Expand your mining empire by purchasing new plots, and boost efficiency with funnels that automatically collect ores for you!">
+  <meta name="twitter:image" content="https://optimize360.shop/minding.png">
+
+  <!-- Mobile Friendly -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f0f0f url("../minding.png") no-repeat center center fixed;
+        background-size: cover;
+        font-family: "Trebuchet MS", sans-serif;
+        color: #eee;
+      }
+
+      #unity-container {
+        position: relative;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+        border: 4px solid #444;
+        border-radius: 12px;
+        background: rgba(20, 20, 20, 0.85);
+        padding: 10px;
+      }
+
+      #unity-canvas {
+        border: 3px solid #333;
+        border-radius: 8px;
+        display: block;
+        margin: auto;
+        background: #000;
+      }
+
+      #unity-loading-bar {
+        width: 100%;
+        height: 20px;
+        background: #222;
+        border: 2px solid #555;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      #unity-progress-bar-full {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #4caf50, #1db954);
+        transition: width 0.2s ease;
+      }
+
+      #unity-footer {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #ccc;
+        font-size: 14px;
+      }
+
+      #unity-build-title {
+        font-weight: bold;
+        font-size: 16px;
+        color: #fff;
+        text-shadow: 0 0 6px #4caf50;
+      }
+    </style>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas" width=960 height=600></canvas>
       <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-mobile-warning">
-        WebGL builds are not supported on mobile devices.
+        <div id="unity-progress-bar-full"></div>
       </div>
       <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
         <div id="unity-build-title">Mine-Ding Your Own Business</div>
+        <div id="unity-fullscreen-button">[Fullscreen]</div>
       </div>
     </div>
+
     <script>
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/mine-ding-your-own-business.loader.js";
@@ -43,24 +123,10 @@
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var mobileWarning = document.querySelector("#unity-mobile-warning");
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
-        // Avoid draining fillrate performance on mobile devices,
-        // and default/override low DPI mode on mobile browsers.
         config.devicePixelRatio = 1;
-        mobileWarning.style.display = "block";
-        setTimeout(() => {
-          mobileWarning.style.display = "none";
-        }, 5000);
       } else {
         canvas.style.width = "960px";
         canvas.style.height = "600px";
