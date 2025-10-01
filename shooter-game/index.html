@@ -2,159 +2,111 @@
 <html lang="en-us">
   <head>
     <meta charset="utf-8">
-    <title>2D Shooter Online | Multiplayer Browser Game</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | 2d shooter online</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-
-    <!-- SEO Meta -->
-    <meta name="description" content="Play 2D Shooter Online, a fast-paced Unity WebGL multiplayer shooter game. Fight opponents, unlock upgrades, and challenge your friends in the browser!">
-    <meta name="keywords" content="2D shooter, unity webgl game, free shooter game, multiplayer shooter, browser game, online shooter, hami2h123 games">
-    <meta name="author" content="Hami2h123 Games">
-
-    <!-- Open Graph -->
-    <meta property="og:title" content="2D Shooter Online | Play Free Shooter Game">
-    <meta property="og:description" content="Join the action in 2D Shooter Online! A multiplayer browser shooter game where you battle, survive, and dominate the arena.">
-    <meta property="og:image" content="https://optimize360.shop/shooter.png">
-    <meta property="og:url" content="https://optimize360.shop/">
-    <meta property="og:type" content="website">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="2D Shooter Online">
-    <meta name="twitter:description" content="Play 2D Shooter Online, a fast-paced multiplayer shooter directly in your browser.">
-    <meta name="twitter:image" content="https://optimize360.shop/shooter.png">
-
-    <!-- Mobile Friendly -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-      /* Page Background */
-      body {
-        margin: 0;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #0a0a0a url("/screenshots/shooter.png") no-repeat center center fixed;
-        background-size: cover;
-        font-family: "Trebuchet MS", sans-serif;
-        color: #eee;
-      }
-
-      /* Unity Game Container */
-      #unity-container {
-        position: relative;
-        text-align: center;
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-        border: 2px solid #555;
-        border-radius: 14px;
-        background: rgba(10, 10, 10, 0.92);
-        padding: 12px;
-        backdrop-filter: blur(6px);
-      }
-
-      #unity-canvas {
-        border: 2px solid #222;
-        border-radius: 10px;
-        display: block;
-        margin: auto;
-        background: #000;
-      }
-
-      /* Loading Bar */
-      #unity-loading-bar {
-        width: 100%;
-        height: 20px;
-        background: #1a1a1a;
-        border: 1px solid #444;
-        border-radius: 10px;
-        margin-top: 10px;
-        overflow: hidden;
-      }
-
-      #unity-progress-bar-full {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #ff3c3c, #ffcc00);
-        transition: width 0.2s ease;
-      }
-
-      /* Footer */
-      #unity-footer {
-        margin-top: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        color: #ddd;
-        font-size: 14px;
-      }
-
-      #unity-build-title {
-        font-weight: bold;
-        font-size: 18px;
-        color: #fff;
-        text-shadow: 0 0 8px #ff3c3c;
-      }
-
-      /* Buttons */
-      .game-btn {
-        cursor: pointer;
-        padding: 6px 14px;
-        border-radius: 6px;
-        border: 1px solid #666;
-        background: #1c1c1c;
-        color: #fff;
-        transition: all 0.2s ease;
-      }
-
-      .game-btn:hover {
-        background: #ff3c3c;
-        border-color: #ff3c3c;
-        color: #fff;
-        box-shadow: 0 0 8px rgba(255, 60, 60, 0.6);
-      }
-    </style>
+    <link rel="stylesheet" href="TemplateData/style.css">
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600></canvas>
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
       <div id="unity-loading-bar">
-        <div id="unity-progress-bar-full"></div>
-      </div>
-      <div id="unity-footer">
-        <div id="unity-build-title">2D Shooter Online</div>
-        <div>
-          <button id="unity-fullscreen-button" class="game-btn">Fullscreen</button>
-          <button id="home-button" class="game-btn" onclick="location.href='https://optimize360.shop/'">Home</button>
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
         </div>
       </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-webgl-logo"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">2d shooter online</div>
+      </div>
     </div>
-
     <script>
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/shooter-game.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/shooter-game.data",
-        frameworkUrl: buildUrl + "/shooter-game.framework.js",
-        codeUrl: buildUrl + "/shooter-game.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Hami2h123 Games",
-        productName: "2D Shooter Online",
-        productVersion: "1.0",
-      };
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
       var loadingBar = document.querySelector("#unity-loading-bar");
       var progressBarFull = document.querySelector("#unity-progress-bar-full");
       var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/shooter-game1.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/shooter-game1.data",
+        frameworkUrl: buildUrl + "/shooter-game1.framework.js",
+        codeUrl: buildUrl + "/shooter-game1.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "hami2h123 games",
+        productName: "2d shooter online",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      // By default, Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      // If you would like all file writes inside Unity Application.persistentDataPath
+      // directory to automatically persist so that the contents are remembered when
+      // the user revisits the site the next time, uncomment the following line:
+      // config.autoSyncPersistentDataPath = true;
+      // This autosyncing is currently not the default behavior to avoid regressing
+      // existing user projects that might rely on the earlier manual
+      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+      // expected to change.
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
         container.className = "unity-mobile";
-        config.devicePixelRatio = 1;
+        canvas.className = "unity-mobile";
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
+
+
       } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
         canvas.style.width = "960px";
         canvas.style.height = "600px";
       }
+
       loadingBar.style.display = "block";
 
       var script = document.createElement("script");
@@ -162,16 +114,18 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-        }).catch((message) => {
-          alert(message);
-        });
-      };
+              }).then((unityInstance) => {
+                loadingBar.style.display = "none";
+                fullscreenButton.onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
+              }).catch((message) => {
+                alert(message);
+              });
+            };
+
       document.body.appendChild(script);
+
     </script>
   </body>
 </html>
